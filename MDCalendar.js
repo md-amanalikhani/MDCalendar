@@ -6,7 +6,7 @@
 	* @link    http://md-amanalikhani.github.io | http://md.akhi.ir
 	* @copyright   Copyright (C) 2015 - 2020 Open Source Matters,Inc. All right reserved.
 	* @license http://www.php.net/license/3_0.txt  PHP License 3.0
-	* @version Release: 1.0.0
+	* @version Release: 0.1.20
 	*/	
 
  var dw=function(obj) {
@@ -21,22 +21,16 @@
     document.body.appendChild(pre)
 }
  
- 
 
 /** The Calendar object constructor. */
 jscal = function() {
 
-	var is_opera = /opera/i.test(navigator.userAgent)//is_opera
-		is_khtml = /Konqueror|Safari|KHTML/i.test(navigator.userAgent),//is_khtml
-        is_ie= /msie/i.test(navigator.userAgent) && !is_opera && !/mac_powerpc/i.test(navigator.userAgent),//is_ie
-        is_ie6 = is_ie && /msie 6/i.test(navigator.userAgent),//is_ie6
-        is_gecko = /gecko/i.test(navigator.userAgent) && !is_khtml && !is_opera && !is_ie//is_gecko
-		jscal.SEL_NONE = 0,
-		jscal.SEL_SINGLE = 1, 
-		jscal.SEL_MULTIPLE = 2, 
-		jscal.SEL_WEEK = 3,
-		jscal.lang = {},
-		jscal.getlang = _,//func
+	var is_opera, is_khtml, is_ie, is_ie6,is_gecko, Q, Z, te, ee, ne, ae
+	is_opera = /opera/i.test(navigator.userAgent),
+		is_khtml = /Konqueror|Safari|KHTML/i.test(navigator.userAgent),
+        is_ie= /msie/i.test(navigator.userAgent) && !is_opera && !/mac_powerpc/i.test(navigator.userAgent),
+        is_ie6 = is_ie && /msie 6/i.test(navigator.userAgent),
+        is_gecko = /gecko/i.test(navigator.userAgent) && !is_khtml && !is_opera && !is_ie,
 		Q = " align='center' cellspacing='0' cellpadding='0'", 
 		Z = {
         "MDCalendar-topCont": "topCont",
@@ -57,10 +51,60 @@ jscal = function() {
         "MDCalendar-navBtn MDCalendar-nextYear": "navNextYear",
         "MDCalendar-navBtn MDCalendar-prevMonth": "navPrevMonth",
         "MDCalendar-navBtn MDCalendar-nextMonth": "navNextMonth"
+		},
+		te = {
+        "-3": "backYear",
+        "-2": "back",
+        0: "now",
+        2: "fwd",
+        3: "fwdYear"
+		}, 
+		ee = {
+			37: -1,
+			38: -2,
+			39: 1,
+			40: 2
+		},
+		ne = {
+			33: -1,
+			34: 1
+		}, 
+		ae = {
+			elastic_b: function(t) {
+				return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t)
+			},
+			magnetic: function(t) {
+				return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t)
+			},
+			accel_b: function(t) {
+				return t = 1 - t, 1 - t * t * t * t
+			},
+			accel_a: function(t) {
+				return t * t * t
+			},
+			accel_ab: function(t) {
+				return t = 1 - t, 1 - Math.sin(t * t * Math.PI / 2)
+			},
+			accel_ab2: function(t) {
+				return (t /= .5) < 1 ? .5 * t * t : -0.5 * (--t * (t - 2) - 1)
+			},
+			brakes: function(t) {
+				return t = 1 - t, 1 - Math.sin(t * t * Math.PI)
+			},
+			shake: function(t) {
+				return .5 > t ? -Math.cos(11 * t * Math.PI) * t * t : (t = 1 - t, Math.cos(11 * t * Math.PI) * t * t)
+			}
 		}
+	
+		jscal.SEL_NONE = 0,
+		jscal.SEL_SINGLE = 1, 
+		jscal.SEL_MULTIPLE = 2, 
+		jscal.SEL_WEEK = 3,
+		jscal.lang = {},
+		jscal.getlang = _//func
 		
 	function jscal (args) {
-		var args = args || {}
+		var args = args || {}, date, tis
 			this.args = args = argDiff(args,{
             cont: null,
             bottomBar: true,
@@ -79,7 +123,7 @@ jscal = function() {
             animation: !is_ie6,
             opacity: is_ie ? 1 : 3,
             selection: [],
-            selectionType: jscal.SEL_SINGLE,
+            selectionType: jscal.SEL_MULTIPLE,
             inputField: null,
             trigger: null,
             align: "Bl/ / /T/r",
@@ -96,7 +140,7 @@ jscal = function() {
             onBlur: Function(),
             onClose: Function()
 			}),
-			this.handlers = {}, 
+			this.handlers = {},
 			date = new Date,
 			args.min = setDate(args.min), 
 			args.max = setDate(args.max), 
@@ -105,7 +149,7 @@ jscal = function() {
 			this.date = setDate(args.date),
 			this.time = args.time,
 			this.fdow = args.fdow, 
-			tis = this
+			tis = this,
 		runAF("onChange onSelect onTimeChange onFocus onBlur onClose".split(/\s+/), function(evname) {
             var evn = args[evname]
             evn instanceof Array || (evn = [evn]),
@@ -175,13 +219,14 @@ jscal = function() {
     }
 
     function Menu(tis) {//i()
-        var k,
+        var k,i,j
 		str = ["<table height='100%'", " align='center' cellspacing='0' cellpadding='0'", "><tr><td><table style='margin-top: 1.5em'", " align='center' cellspacing='0' cellpadding='0'", ">", "<tr><td colspan='3'><input dyc-btn='year' class='MDCalendar-menu-year' size='6' value='", 
-		tis.date.getFullYear(), "' /></td></tr><tr><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>", _("goToday"), "</div></td></tr></table><p class='MDCalendar-menu-sep'>&nbsp;</p><table class='MDCalendar-menu-mtable'", " align='center' cellspacing='0' cellpadding='0'", ">"], 
+		tis.date.getFullYear(), "' /></td><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>", 
+		tis.date.getFullYear(), "</div></td></tr><tr><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>", _("goToday"), "</div></td></tr></table><p class='MDCalendar-menu-sep'>&nbsp;</p><table class='MDCalendar-menu-mtable'", " align='center' cellspacing='0' cellpadding='0'", ">"], 
 		shortMN = _("smn")
 		for (i = 0,j = str.length; 12 > i;) {
 			str[j++] = "<tr>"
-            for (k = 4; --k > 0;)
+            for (k = 5; --k > 0;)
 				str[j++] = "<td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='m" + i + "' class='MDCalendar-menu-month'>" + shortMN[i++] + "</div></td>"
             str[j++] = "</tr>"
         }
@@ -288,11 +333,11 @@ jscal = function() {
     }
 	
     function getDayOfYear(date) {
-        var e, time
-        return now = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0),
+        var e, time,now, then
+			now = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0),
 			then = new Date(date.getFullYear(), 0, 1, 12, 0, 0),
-			time = now - then,
-			Math.floor(time / 864e5)
+			time = now - then
+        return Math.floor(time / 864e5)
     }
 	
 	function inputField() {// print inputField
@@ -301,11 +346,11 @@ jscal = function() {
 		this.callHooks("onSelect", this, this.selection)
     }
 	
-	function argDiff(args,defargs, n, newArg){//E()
-		var newArg = {}
-        for (n in defargs) defargs.hasOwnProperty(n) && (newArg[n] = defargs[n])
-        for (n in args) args.hasOwnProperty(n) && (newArg[n] = args[n])
-		return newArg;
+	function argDiff(args,defargs, n, newArgs){//E()
+		var newArgs = {}
+        for (n in defargs) defargs.hasOwnProperty(n) && (newArgs[n] = defargs[n])
+        for (n in args) args.hasOwnProperty(n) && (newArgs[n] = args[n])
+		return newArgs;
 	}    
 	
 	function setDate(date) {//k()
@@ -410,7 +455,7 @@ jscal = function() {
     }
 	
 	function m(e, n) {
-        var dycType, timeOut, dycBtn, dTdycType, dycDate, selection, event, dTDycCls, u
+        var dycType, timeOut, dycBtn, dTdycType, dycDate, selection, event, dTDycCls, u,DateDiv
         n = n || window.event, 
 		dycType = getDycType(n),
 		dycType && !dycType.getAttribute("disabled") && (
@@ -461,7 +506,7 @@ jscal = function() {
 										addEvent(document, event, true)
 									) : 
 									(dycDate && selection.type && 
-										((selection.type == t.SEL_MULTIPLE ? 
+										((selection.type == jscal.SEL_MULTIPLE ? 
 												(n.shiftKey && this._selRangeStart ? 
 													selection.selectRange(this._selRangeStart, dycDate) : 
 													(n.ctrlKey || selection.isSelected(dycDate) || !this.args.multiCtrl || selection.clear(true),
@@ -710,17 +755,17 @@ jscal = function() {
                             switch (keyCode) {
                                 case 37:
                                     date.setDate(date.getDate() - 1)
-                                    break
+                                    break;
                                 case 38:
                                     date.setDate(date.getDate() - 7)
-                                    break
+                                    break;
                                 case 39:
-                                    date.setDate(date.getDate() + 1)
-                                    break
+                                    date.setDate(date.getDate() + 1);
+                                    break;
                                 case 40:
                                     date.setDate(date.getDate() + 7)
                             }
-                            if (!this.isDisabled(date)) break
+                            if (!this.isDisabled(date)) break;
                         }
                         date = jscal.dateToInt(date),
 						(date < this._firstDateVisible || date > this._lastDateVisible) && this.moveTo(date)
@@ -755,7 +800,7 @@ jscal = function() {
 			tis._menuAnim && tis._menuAnim.stop(),
 			offsetHeight = tis.els.main.offsetHeight, 
 			is_ie6 && (menu.style.width = tis.els.topBar.offsetWidth + "px"), 
-			e && (menu.firstChild.style.marginTop = -offsetHeight + "px", tis.args.opacity > 0 && setOpacity(menu, 0), styledisplay(menu, true)), 
+			e && (menu.firstChild.style.marginTop = -offsetHeight + "px", tis.args.opacity > 0 && setOpacity(menu, 0), styleDisplay(menu, true)), 
 			tis._menuAnim = bodyanimation({
 				onUpdate: function(s, i) {
 					menu.firstChild.style.marginTop = i(ae.accel_b(s), -offsetHeight, 0, !e) + "px",
@@ -765,14 +810,18 @@ jscal = function() {
 					tis.args.opacity > 0 && setOpacity(menu, .85),
 					menu.firstChild.style.marginTop = "",
 					tis._menuAnim = null, 
-					e || (styledisplay(menu, false), 
+					e || (styleDisplay(menu, false), 
 					tis.focused && tis.focus())
 				}
 			})
 		) : (
-			styledisplay(menu, e),
+			styleDisplay(menu, e),
 			tis.focused && tis.focus()
 		)
+    }
+
+    function styleDisplay(t, e) { // display
+        return null != e && ( t.style.display = e ? "" : "none"), t.style.display != "none"
     }
 	
 	function Y(t, e, n) {
@@ -1251,12 +1300,13 @@ jscal = function() {
 	
 	jscal.intToDate = function(t, e, n, a, s) {//A()
         var i, r
-        return t instanceof Date || (t = parseInt(t, 10),
+		t instanceof Date || (t = parseInt(t, 10),
 		i = Math.floor(t / 1e4),
 		t %= 1e4,
 		r = Math.floor(t / 100), 
 		t %= 100, 
-		t = new Date(i, r - 1, t, null == e ? 12 : e, null == n ? 0 : n, null == a ? 0 : a, null == s ? 0 : s)), t
+		t = new Date(i, r - 1, t, null == e ? 12 : e, null == n ? 0 : n, null == a ? 0 : a, null == s ? 0 : s))
+        return t
     }
 	
 	jscal.dateToInt = function(date) {//L()
