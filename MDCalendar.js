@@ -6,7 +6,7 @@
 	* @link    http://md-amanalikhani.github.io | http://md.akhi.ir
 	* @copyright   Copyright (C) 2015 - 2020 Open Source Matters,Inc. All right reserved.
 	* @license http://www.php.net/license/3_0.txt  PHP License 3.0
-	* @version Release: 0.1.20
+	* @version Release: 0.1.50
 	*/	
 
  var dw=function(obj) {
