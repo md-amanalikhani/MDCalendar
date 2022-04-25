@@ -1,0 +1,31 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "inlineSourceMap": false,
+    "listEmittedFiles": false,
+    "listFiles": false,
+    "noFallthroughCasesInSwitch": true,
+    "pretty": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "traceResolution": false,
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "moduleResolution": "node",
+    "types": ["node"],
+    "typeRoots": ["node_modules/@types"],
+    "removeComments": true,
+    "importHelpers": true,
+    "module": "es2020",
+    "outDir": "dist",
+    "target": "es6",
+    "sourceMap": true,
+    "declaration": true
+  },
+  "compileOnSave": false,
+  "exclude": ["node_modules", "dist", "src/css", "src/js"],
+  "include": ["src", "tests"]
+}
