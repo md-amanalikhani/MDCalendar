@@ -12,20 +12,34 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "nodemon test/tst.js",
-    "test": "node src/SHCalendar.js > test/out.out"
+    "build": "tsc -p tsconfig.json",
+    "test": "node src/SHCalendar.js > test/out.out",
+    "prepare": "husky install"
   },
   "homepage": "https://github.com/md-akhi/SHCalendar-js#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/md-akhi/SHCalendar-js.git"
   },
-  "keywords": ["calendar", "date", "time"],
+  "keywords": [
+    "calendar",
+    "date",
+    "time"
+  ],
   "author": "Mohammad Amanalikhani <md.akhi.ir@gmail.com>",
   "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/md-akhi/SHCalendar-js/issues"
   },
+  "files": [
+    "dist",
+    "src",
+    "test",
+    "demo"
+  ],
   "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "@types/node": "^17.0.25",
     "cross-env": "^7.0.3",
     "eslint": "^8.6.0",
     "gulp": "^3.9.1",
@@ -35,7 +49,8 @@
     "lint-staged": "^12.1.5",
     "nodemon": "^2.0.15",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "typescript": "^4.6.3"
   },
   "husky": {
     "hooks": {
@@ -43,7 +58,17 @@
     }
   },
   "lint-staged": {
-    "*.{js}": ["prettier --write", "eslint --fix", "git add"],
-    "*": ["prettier --write", "git add"]
+    "*.{js}": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ],
+    "*": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "dependencies": {
+    "@md-akhi/shdatetime": "^1.0.4-rc2"
   }
 }
