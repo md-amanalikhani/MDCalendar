@@ -83,7 +83,7 @@ function combineLibJSMin() {
 }
 
 function delTSBrowser() {
-	//return del(["src/browser"]);
+	return del(["src/browser"]);
 }
 
 /**
