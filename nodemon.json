@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "tests"],
+  "ext": "ts",
+  "ignore": ["dist", "node_modules", "src/browser"],
+  "restartable": "rs"
+}

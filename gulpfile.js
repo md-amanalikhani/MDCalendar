@@ -36,13 +36,15 @@ function combineTS() {
 }
 
 function browser() {
-	return gulp
-		.src("dist/shcalendar.js", { sourcemaps: true })
-		.pipe(babel({ presets: ["@babel/env"] }))
-		.pipe(gulp.dest("dist"))
-		.pipe(uglify())
-		.pipe(rename({ extname: ".min.js" }))
-		.pipe(gulp.dest("dist", { sourcemaps: "." }));
+	return (
+		gulp
+			.src("dist/shcalendar.js", { sourcemaps: true })
+			.pipe(babel({ presets: ["@babel/env"] }))
+			//.pipe(gulp.dest("dist"))
+			//.pipe(uglify())
+			//.pipe(rename({ extname: ".min.js" }))
+			.pipe(gulp.dest("dist", { sourcemaps: "." }))
+	);
 }
 
 function combineLibJS() {
@@ -92,7 +94,25 @@ function delTSBrowser() {
 exports.default = gulp.series(
 	browser,
 	combineLibJS,
-	combineLibJSMin,
+	//combineLibJSMin,
 	delTSBrowser
 );
 exports.combineTS = combineTS;
+
+function rlsVersion() {
+	return gulp
+		.src("src/index.ts")
+		.pipe(
+			replace(
+				/@version Release: [0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}/g,
+				`@version Release: ${pkg.version}`
+			)
+		)
+		.pipe(
+			replace(
+				/version: string = \"[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}\";/g,
+				`version: string = "${pkg.version}";`
+			)
+		)
+		.pipe(gulp.dest("src/v"));
+}

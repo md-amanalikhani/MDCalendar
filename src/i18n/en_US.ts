@@ -1,62 +1,74 @@
+// import SHDateLanguage_en_US from "@md-akhi/shdatetime/en_US";
 export default class en_US {
-	static NAME = "English";
+	//extend SHDateLanguage_en_US {
+	static NAME: string = "English";
+	static IS_RTL: boolean = true;
 
-	static FIRST_DAY_OF_WEEK = 0; // first day of week for this locale; 0 = Satarday, 1 = Sunday, etc.
+	static FIRST_DAY_OF_WEEK: number = 0; // first day of week for this locale; 0 = Satarday, 1 = Sunday, etc.
 
-	static GO_TODAY = "Go Today";
+	static GO_TODAY: string = "Go Today";
 
-	static IS_RTL = true;
+	static TODAY: string = "Today"; // appears in bottom bar
 
-	static TODAY = "Today"; // appears in bottom bar
+	static WEEK_NAME: string = "wk";
 
-	static WK = "wk";
+	static WEEKEND: number | number[] = 6; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
 
-	static WEEKEND = "0,6"; // 0 = Satarday, 1 = Sunday, etc.
+	static AM: string = "am"; //MERIDIEN_SHORT_NAMES
 
-	static AM = "am";
+	static PM: string = "pm"; //MERIDIEN_SHORT_NAMES
 
-	static PM = "pm";
-
-	static MN = [
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"October",
-		"November",
-		"December"
+	static MONTH_NAME: string[] = [
+		//MONTH_FULL_NAMES
+		"Farvardin",
+		"Ordibehesht",
+		"Khordad",
+		"Tir",
+		"Amordad",
+		"Shahrivar",
+		"Mehr",
+		"Aban",
+		"Azar",
+		"Dey",
+		"Bahman",
+		"Esfand"
 	];
 
-	static SMN = [
-		"Jan",
-		"Feb",
-		"Mar",
-		"Apr",
-		"May",
-		"Jun",
-		"Jul",
-		"Aug",
-		"Sep",
-		"Oct",
-		"Nov",
-		"Dec"
+	static SHORT_MONTH_NAME: string[] = [
+		//MONTH_SHORT_NAMES
+		"Far",
+		"Ord",
+		"Kho",
+		"Tir",
+		"Amo",
+		"Sha",
+		"Meh",
+		"Aba",
+		"Aza",
+		"Dey",
+		"Bah",
+		"Esf"
 	];
 
-	static DN = [
+	static DAY_NAME: string[] = [
+		//DAY_FULL_NAMES
+		"Saturday",
 		"Sunday",
 		"Monday",
 		"Tuesday",
 		"Wednesday",
 		"Thursday",
-		"Friday",
-		"Saturday",
-		"Sunday"
+		"Friday"
 	];
 
-	static SDN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+	static SHORT_DAY_NAME: string[] = [
+		//DAY_SHORT_NAMES
+		"Sat",
+		"Sun",
+		"Mon",
+		"Tue",
+		"Wed",
+		"Thu",
+		"Fri"
+	];
 }

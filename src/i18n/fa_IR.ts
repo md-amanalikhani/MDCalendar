@@ -1,15 +1,14 @@
 export default class fa_IR {
 	static NAME: string = "Persion";
+	static IS_RTL: boolean = true;
 
 	static FIRST_DAY_OF_WEEK: number = 1; // first day of week for this locale; 0 = Sunday, 1 = Monday, etc.
 
 	static GO_TODAY: string = "به امروز";
 
-	static IS_RTL: boolean = true;
-
 	static TODAY: string = "امروز"; // appears in bottom bar
 
-	static WK: string = "هفته";
+	static WEEK_NAME: string = "هفته";
 
 	static WEEKEND: number | number[] = 6; // 0 = Sunday, 1 = Monday, etc.
 
@@ -17,7 +16,7 @@ export default class fa_IR {
 
 	static PM: string = "pm";
 
-	static MN: string[] = [
+	static MONTH_NAME: string[] = [
 		"January",
 		"February",
 		"March",
@@ -32,7 +31,7 @@ export default class fa_IR {
 		"December"
 	];
 
-	static SMN: string[] = [
+	static SHORT_MONTH_NAME: string[] = [
 		"Jan",
 		"Feb",
 		"Mar",
@@ -47,7 +46,7 @@ export default class fa_IR {
 		"Dec"
 	];
 
-	static DN: string[] = [
+	static DAY_NAME: string[] = [
 		"Sunday",
 		"Monday",
 		"Tuesday",
@@ -58,5 +57,14 @@ export default class fa_IR {
 		"Sunday"
 	];
 
-	static SDN: string[] = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+	static SHORT_DAY_NAME: string[] = [
+		"Su",
+		"Mo",
+		"Tu",
+		"We",
+		"Th",
+		"Fr",
+		"Sa",
+		"Su"
+	];
 }

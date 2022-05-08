@@ -11,33 +11,31 @@ enum Language {
 }
 export default class Word {
 	static LANGUAGE_WORD: string = Language.en_US;
+	static FIRST_DAY_OF_WEEK: number = 0;
 	/**
-	 * Get Language class
-	 * @param {string} lang
-	 * @return  string
-	 * @since   1.0.0
+	 * cheeck Language
+	 * @param {string} language
+	 * @return string
+	 * @since 1.0.0
 	 */
-	static checkLanguage(lang: string = Word.LANGUAGE_WORD) {
-		switch (lang) {
-			// Languages
+	static checkLanguage(language: string = Word.LANGUAGE_WORD): boolean {
+		switch (language) {
 			case Language.fa_IR:
-				return Language.fa_IR;
 			case Language.en_US:
-				return Language.en_US;
+				return true;
 			default:
-				return Language.en_US;
+				return false;
 		}
 	}
 
 	/**
 	 * Get Language class
-	 * @param {string} lang
-	 * @return  string
-	 * @since   1.0.0
+	 * @param {string} language
+	 * @return string
+	 * @since 1.0.0
 	 */
-	static getClassLanguage(lang: string = Word.LANGUAGE_WORD) {
-		switch (lang) {
-			// Languages
+	static getClassLanguage(language: string = Word.LANGUAGE_WORD): any {
+		switch (language) {
 			case Language.fa_IR:
 				return Language_fa_IR;
 			case Language.en_US:
@@ -49,134 +47,133 @@ export default class Word {
 
 	/**
 	 *
-	 * @param   {int}  H24    numeric
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static isRTL(LW = Word.LANGUAGE_WORD): boolean {
-		const cls = Word.getClassLanguage(LW);
+	static isRTL(language_word = Word.LANGUAGE_WORD): boolean {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.IS_RTL;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getFirstDayOfWeek(LW = Word.LANGUAGE_WORD): number {
-		const cls = Word.getClassLanguage(LW);
+	static getFirstDayOfWeek(language_word = Word.LANGUAGE_WORD): number {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.FIRST_DAY_OF_WEEK;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getWeekend(LW = Word.LANGUAGE_WORD): number | number[] {
-		const cls = Word.getClassLanguage(LW);
+	static getWeekend(language_word = Word.LANGUAGE_WORD): number | number[] {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.WEEKEND as number | number[];
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getWeekName(LW = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClassLanguage(LW);
+	static getWeekName(language_word = Word.LANGUAGE_WORD): string {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.WEEK_NAME;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getGoToday(LW = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClassLanguage(LW);
+	static getGoToday(language_word = Word.LANGUAGE_WORD): string {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.GO_TODAY;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getToday(LW = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClassLanguage(LW);
+	static getToday(language_word = Word.LANGUAGE_WORD): string {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.TODAY;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getAM(LW = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClassLanguage(LW);
+	static getAM(language_word = Word.LANGUAGE_WORD): string {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.AM;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getPM(LW = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClassLanguage(LW);
+	static getPM(language_word = Word.LANGUAGE_WORD): string {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.PM;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getMonthName(LW = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClassLanguage(LW);
+	static getMonthName(language_word = Word.LANGUAGE_WORD): string[] {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.MONTH_NAME;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getShortMonthName(LW = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClassLanguage(LW);
+	static getShortMonthName(language_word = Word.LANGUAGE_WORD): string[] {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.SHORT_MONTH_NAME;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getDayName(LW = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClassLanguage(LW);
+	static getDayName(language_word = Word.LANGUAGE_WORD): string[] {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.DAY_NAME;
 	}
 
 	/**
 	 *
-	 * @param   {string}  LW    language    word
-	 * @return  string  Ante/Post meridiem
-	 * @since   1.0.0
+	 * @param {string} language_word language word
+	 * @return string Ante/Post meridiem
+	 * @since 1.0.0
 	 */
-	static getshortDayName(LW = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClassLanguage(LW);
+	static getshortDayName(language_word = Word.LANGUAGE_WORD): string[] {
+		const cls = Word.getClassLanguage(language_word);
 		return cls.SHORT_DAY_NAME;
 	}
 }

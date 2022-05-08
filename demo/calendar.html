@@ -1,6 +1,5 @@
-<!-- <script src="./MDCalendar.js"></script> -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
 		<link rel="stylesheet" type="text/css" href="../src/css/jscal2.css" />
 		<link
@@ -13,25 +12,18 @@
 		<!-- <script type="text/javascript" src="../dist/lang/en.js"></script> -->
 	</head>
 
-	<table style="float: left; margin: 0 1em 1em 0">
-		<tr>
-			<td>
-				<!-- element that will contain the calendar -->
-				<div id="SHcalendar-container"></div>
+	<!-- element that will contain the calendar -->
+	<div id="SHContainer"></div>
 
-				<!-- here we will display selection information -->
-				<div
-					id="calendar-info"
-					style="text-align: center; margin-top: 0.3em"
-				></div>
-			</td>
-		</tr>
-	</table>
-	<script type="text/javascript" src="../dist/shcalendar.min.js"></script>
+	<!-- here we will display selection information -->
+	<div id="calendar-info" style="text-align: center; margin-top: 0.3em"></div>
+
+	<script type="text/javascript" src="../dist/shcalendar.js"></script>
 	<script type="text/javascript">
-		SHCalendar.setup({
-			cont: "SHcalendar-container",
-			weekNumbers: true
+		new SHCalendar({
+			cont: "SHContainer",
+			weekNumbers: true,
+			animation: false
 		});
 	</script>
 </html>
