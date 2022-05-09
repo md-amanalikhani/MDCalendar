@@ -13,26 +13,49 @@ const pkg = require("./package.json");
  * combine all .ts files into one
  */
 function combineTS() {
-	return gulp
-		.src([
-			"./node_modules/@md-akhi/shdatetime/dist/types/shdatetime.ts",
-			"src/i18n/*.ts",
-			"src/word.ts",
-			"src/selection.ts",
-			"src/index.ts"
-		])
-		.pipe(concat("shcalendar.ts"))
-		.pipe(replace(/class ([a-z]{2}_[A-Z]{2})/g, "class SHCalendarLanguage_$1"))
-		.pipe(replace(/export default (function|class)/g, "$1"))
-		.pipe(replace(/import [a-zA-z_]+ from [0-9a-zA-z_/\.\"@]+;/g, " "))
-		.pipe(replace(/import [A-Za-z]+ from [\"@a-z-\/]+;/g, ""))
-		.pipe(replace(/ ([a-z]{2}_[A-Z]{2})\./g, " SHCalendarLanguage_$1."))
-		.pipe(replace(/ Language_([a-z]{2}_[A-Z]{2})/g, " SHCalendarLanguage_$1"))
-		.pipe(replace(/class (Word|Selection)/g, "class SHCalendar$1"))
-		.pipe(replace(/ (Word|Selection)(\.|\()/g, " SHCalendar$1$2"))
-		.pipe(replace(/enum (Language)/g, "enum SHCalendar$1"))
-		.pipe(replace(/ Language.([a-z]{2}_[A-Z]{2})/g, " SHCalendarLanguage.$1"))
-		.pipe(gulp.dest("src/browser"));
+	return (
+		gulp
+			.src([
+				"./node_modules/@md-akhi/shdatetime/dist/types/shdatetime.ts",
+				"src/i18n/*.ts",
+				"src/word.ts",
+				"src/selection.ts",
+				"src/index.ts"
+			])
+			.pipe(concat("shcalendar.ts"))
+			.pipe(
+				replace(/class ([a-z]{2}\_[A-Z]{2})/g, "class SHCalendarLanguage_$1")
+			)
+			.pipe(replace(/ ([a-z]{2}_[A-Z]{2})\./g, " SHCalendarLanguage_$1."))
+			.pipe(replace(/ Language_([a-z]{2}_[A-Z]{2})/g, " SHCalendarLanguage_$1"))
+			.pipe(replace(/export default /g, ""))
+			.pipe(replace(/export \{ [A-Za-z\,\W]+ \}\;/g, ""))
+			//.pipe(replace(/import [a-zA-z_]+ from [0-9a-zA-Z_\/\.\"@]+;/g, ""))
+			// .pipe(
+			// 	replace(
+			// 		/import [A-Za-z]+ from [a-z\"\@\/\.\-]+\;/g,
+			// 		""
+			// 	)
+			// )
+			.pipe(
+				replace(
+					/import [A-Za-z\_]+(\, \{ [A-Za-z\W\,]+ \})? from [A-Za-z0-9\"\@\/\_\.\-]+\;/g,
+					""
+				)
+			)
+			.pipe(replace(/class (Word|Selection)/g, "class SHCalendar$1"))
+			.pipe(
+				replace(/ (Word|Selection|SelectionType)(\,|\.|\()/g, " SHCalendar$1$2")
+			)
+			.pipe(
+				replace(/ Language\.([a-z]{2}_[A-Z]{2})/g, " SHCalendarLanguage.$1")
+			)
+			.pipe(replace(/enum (Language|SelectionType)/g, "enum SHCalendar$1"))
+			.pipe(
+				replace(/ SelectionType\.([A-Z]{4,8})/g, " SHCalendarSelectionType.$1")
+			)
+			.pipe(gulp.dest("src/browser"))
+	);
 }
 
 function browser() {
