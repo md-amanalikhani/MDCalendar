@@ -5,6 +5,11 @@
 		<link
 			rel="stylesheet"
 			type="text/css"
+			href="../src/css/reduce-spacing.css"
+		/>
+		<link
+			rel="stylesheet"
+			type="text/css"
 			href="../src/css/border-radius.css"
 		/>
 		<link rel="stylesheet" type="text/css" href="../src/css/gold/gold.css" />
@@ -23,7 +28,10 @@
 		new SHCalendar({
 			cont: "SHContainer",
 			weekNumbers: true,
-			animation: false
+			animation: false,
+			//selectionType: SHContainer.SEL_MULTIPLE,
+			showTime: 12
+			// titleFormat: "%B %Y"
 		});
 	</script>
 </html>
