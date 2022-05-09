@@ -9,240 +9,300 @@
 import SHDate from "@md-akhi/shdatetime";
 import SHCalendar from "./index.js";
 
+enum SelectionType {
+	NONE = 0,
+	SINGLE = 1,
+	MULTIPLE = 2,
+	WEEK = 3
+}
+export { SelectionType };
+
 export default class Selection {
-	type;
-	sel;
-	onChange;
-	cal;
+	type: any;
+	sel: any;
+	onChange: Function;
+	cal: any;
 
 	constructor(
 		selection: any[],
-		selectionType: number,
-		inputField: Function,
+		selection_type: SelectionType,
 		cal: SHCalendar
 	) {
-		this.type = selectionType;
+		this.type = selection_type;
 		this.sel = selection instanceof Array ? selection : [selection];
-		this.onChange = cal.inputField;
 		this.cal = cal;
+		this.onChange = cal.inputField;
 	}
 
 	get() {
 		return this.type == SHCalendar.SEL_SINGLE ? this.sel[0] : this.sel;
 	}
+
 	isEmpty() {
 		return this.sel.length == 0;
 	}
-	set(e: any, n?: any, a?: any) {
+
+	set(
+		date: SHDate | number | number[],
+		is_select?: boolean,
+		is_change?: boolean
+	) {
 		//arg, toggle)
 		var type = this.type == SHCalendar.SEL_SINGLE;
-		if (e instanceof Array) {
-			this.sel = e;
+		if (date instanceof Array) {
+			this.sel = date;
 			this.normalize();
-			a || this.onChange();
+			if (!is_change) this.onChange();
 		} else {
-			e = SHCalendar.dateToInt(e);
-			if (type || !this.isSelected(e)) {
-				if (type) {
-					this.sel = [e];
-				} else {
-					this.sel.splice(this.findInsertPos(e), 0, e);
-				}
-				this.normalize(), a || this.onChange();
-			} else {
-				if (n) this.unselect(e, a);
-			}
+			date = SHCalendar.dateToInt(date);
+			if (type || !this.isSelected(date)) {
+				if (type) this.sel = [date];
+				else this.sel.splice(this.findInsertPos(date), 0, date);
+				this.normalize();
+				if (!is_change) this.onChange();
+			} else if (is_select) this.unselect(date, is_change);
 		}
 	}
 
 	reset(...args: any[]) {
 		//arg, toggle)
-		(this.sel = []), this.set(args);
+		this.sel = [];
+		this.set(args);
 	}
 
 	countDays() {
-		var subSel,
-			dateo,
-			datet,
-			count = 0,
-			sel = this.sel;
-		for (var i = sel.length; --i >= 0; )
-			(subSel = sel[i]),
-				subSel instanceof Array &&
-					((dateo = SHCalendar.intToDate(subSel[0])),
-					(datet = SHCalendar.intToDate(subSel[1])),
-					(count += Math.round(
-						Math.abs(datet.getTime() - dateo.getTime()) / 864e5
-					))),
-				++count;
+		var sel_item: any,
+			date_first: SHDate,
+			date_second: SHDate,
+			count: number = 0,
+			sel: number[] = this.sel;
+		for (var i: number = sel.length - 1; i >= 0; i--, count++) {
+			sel_item = sel[i];
+			if (sel_item instanceof Array) {
+				date_first = SHCalendar.intToDate(sel_item[0]);
+				date_second = SHCalendar.intToDate(sel_item[1]);
+				count += Math.round(
+					Math.abs(date_second.getTime() - date_first.getTime()) / 864e5
+				);
+			}
+		}
 		return count;
 	}
-	unselect(date: SHDate | number, e: any) {
+
+	unselect(date: SHDate | number, is_change: any) {
 		//date)
-		var bool, a, sel, i, datet, Date, Datet;
+		var bool: boolean,
+			sel_item: any,
+			sel: any,
+			i: number,
+			shdate: SHDate,
+			day: number,
+			shdate_second: SHDate;
 		date = SHCalendar.dateToInt(date);
 		bool = false;
 		sel = this.sel;
-		for (i = sel.length; --i >= 0; )
-			(a = sel[i]),
-				a instanceof Array
-					? date < a[0] ||
-					  date > a[1] ||
-					  ((datet = SHCalendar.intToDate(date)),
-					  (Date = datet.getDate()),
-					  date == a[0]
-							? (datet.setDate(Date + 1),
-							  (a[0] = SHCalendar.dateToInt(datet)),
-							  (bool = true))
-							: date == a[1]
-							? (datet.setDate(Date - 1),
-							  (a[1] = SHCalendar.dateToInt(datet)),
-							  (bool = true))
-							: ((Datet = new SHDate(datet)),
-							  Datet.setDate(Date + 1),
-							  datet.setDate(Date - 1),
-							  sel.splice(i + 1, 0, [SHCalendar.dateToInt(Datet), a[1]]),
-							  (a[1] = SHCalendar.dateToInt(datet)),
-							  (bool = true)))
-					: date == a && (sel.splice(i, 1), (bool = true));
-		bool && (this.normalize(), e || this.onChange());
-	}
-	normalize() {
-		var t, e, sel, a, s, i, r;
-		this.sel = this.sel.sort(function (t, e) {
-			return (
-				t instanceof Array && (t = t[0]),
-				e instanceof Array && (e = e[0]),
-				t - e
-			);
-		});
-		sel = this.sel;
-		for (a = sel.length; --a >= 0; ) {
-			if (((t = sel[a]), t instanceof Array)) {
-				if (t[0] > t[1]) {
-					sel.splice(a, 1);
-					continue;
+		for (i = sel.length - 1; i >= 0; i--) {
+			sel_item = sel[i];
+			if (sel_item instanceof Array) {
+				if (!(date < sel_item[0] || date > sel_item[1])) {
+					shdate = SHCalendar.intToDate(date);
+					day = shdate.getDate();
+					if (date == sel_item[0]) {
+						shdate.setDate(day + 1);
+						sel_item[0] = SHCalendar.dateToInt(shdate);
+						bool = true;
+					} else if (date == sel_item[1]) {
+						shdate.setDate(day - 1);
+						sel_item[1] = SHCalendar.dateToInt(shdate);
+						bool = true;
+					} else {
+						shdate_second = new SHDate(shdate);
+						shdate_second.setDate(day + 1);
+						shdate.setDate(day - 1);
+						sel.splice(i + 1, 0, [
+							SHCalendar.dateToInt(shdate_second),
+							sel_item[1]
+						]);
+						sel_item[1] = SHCalendar.dateToInt(shdate);
+						bool = true;
+					}
 				}
-				t[0] == t[1] && (t = sel[a] = t[0]);
+			} else if (date == sel_item) {
+				sel.splice(i, 1);
+				bool = true;
 			}
-			e &&
-				((s = e),
-				(i = t instanceof Array ? t[1] : t),
-				(i = SHCalendar.intToDate(i)),
-				i.setDate(i.getDate() + 1),
-				(i = SHCalendar.dateToInt(i)),
-				s > i ||
-					((r = sel[a + 1]),
-					t instanceof Array && r instanceof Array
-						? ((t[1] = r[1]), sel.splice(a + 1, 1))
-						: t instanceof Array
-						? ((t[1] = e), sel.splice(a + 1, 1))
-						: r instanceof Array
-						? ((r[0] = t), sel.splice(a, 1))
-						: ((sel[a] = [t, r]), sel.splice(a + 1, 1)))),
-				(e = t instanceof Array ? t[0] : t);
+		}
+		if (bool) {
+			this.normalize();
+			if (!is_change) this.onChange();
 		}
 	}
-	findInsertPos(t: any) {
-		var e,
-			sel = this.sel,
-			i;
-		for (
-			i = sel.length;
-			--i >= 0 && ((e = sel[i]), e instanceof Array && (e = e[0]), t < e);
 
-		);
+	normalize() {
+		var i: number,
+			date: SHDate,
+			date_int: any,
+			sel: any,
+			sel_item: any,
+			sel_item_second: any,
+			sel_item_first: any;
+		this.sel = this.sel.sort(function (sel_first: any, sel_second: any) {
+			if (sel_first instanceof Array) sel_first = sel_first[0];
+			if (sel_second instanceof Array) sel_second = sel_second[0];
+			return sel_first - sel_second;
+		});
+		sel = this.sel;
+		for (i = sel.length - 1; i >= 0; i--) {
+			sel_item_first = sel[i];
+			if (sel_item_first instanceof Array) {
+				if (sel_item_first[0] > sel_item_first[1]) {
+					sel.splice(i, 1);
+					continue;
+				}
+				if (sel_item_first[0] == sel_item_first[1])
+					sel_item_first = sel[i] = sel_item_first[0];
+			}
+			if (sel_item) {
+				date_int =
+					sel_item_first instanceof Array ? sel_item_first[1] : sel_item_first;
+				date = SHCalendar.intToDate(date_int);
+				date.setDate(date.getDate() + 1);
+				date_int = SHCalendar.dateToInt(date);
+				if (sel_item < date_int) {
+					sel_item_second = sel[i + 1];
+					if (
+						sel_item_first instanceof Array &&
+						sel_item_second instanceof Array
+					) {
+						sel_item_first[1] = sel_item_second[1];
+						sel.splice(i + 1, 1);
+					} else if (sel_item_first instanceof Array) {
+						sel_item_first[1] = sel_item;
+						sel.splice(i + 1, 1);
+					} else if (sel_item_second instanceof Array) {
+						sel_item_second[0] = sel_item_first;
+						sel.splice(i, 1);
+					} else {
+						sel[i] = [sel_item_first, sel_item_second];
+						sel.splice(i + 1, 1);
+					}
+				}
+			}
+			sel_item =
+				sel_item_first instanceof Array ? sel_item_first[0] : sel_item_first;
+		}
+	}
+
+	findInsertPos(date: SHDate | number) {
+		var sel_item: any,
+			sel: any = this.sel,
+			i: number = sel.length - 1;
+		do {
+			sel_item = sel[i--];
+			if (sel_item instanceof Array) sel_item = sel_item[0];
+		} while (i >= 0 && date < sel_item);
 		return i + 1;
 	}
+
 	clear(nohooks: any) {
 		//nohooks)
-		(this.sel = []), nohooks || this.onChange();
+		this.sel = [];
+		if (!nohooks) this.onChange();
 	}
-	selectRange(start_date: any | any[], end_date: any | any[]) {
-		//start_date, end_date)
-		var tmp, checkRange: any;
-		start_date = SHCalendar.dateToInt(start_date);
-		end_date = SHCalendar.dateToInt(end_date);
-		if (start_date > end_date) [end_date, start_date] = [start_date, end_date];
+
+	selectRange(date_start: any | any[], date_end: any | any[]) {
+		var checkRange: any;
+		date_start = SHCalendar.dateToInt(date_start);
+		date_end = SHCalendar.dateToInt(date_end);
+		if (date_start > date_end) [date_end, date_start] = [date_start, date_end];
 		checkRange = this.cal.args.checkRange;
-		if (!checkRange) return this.#do_selectRange(start_date, end_date);
-		// try {
-		// 	this.cal.setFunction(
-		// 		new Selection(
-		// 			[[start_date, end_date]],
-		// 			SHCalendar.SEL_MULTIPLE,
-		// 			Function(),
-		// 			this.cal
-		// 		).getDates(),
-		// 		(t: any = this.cal) => {
-		// 			if (this.cal.isDisabled(t))
-		// 				throw (
-		// 					(checkRange instanceof Function && checkRange(t, this), "OUT")
-		// 				);
-		// 		}
-		// 	);
-		// 	this.#do_selectRange(start_date, end_date);
-		// } catch (i) {}
+		if (!checkRange) return this.#do_selectRange(date_start, date_end);
+		try {
+			this.cal.setFunction(
+				new Selection(
+					[[date_start, date_end]],
+					SHCalendar.SEL_MULTIPLE,
+					this.cal
+				).getDates(),
+				(date: SHDate | number) => {
+					if (this.cal.isDisabled(date))
+						throw (
+							(checkRange instanceof Function && checkRange(date, this), "OUT")
+						);
+				}
+			);
+			this.#do_selectRange(date_start, date_end);
+		} catch (i) {}
 	}
-	#do_selectRange(start_date: any, end_date: any) {
-		this.sel.push([start_date, end_date]), this.normalize(), this.onChange();
+
+	#do_selectRange(date_start: any, date_end: any) {
+		this.sel.push([date_start, date_end]);
+		this.normalize();
+		this.onChange();
 	}
-	isSelected(t: any) {
-		var sel, i;
-		for (i = this.sel.length; --i >= 0; ) {
+
+	isSelected(date: SHDate | number) {
+		var sel: any, i: number;
+		for (i = this.sel.length - 1; i >= 0; i--) {
 			sel = this.sel[i];
-			if ((sel instanceof Array && t >= sel[0] && t <= sel[1]) || t == sel)
+			if (
+				(sel instanceof Array && date >= sel[0] && date <= sel[1]) ||
+				date == sel
+			)
 				return true;
 		}
 		return false;
 	}
+
 	getFirstDate() {
 		var sel = this.sel[0];
-		sel && sel instanceof Array && (sel = sel[0]);
+		if (sel && sel instanceof Array) sel = sel[0];
 		return sel;
 	}
+
 	getLastDate() {
 		if (this.sel.length > 0) {
 			var sel = this.sel[this.sel.length - 1];
-			sel && sel instanceof Array && (sel = sel[1]);
+			if (sel && sel instanceof Array) sel = sel[1];
 			return sel;
 		}
 	}
-	print(format: any, separator: any) {
+
+	print(format: string, separator: string) {
 		//format, separator)
-		var sel,
+		var sel: any,
 			str = [],
-			Hours = this.cal.getHours(),
-			Minutes = this.cal.getMinutes();
-		separator || (separator = " -> ");
-		for (var i = 0; i < this.sel.length; )
-			(sel = this.sel[i++]),
-				sel instanceof Array
-					? str.push(
-							this.cal.printDate(
-								SHCalendar.intToDate(sel[0], Hours, Minutes),
-								format
-							) +
-								separator +
-								this.cal.printDate(
-									SHCalendar.intToDate(sel[1], Hours, Minutes),
-									format
-								)
-					  )
-					: str.push(
-							this.cal.printDate(
-								SHCalendar.intToDate(sel, Hours, Minutes),
-								format
-							)
-					  );
+			hours: number = this.cal.getHours(),
+			minutes: number = this.cal.getMinutes();
+		if (!separator) separator = " -> ";
+		for (var i: number = 0; i < this.sel.length; i++) {
+			sel = this.sel[i];
+			if (sel instanceof Array)
+				str.push(
+					this.cal.printDate(
+						SHCalendar.intToDate(sel[0], hours, minutes),
+						format
+					) +
+						separator +
+						this.cal.printDate(
+							SHCalendar.intToDate(sel[1], hours, minutes),
+							format
+						)
+				);
+			else
+				str.push(
+					this.cal.printDate(SHCalendar.intToDate(sel, hours, minutes), format)
+				);
+		}
 		return str;
 	}
+
 	getDates(str?: any) {
-		var date,
-			sel,
+		var date: SHDate,
+			sel: any,
 			string = [];
-		for (var i = 0; i < this.sel.length; ) {
-			sel = this.sel[i++];
+		for (var i = 0; i < this.sel.length; i++) {
+			sel = this.sel[i];
 			if (sel instanceof Array) {
 				date = SHCalendar.intToDate(sel[0]);
 				for (sel = sel[1]; SHCalendar.dateToInt(date) < sel; )
