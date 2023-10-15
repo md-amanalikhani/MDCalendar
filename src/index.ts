@@ -165,6 +165,7 @@ export default class SHCalendar {
 	dateFormat: any;
 	input_field: any;
 	#lang: string = SHCalendar.defaultArgs.lang;
+	static kcmonth: any;
 
 	constructor(args: any = SHCalendar.defaultArgs) {
 		var date: SHDate = new SHDate();
@@ -233,27 +234,27 @@ export default class SHCalendar {
 		var els: any;
 		var el = this.getElementById(this.args.cont);
 		els = this.els = {};
-		const event: any = {
-			mousedown: (event: MouseEvent) => this.mouseClick(true, event),
-			mouseup: (event: MouseEvent) => this.mouseClick(false, event),
-			mouseover: (event: MouseEvent) => this.mouseHover(true, event),
-			mouseout: (event: MouseEvent) => this.mouseHover(false, event)
+		const events: any = {
+			// mousedown: (event: any) => this.mouseClick(true, event),
+			// mouseup: (event: any) => this.mouseClick(false, event),
+			mouseover: (event: any) => this.mouseHover(true, event),
+			mouseout: (event: any) => this.mouseHover(false, event)
 			// keypress: (event: KeyboardEvent) => this.keypress(event)
 		};
-		const event_IE: any = SHCalendar.IS_IE
+		const events_IE: any = SHCalendar.IS_IE
 			? {
-					dblclick: event.mousedown,
-					keydown: event.keypress
+					// dblclick: events.mousedown,
+					// keydown: events.keypress
 			  }
 			: {};
 
-		const event_wheel: any = !this.args.noScroll
+		const events_wheel: any = !this.args.noScroll
 			? SHCalendar.IS_GECKO
 				? {
-						DOMMouseScroll: (event: WheelEvent) => this.wheelCHTime(event)
+						// DOMMouseScroll: (event: any) => this.wheelCHTime(event)
 				  }
 				: {
-						mousewheel: (event: WheelEvent) => this.wheelCHTime(event)
+						// mousewheel: (event: any) => this.wheelCHTime(event)
 				  }
 			: {};
 		el.innerHTML = this.template();
@@ -262,12 +263,13 @@ export default class SHCalendar {
 			if (class_name) els[class_name] = el;
 			if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
-		this.addEvent(els.main, { ...event, ...event_IE, ...event_wheel });
+		this.addEvent(els.main, { ...events, ...events_IE, ...events_wheel });
 		this._focusEvents = {
-			focus: () => this.onFocus(),
-			blur: () => this.onBluringTimeout()
+			focus: (event: any) => this.onFocus(),
+			blur: (event: any) => this.onBluringTimeout()
 		};
-		this.addEvent([els.focusLink, els.yearInput], this._focusEvents);
+		this.addEvent(els.focusLink, this._focusEvents);
+		els.yearInput && this.addEvent(els.yearInput, this._focusEvents);
 
 		this.moveTo(this.date, false);
 		this.setTime(null, true);
@@ -285,20 +287,23 @@ export default class SHCalendar {
 		return el;
 	}
 
-	addEvent(el: any, evname: any, callback?: any, a?: any) {
-		//addEvent = function(el, evname, func) {
+	addEvent(el: any, evname: any, callback?: any, useCapture?: any) {
 		var i: number | string;
-		if (el instanceof Array)
-			for (i = el.length - 1; i >= 0; i--)
-				this.addEvent(el[i], evname, callback, a);
-		else if ("object" == typeof evname)
+		// if (el instanceof Array)
+		// 	for (i = el.length - 1; i >= 0; i--)
+		// 		this.addEvent(el[i], evname, callback, useCapture);else
+		if ("object" == typeof evname)
 			for (i in evname)
 				if (evname.hasOwnProperty(i)) this.addEvent(el, i, evname[i], callback);
-		if (el)
-			if (el.addEventListener)
-				el.addEventListener(evname, callback, SHCalendar.IS_IE ? true : !!a);
-			else if (el.attachEvent) el.attachEvent("on" + evname, callback);
-			else el["on" + evname] = callback;
+		//if (el)
+		if (el.addEventListener)
+			el.addEventListener(
+				evname,
+				callback
+				//SHCalendar.IS_IE ? true : !!useCapture
+			);
+		else if (el.attachEvent) el.attachEvent("on" + evname, callback);
+		else el["on" + evname] = callback;
 	}
 
 	stopEvent(event: MouseEvent) {
@@ -313,19 +318,23 @@ export default class SHCalendar {
 		return false;
 	}
 
-	removeEvent(el: any, evname: any, callback?: any, a?: any) {
+	removeEvent(el: any, evname: any, callback?: any, useCapture?: any) {
 		//removeEvent   F
 		var i: number | string;
-		if (el instanceof Array)
-			for (i = el.length - 1; i >= 0; i--)
-				this.removeEvent(el[i], evname, callback, a);
-		else if ("object" == typeof evname)
+		// if (el instanceof Array)
+		// 	for (i = el.length - 1; i >= 0; i--)
+		// 		this.removeEvent(el[i], evname, callback, useCapture);else
+		if ("object" == typeof evname)
 			for (i in evname)
 				if (evname.hasOwnProperty(i))
 					this.removeEvent(el, i, evname[i], callback);
 		if (el)
 			if (el.removeEventListener)
-				el.removeEventListener(evname, callback, SHCalendar.IS_IE ? true : !!a);
+				el.removeEventListener(
+					evname,
+					callback
+					//SHCalendar.IS_IE ? true : !!useCapture
+				);
 			else if (el.detachEvent) el.detachEvent("on" + evname, callback);
 			else el["on" + evname] = null;
 	}
@@ -365,46 +374,48 @@ export default class SHCalendar {
 			shc_date = el_type.getAttribute("shc-date");
 			selection = this.selection;
 			if (io) {
-			events = {
-				mouseover: (event: MouseEvent) => this.stopEvent(event),
-				mousemove: (event: MouseEvent) => this.stopEvent(event),
-				mouseup: (event?: MouseEvent) => {
-					var shc_cls = el_type.getAttribute("shc-cls");
-					if (shc_cls) this.removeClass(el_type, this.splitClass(shc_cls, 1));
-					clearTimeout(timeOut);
-					this.removeEvent(document, events, true);
-					//events = null;
-				}
-			};
-				setTimeout(this.focus, 1);
+				events = {
+					mouseover: (event: any) => this.stopEvent(event),
+					mousemove: (event: any) => this.stopEvent(event),
+					mouseup: (event?: any) => {
+						var shc_cls = el_type.getAttribute("shc-cls");
+						if (shc_cls) this.removeClass(el_type, this.splitClass(shc_cls, 1));
+						clearTimeout(timeOut);
+						this.removeEvent(document, events); //, true
+						events = null;
+					}
+				};
+				setTimeout(() => this.focus(), 1);
 				shc_cls = el_type.getAttribute("shc-cls");
 				if (shc_cls) this.addClass(el_type, this.splitClass(shc_cls, 1));
-
 				if ("menu" == shc_btn) {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
 					if (this.changeDate(shc_btn)) {
-						u = () => {
-							this.changeDate(shc_btn, true)
-								? (timeOut = setTimeout(u, 40))
-								: (events.mouseup(), this.changeDate(shc_btn));
+						const time_out = () => {
+							if (this.changeDate(shc_btn, true))
+								timeOut = setTimeout(time_out, 40);
+							else {
+								events.mouseup();
+								this.changeDate(shc_btn);
+							}
 						};
-						timeOut = setTimeout(u, 350);
-						this.addEvent(document, events, true);
+						timeOut = setTimeout(time_out, 350);
+						this.addEvent(document, events); //, true
 					} else events.mouseup();
 				} else if ("year" == shc_btn) {
 					this.els.yearInput.focus();
 					this.els.yearInput.select();
 				} else if ("time-am" == shc_type) {
-					this.addEvent(document, events, true);
+					this.addEvent(document, events); //, true
 				} else if (/^time/.test(shc_type)) {
-					u = (t: string) => {
+					const time_out = (t: string = shc_type) => {
 						this.changeTime(t);
-						timeOut = setTimeout(u(shc_type), 100);
+						timeOut = setTimeout(time_out, 100);
 					};
 					this.changeTime(shc_type);
-					timeOut = setTimeout(u(shc_type), 350);
-					this.addEvent(document, events, true);
+					timeOut = setTimeout(time_out, 350);
+					this.addEvent(document, events); //, true
 				} else if (shc_date && selection.type) {
 					if (selection.type == SelectionType.MULTIPLE) {
 						if (event.shiftKey && this._selRangeStart) {
@@ -424,7 +435,7 @@ export default class SHCalendar {
 					}
 					el_date = this.getElementDate(shc_date);
 					this.mouseHover(true, { target: el_date });
-					this.addEvent(document, events, true);
+					this.addEvent(document, events); //, true
 				}
 				if (SHCalendar.IS_IE && events && /dbl/i.test(event.type)) {
 					events.mouseup();
@@ -441,7 +452,7 @@ export default class SHCalendar {
 						event,
 						this.getAbsolutePos(this.els.topCont)
 					);
-					this.addEvent(document, events, true);
+					this.addEvent(document, events); //, true
 				}
 			} else if ("today" == shc_btn) {
 				if (!(this._menuVisible || selection.type != SelectionType.SINGLE))
@@ -457,7 +468,7 @@ export default class SHCalendar {
 				this.showMenu(false);
 			} else if ("time-am" == shc_type) {
 				this.setHours(this.getHours() + 12);
-				SHCalendar.IS_IE || this.stopEvent(event);
+				if (!SHCalendar.IS_IE) this.stopEvent(event);
 			}
 		}
 	}
@@ -684,8 +695,8 @@ export default class SHCalendar {
 				this.addEvent(el, this._focusEvents);
 				this.els.yearInput = el;
 			} else if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
-		}),
-			this.setTime(null, true);
+		});
+		this.setTime(null, true);
 	}
 
 	focus() {
@@ -764,7 +775,7 @@ export default class SHCalendar {
 	}
 
 	setMinutes(minute: number) {
-		0 > minute && (minute += 60);
+		if (0 > minute) minute += 60;
 		minute = Math.floor(minute / this.args.minuteStep) * this.args.minuteStep;
 		//this.setTime(100 * this.getHours() + (M % 60));
 		this.date.setMinutes(minute);
@@ -850,7 +861,7 @@ export default class SHCalendar {
 
 	_getInputYear() {
 		var year = parseInt(this.els.yearInput.value, 10);
-		if (isNaN(year)) {
+		if (typeof year !== "number") {
 			year = this.date.getFullYear();
 		}
 		return year;
@@ -1067,7 +1078,7 @@ export default class SHCalendar {
 
 	showMenu(visible: boolean) {
 		// show menu
-		var menu: any, offsetHeight: number;
+		var menu: any, offset_height: number;
 		this._menuVisible = visible;
 		this.changeCalss(visible, this.els.title, "SHCalendar-pressed-title");
 		menu = this.els.menu;
@@ -1075,39 +1086,39 @@ export default class SHCalendar {
 			if (SHCalendar.IS_IE6)
 				menu.style.height = this.els.main.offsetHeight + "px";
 			if (this.args.animation) {
-				this._menuAnim && this._menuAnim.stop();
-				offsetHeight = this.els.main.offsetHeight;
+				if (this._menuAnim) this._menuAnim.stop();
+				offset_height = this.els.main.offsetHeight;
 				if (SHCalendar.IS_IE6)
 					menu.style.width = this.els.topBar.offsetWidth + "px";
 				if (visible) {
-					menu.firstChild.style.marginTop = -offsetHeight + "px";
-					this.args.opacity > 0 && this.setOpacity(menu, 0);
+					menu.firstChild.style.marginTop = -offset_height + "px";
+					if (this.args.opacity > 0) this.setOpacity(menu, 0);
 					this.styleDisplay(menu, true);
 				}
 				this._menuAnim = this.Animation({
 					onUpdate: function (s: number, i: Function) {
 						menu.firstChild.style.marginTop =
-							i(this.#math_animation.accel_b(s), -offsetHeight, 0, !visible) +
+							i(this.#math_animation.accel_b(s), -offset_height, 0, !visible) +
 							"px";
-						this.args.opacity > 0 &&
+						if (this.args.opacity > 0)
 							this.setOpacity(
 								menu,
 								i(this.#math_animation.accel_b(s), 0, 0.85, !visible)
 							);
 					},
 					onStop: function () {
-						this.args.opacity > 0 && this.setOpacity(menu, 0.85);
+						if (this.args.opacity > 0) this.setOpacity(menu, 0.85);
 						menu.firstChild.style.marginTop = "";
 						this._menuAnim = null;
 						if (!visible) {
 							this.styleDisplay(menu, false);
-							this.focused && this.focus();
+							if (this.focused) this.focus();
 						}
 					}
 				});
 			} else {
 				this.styleDisplay(menu, visible);
-				this.focused && this.focus();
+				if (this.focused) this.focus();
 			}
 		}
 	}
@@ -1126,12 +1137,15 @@ export default class SHCalendar {
 		// Y
 		if (el) {
 			var i: number,
-				cls: string[] = el.className.replace(/^\s+|\s+$/, "").split(/\x20/),
+				cls: string[] = el.className.replace(/^\s+|\s+$/, " ").split(/\x20/),
 				temp_cls = [];
-			for (i = cls.length; i > 0; )
-				if (cls[--i] != old_class) temp_cls.push(cls[i]);
+			for (i = cls.length - 1; i > 0; i--)
+				if (cls[i] != old_class) temp_cls.push(cls[i]);
 			if (new_class) temp_cls.push(new_class);
 			el.className = temp_cls.join(" ");
+			// if (el.classList as DOMTokenList) {
+			// 	console.log(el.classList);
+			// }
 		}
 		return new_class;
 	}
@@ -1158,18 +1172,14 @@ export default class SHCalendar {
 		return is_change;
 	}
 
-	dateDiff(
-		first_date: SHDate,
-		second_date: SHDate,
-		year_and_month: boolean = false
-	) {
+	dateDiff(first_date: SHDate, second_date: SHDate, is_day: boolean = true) {
 		//H()
 		var first_year: number = first_date.getFullYear(),
 			first_month: number = first_date.getMonth(),
-			first_day: number = year_and_month ? 0 : first_date.getDate(),
+			first_day: number = is_day ? first_date.getDate() : 0,
 			second_year: number = second_date.getFullYear(),
 			second_month: number = second_date.getMonth(),
-			second_day: number = year_and_month ? 0 : second_date.getDate();
+			second_day: number = is_day ? second_date.getDate() : 0;
 		if (second_year > first_year) {
 			return -3;
 		} else if (first_year > second_year) {
@@ -1188,7 +1198,7 @@ export default class SHCalendar {
 
 	changeDate(shc_btn: any, anim?: any) {
 		// f()
-		this._bodyAnim && this._bodyAnim.stop();
+		if (this._bodyAnim) this._bodyAnim.stop();
 		if (0 != shc_btn) {
 			var date = this.date;
 			date.setDate(1);
@@ -1215,28 +1225,29 @@ export default class SHCalendar {
 
 	hide() {
 		this.callHooks("onClose", this);
-		var topCont = this.els.topCont,
-			firstChild = this.els.body.firstChild,
-			offsetHeight = firstChild.offsetHeight,
-			s = this.getAbsolutePos(topCont).y;
+		var top_cont = this.els.topCont,
+			first_child = this.els.body.firstChild,
+			offset_height = first_child.offsetHeight,
+			pos_y = this.getAbsolutePos(top_cont).y;
 
 		if (this.args.animation) {
 			if (this._showAnim) this._showAnim.stop();
 			this._showAnim = this.Animation({
 				onUpdate: (i: number, r: Function) => {
-					if (this.args.opacity > 1) this.setOpacity(topCont, 1 - i);
-					(firstChild.style.marginTop =
-						-r(this.#math_animation.accel_b(i), 0, offsetHeight) + "px"),
-						(topCont.style.top =
-							r(this.#math_animation.accel_ab(i), s, s - 10) + "px");
+					if (this.args.opacity > 1) this.setOpacity(top_cont, 1 - i);
+					first_child.style.marginTop =
+						-r(this.#math_animation.accel_b(i), 0, offset_height) + "px";
+					top_cont.style.top =
+						r(this.#math_animation.accel_ab(i), pos_y, pos_y - 10) + "px";
 				},
 				onStop: () => {
-					(topCont.style.display = "none"), (firstChild.style.marginTop = "");
-					if (this.args.opacity > 1) this.setOpacity(topCont, "");
+					top_cont.style.display = "none";
+					first_child.style.marginTop = "";
+					if (this.args.opacity > 1) this.setOpacity(top_cont, "");
 					this._showAnim = null;
 				}
 			});
-		} else topCont.style.display = "none";
+		} else top_cont.style.display = "none";
 		this.input_field = null;
 	}
 
@@ -1260,52 +1271,169 @@ export default class SHCalendar {
 
 	printDate(date: SHDate = this.date, str: string) {
 		//S()
-		var m = date.getMonth(),
-			d = date.getDate(),
-			y = date.getFullYear(),
+		var month = date.getMonth(),
+			day = date.getDate(),
+			year = date.getFullYear(),
 			woy = this.getWeekNumber(date)[0],
 			dow = date.getDay(),
-			h = date.getHours(),
-			h12 = h >= 12 ? h - 12 : h || 12,
+			hours = date.getHours(),
+			h12 = hours >= 12 ? hours - 12 : hours || 12,
 			doy = this.getDayOfYear(date),
-			i = date.getMinutes(),
-			s = date.getSeconds(),
+			minutes = date.getMinutes(),
+			second = date.getSeconds(),
 			reg = /%./g;
 		woy = woy instanceof Number ? woy.toString() : woy;
 		var data: any = {
 			"%a": this.getLanguage("sdn")[dow],
 			"%A": this.getLanguage("dn")[dow],
-			"%b": this.getLanguage("smn")[m],
-			"%B": this.getLanguage("mn")[m],
-			"%C": 1 + Math.floor(y / 100),
-			"%d": 10 > d ? "0" + d : d,
-			"%e": d,
-			"%H": 10 > h ? "0" + h : h,
+			"%b": this.getLanguage("smn")[month],
+			"%B": this.getLanguage("mn")[month],
+			"%C": 1 + Math.floor(year / 100),
+			"%d": 10 > day ? "0" + day : day,
+			"%e": day,
+			"%H": 10 > hours ? "0" + hours : hours,
 			"%I": 10 > h12 ? "0" + h12 : h12,
 			"%j": 10 > doy ? "00" + doy : 100 > doy ? "0" + doy : doy,
-			"%k": h,
+			"%k": hours,
 			"%l": h12,
-			"%m": 9 > m ? "0" + (1 + m) : 1 + m,
-			"%o": 1 + m,
-			"%M": 10 > i ? "0" + i : i,
+			"%m": 9 > month ? "0" + (1 + month) : 1 + month,
+			"%o": 1 + month,
+			"%M": 10 > minutes ? "0" + minutes : minutes,
 			"%n": "\n",
-			"%p": h >= 12 ? "PM" : "AM",
-			"%P": h >= 12 ? "pm" : "am",
+			"%p": hours >= 12 ? "PM" : "AM",
+			"%P": hours >= 12 ? "pm" : "am",
 			"%s": Math.floor(date.getTime() / 1e3),
-			"%S": 10 > s ? "0" + s : s,
+			"%S": 10 > second ? "0" + second : second,
 			"%t": "	",
 			"%U": 10 > woy ? "0" + woy : woy,
 			"%W": 10 > woy ? "0" + woy : woy,
 			"%V": 10 > woy ? "0" + woy : woy,
 			"%u": dow + 1,
 			"%w": dow,
-			"%y": ("" + y).substr(2, 2),
-			"%Y": y,
+			"%y": ("" + year).substr(2, 2),
+			"%Y": year,
 			"%%": "%"
 		};
 		return str.replace(reg, function (t: any) {
 			return data.hasOwnProperty(t) ? data[t] : t;
 		});
+	}
+
+	static parseDate(str: string, n: any, date_now?: SHDate) {
+		//str, n, date_now?
+		var year: any,
+			month: any,
+			day: any,
+			hours: number,
+			minute: number,
+			second: number,
+			time: any,
+			u: any,
+			d: any,
+			f: any,
+			y: any;
+		if (!/\S/.test(str)) return "";
+		str = str.replace(/^\s+/, "").replace(/\s+$/, "");
+		if (!date_now) date_now = new SHDate();
+		year = null;
+		month = null;
+		day = null;
+		hours = null; //hours
+		minute = null; //minute
+		second = null; //second
+		time = str.match(/([0-9]{1,2}):([0-9]{1,2})(:[0-9]{1,2})?\s*(am|pm)?/i);
+		if (time) {
+			hours = parseInt(time[1], 10);
+			minute = parseInt(time[2], 10);
+			second = time[3] ? parseInt(time[3].substr(1), 10) : 0;
+			str =
+				str.substring(0, time.index) + str.substr(time.index + time[0].length);
+			if (time[4]) {
+				time[4].toLowerCase() == "pm" && 12 > hours
+					? (hours += 12)
+					: time[4].toLowerCase() != "am" || 12 > hours || (hours -= 12);
+			}
+		}
+		u = (() => {
+			const charAt = () => {
+				return str.charAt(l);
+			};
+			const charAtNext = () => {
+				return str.charAt(l++);
+			};
+			const s = (t: any) => {
+				for (; charAt() && is_unicode_letter(charAt()); ) t += charAtNext();
+				return t;
+			};
+			const i = () => {
+				for (var t = ""; charAt() && /[0-9]/.test(charAt()); )
+					t += charAtNext();
+				return is_unicode_letter(charAt()) ? s(t) : parseInt(t, 10);
+			};
+			const push = (t: any) => {
+				c.push(t);
+			};
+			var o,
+				l,
+				c = [],
+				is_unicode_letter = (arg) => SHCalendar.isUnicodeLetter(arg);
+			for (l = 0; l < str.length; ) {
+				o = charAt();
+				is_unicode_letter(o)
+					? push(s(""))
+					: /[0-9]/.test(o)
+					? push(i())
+					: charAtNext();
+			}
+			return c;
+		})();
+
+		d = [];
+		for (f = 0; f < u.length; ++f) {
+			y = u[f];
+			/^[0-9]{4}$/.test(y)
+				? ((year = parseInt(y, 10)),
+				  null == month && null == day && null == n && (n = true))
+				: /^[0-9]{1,2}$/.test(y)
+				? ((y = parseInt(y, 10)),
+				  60 > y
+						? 0 > y || y > 12
+							? 1 > y || y > 31 || (day = y)
+							: d.push(y)
+						: (year = y))
+				: null == month && (month = this.kcmonth(y));
+		}
+
+		d.length < 2
+			? d.length == 1 &&
+			  (null == day ? (day = d.shift()) : null == month && (month = d.shift()))
+			: n
+			? (null == month && (month = d.shift()), null == day && (day = d.shift()))
+			: (null == day && (day = d.shift()),
+			  null == month && (month = d.shift()));
+		if (null == year) year = d.length > 0 ? d.shift() : date_now.getFullYear();
+		if (30 > year) year += 2e3;
+		else if (99 > year) year += 1900;
+		if (null == month) month = date_now.getMonth() + 1;
+		if (null != year && null != month && null != day)
+			return new SHDate(year, month - 1, day, hours, minute, second);
+		return null;
+	}
+
+	kcmonth(t: any) {
+		//keyCodeMonth I
+		const e = (e) => {
+			for (var n = e.length; --n >= 0; )
+				if (e[n].toLowerCase().indexOf(t) == 0) return n + 1;
+		};
+		return /\S/.test(t)
+			? ((t = t.toLowerCase()),
+			  e(this.getLanguage("smn")) || e(this.getLanguage("mn")))
+			: void 0;
+	}
+
+	static isUnicodeLetter(str: any) {
+		return str.toUpperCase() != str.toLowerCase();
 	}
 
 	getLanguage(name: string, lang: string = this.#lang): any {
@@ -1400,7 +1528,7 @@ export default class SHCalendar {
 
 	Menu() {
 		//i()
-		var k, month, shortMN;
+		var col: number, month: number, month_short_name: string;
 		var template: string[] = [];
 		template.push(
 			"<table height='100%'",
@@ -1418,15 +1546,15 @@ export default class SHCalendar {
 			" align='center' cellspacing='0' cellpadding='0'",
 			">"
 		);
-		shortMN = this.getLanguage("smn");
-		for (month = 0; 12 > month; ) {
+		month_short_name = this.getLanguage("smn");
+		for (month = 0; 12 > month; month++) {
 			template.push("<tr>");
-			for (k = 5; --k > 0; )
+			for (col = 5 - 1; col > 0; col--)
 				template.push(
 					"<td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='m" +
 						month.toString() +
 						"' class='SHCalendar-menu-month'>" +
-						shortMN[month++] +
+						month_short_name[month] +
 						"</div></td>"
 				);
 			template.push("</tr>");
@@ -1448,8 +1576,8 @@ export default class SHCalendar {
 				this.getLanguage("wk"),
 				"</div></td>"
 			);
-		for (var a = 0; 7 > a; a++) {
-			day = (a + this.fdow) % 7;
+		for (var col = 0; 7 > col; col++) {
+			day = (col + this.fdow) % 7;
 			template.push(
 				"<td><div",
 				weekend.indexOf(day) < 0 ? ">" : " class='SHCalendar-weekend'>",
@@ -1619,159 +1747,140 @@ export default class SHCalendar {
 		this.callHooks("onSelect", this, sel);
 	}
 
-	popupForField(trigger: any, field: any, dateFormat: any) {
-		var s: any, i: any, r: any, o: any;
-		field = this.getElementById(field);
-		trigger = this.getElementById(trigger);
-		this.input_field = field;
-		this.dateFormat = dateFormat;
+	popupForField(trigger: string, field: string, date_format: string) {
+		var date: any, i: any, r: any, el_field: any, el_trigger: any;
+		el_field = this.getElementById(field);
+		el_trigger = this.getElementById(trigger);
+		this.input_field = el_field;
+		this.dateFormat = date_format;
 		if (this.selection.type == SelectionType.SINGLE) {
-			s = /input|textarea/i.test(field.tagName)
-				? field.value
-				: field.innerText || field.textContent;
-			if (s) {
-				(i = /(^|[^%])%[bBmo]/.exec(dateFormat)),
-					(r = /(^|[^%])%[de]/.exec(dateFormat));
-				if (i && r) (o = i.index < r.index), (s = SHCalendar.parseDate(s, o));
-				if (s) {
-					this.selection.set(s, false, true);
+			date = /input|textarea/i.test(el_field.tagName)
+				? el_field.value
+				: el_field.innerText || el_field.textContent;
+			if (date) {
+				(i = /(^|[^%])%[bBmo]/.exec(date_format)),
+					(r = /(^|[^%])%[de]/.exec(date_format));
+				if (i && r) {
+					date = SHCalendar.parseDate(date, i.index < r.index);
+				}
+				if (date) {
+					this.selection.set(date, false, true);
 					if (this.args.showTime) {
-						this.setHours(s.getHours()), this.setMinutes(s.getMinutes());
+						this.setHours(date.getHours()), this.setMinutes(date.getMinutes());
 					}
-					this.moveTo(s);
+					this.moveTo(date);
 				}
 			}
 		}
-		this.popup(trigger);
+		this.popup(el_trigger);
 	}
 
-	manageFields(trigger: any, field: any, dateFormat: any) {
-		field = this.getElementById(field);
-		trigger = this.getElementById(trigger);
-		if (/^button$/i.test(trigger.tagName))
-			trigger.setAttribute("type", "button");
-		this.addEvent(trigger, "click", (s: any) => {
-			this.popupForField(trigger, field, dateFormat);
-			return this.stopEvent(s);
+	manageFields(trigger: string, field: string, date_format: string) {
+		var el_trigger: any, el_field: any;
+		el_field = this.getElementById(field);
+		el_trigger = this.getElementById(trigger);
+		if (/^button$/i.test(el_trigger.tagName))
+			el_trigger.setAttribute("type", "button");
+		this.addEvent(el_trigger, "click", (event: any) => {
+			this.popupForField(el_trigger, el_field, date_format);
+			return this.stopEvent(event);
 		});
-	}
-
-	static parseDate(e: any, n: any, a?: any) {
-		var s: any,
-			i: any,
-			r: any,
-			o: any,
-			l: any,
-			c: any,
-			h: any,
-			u: any,
-			d: any,
-			f: any,
-			y: any;
-		if (!/\S/.test(e)) return "";
-		(e = e.replace(/^\s+/, "").replace(/\s+$/, "")),
-			(a = a || new SHDate()),
-			(s = null),
-			(i = null),
-			(r = null),
-			(o = null),
-			(l = null),
-			(c = null),
-			(h = e.match(/([0-9]{1,2}):([0-9]{1,2})(:[0-9]{1,2})?\s*(am|pm)?/i)),
-			h &&
-				((o = parseInt(h[1], 10)),
-				(l = parseInt(h[2], 10)),
-				(c = h[3] ? parseInt(h[3].substr(1), 10) : 0),
-				(e = e.substring(0, h.index) + e.substr(h.index + h[0].length)),
-				h[4] &&
-					(h[4].toLowerCase() == "pm" && 12 > o
-						? (o += 12)
-						: h[4].toLowerCase() != "am" || 12 > o || (o -= 12)));
 	}
 
 	popup(trigger: any, align?: any) {
 		const alignment = (align: any) => {
-			var pos: any = { x: l.x, y: l.y };
+			var pos: any = { x: offset.x, y: offset.y };
 			if (align) {
 				// vertical alignment
-				if (/B/.test(align)) pos.y += trigger.offsetHeight;
-				if (/b/.test(align)) pos.y += trigger.offsetHeight - tcpos.y;
-				if (/T/.test(align)) pos.y -= tcpos.y;
-				if (/m/i.test(align)) pos.y += (trigger.offsetHeight - tcpos.y) / 2;
+				if (/B/.test(align)) pos.y += el_trigger.offsetHeight;
+				if (/b/.test(align))
+					pos.y += el_trigger.offsetHeight - top_cont_offset.y;
+				if (/T/.test(align)) pos.y -= top_cont_offset.y;
+				if (/m/i.test(align))
+					pos.y += (el_trigger.offsetHeight - top_cont_offset.y) / 2;
 				// horizontal alignment
-				if (/l/.test(align)) pos.x -= tcpos.x - trigger.offsetWidth;
-				if (/L/.test(align)) pos.x -= tcpos.x;
-				if (/R/.test(align)) pos.x += trigger.offsetWidth;
-				if (/c/i.test(align)) pos.x += (trigger.offsetWidth - tcpos.x) / 2;
+				if (/l/.test(align))
+					pos.x -= top_cont_offset.x - el_trigger.offsetWidth;
+				if (/L/.test(align)) pos.x -= top_cont_offset.x;
+				if (/R/.test(align)) pos.x += el_trigger.offsetWidth;
+				if (/c/i.test(align))
+					pos.x += (el_trigger.offsetWidth - top_cont_offset.x) / 2;
 				return pos;
 			} else return pos;
 		};
-		var tcpos: any,
-			postrigger: any,
-			topCont: any,
-			tcstyle: any,
-			poscrol: any,
-			l: any;
+		var top_cont_offset: any,
+			trigger_offset: any,
+			top_cont: any,
+			top_cont_style: any,
+			position_mouse: any,
+			offset: any,
+			el_trigger: any;
 		this.showAt(0, 0);
-		topCont = this.els.topCont;
-		tcstyle = topCont.style;
-		tcstyle.visibility = "hidden";
-		tcstyle.display = "";
-		document.body.appendChild(topCont);
-		tcpos = {
-			x: topCont.offsetWidth,
-			y: topCont.offsetHeight
+		top_cont = this.els.topCont;
+		top_cont_style = top_cont.style;
+		top_cont_style.visibility = "hidden";
+		top_cont_style.display = "";
+		document.body.appendChild(top_cont);
+		top_cont_offset = {
+			x: top_cont.offsetWidth,
+			y: top_cont.offsetHeight
 		};
-		trigger = this.getElementById(trigger);
-		postrigger = this.getAbsolutePos(trigger);
-		l = postrigger;
+		el_trigger = this.getElementById(trigger);
+		trigger_offset = this.getAbsolutePos(el_trigger);
+		offset = trigger_offset;
 		if (!align) align = this.args.align;
-		(align = align.split(/\x2f/)),
-			(l = alignment(align[0])),
-			(poscrol = this.posScrol());
-		if (l.y < poscrol.y) {
-			(l.y = postrigger.y), (l = alignment(align[1]));
+		align = align.split(/\x2f/);
+		offset = alignment(align[0]);
+		position_mouse = this.positionMouse();
+		if (offset.y < position_mouse.y) {
+			offset.y = trigger_offset.y;
+			offset = alignment(align[1]);
 		}
-		if (l.x + tcpos.x > poscrol.x + poscrol.w) {
-			(l.x = postrigger.x), (l = alignment(align[2]));
+		if (offset.x + top_cont_offset.x > position_mouse.x + position_mouse.w) {
+			offset.x = trigger_offset.x;
+			offset = alignment(align[2]);
 		}
-		if (l.y + tcpos.y > poscrol.y + poscrol.h) {
-			(l.y = postrigger.y), (l = alignment(align[3]));
+		if (offset.y + top_cont_offset.y > position_mouse.y + position_mouse.h) {
+			offset.y = trigger_offset.y;
+			offset = alignment(align[3]);
 		}
-		if (l.x < poscrol.x) {
-			(l.x = postrigger.x), (l = alignment(align[4]));
+		if (offset.x < position_mouse.x) {
+			offset.x = trigger_offset.x;
+			offset = alignment(align[4]);
 		}
-		this.showAt(l.x, l.y, true), (tcstyle.visibility = ""), this.focus();
+		this.showAt(offset.x, offset.y, true);
+		top_cont_style.visibility = "";
+		this.focus();
 	}
 
 	showAt(lpos: any, tpos: any, banim?: any) {
 		if (this._showAnim) this._showAnim.stop();
 		banim = banim && this.args.animation;
-		var topCont = this.els.topCont,
-			firstChild = this.els.body.firstChild,
-			offsetHeight = firstChild.offsetHeight,
-			tcstyle = topCont.style,
-			tis = this;
-		tcstyle.position = "absolute";
-		tcstyle.left = lpos + "px";
-		tcstyle.top = tpos + "px";
-		tcstyle.zIndex = 1e4;
-		tcstyle.display = "";
+		var top_cont = this.els.topCont,
+			first_child = this.els.body.firstChild,
+			offsetHeight = first_child.offsetHeight,
+			top_cont_style = top_cont.style;
+		top_cont_style.position = "absolute";
+		top_cont_style.left = lpos + "px";
+		top_cont_style.top = tpos + "px";
+		top_cont_style.zIndex = 1e4;
+		top_cont_style.display = "";
 		if (banim) {
-			firstChild.style.marginTop = -offsetHeight + "px";
-			if (this.args.opacity > 1)
-				this.setOpacity(topCont, 0),
-					(this._showAnim = this.Animation({
-						onUpdate: function (t: any, e: any) {
-							(firstChild.style.marginTop =
-								-e(this.#math_animation.accel_b(t), offsetHeight, 0) + "px"),
-								tis.args.opacity > 1 && this.setOpacity(topCont, t);
-						},
-						onStop: function () {
-							tis.args.opacity > 1 && this.setOpacity(topCont, ""),
-								(tis._showAnim = null);
-						}
-					}));
+			first_child.style.marginTop = -offsetHeight + "px";
+			if (this.args.opacity > 1) {
+				this.setOpacity(top_cont, 0);
+				this._showAnim = this.Animation({
+					onUpdate: function (t: any, e: any) {
+						first_child.style.marginTop =
+							-e(this.#math_animation.accel_b(t), offsetHeight, 0) + "px";
+						if (this.args.opacity > 1) this.setOpacity(top_cont, t);
+					},
+					onStop: function () {
+						if (this.args.opacity > 1) this.setOpacity(top_cont, "");
+						this._showAnim = null;
+					}
+				});
+			}
 		}
 	}
 
@@ -1823,21 +1932,27 @@ export default class SHCalendar {
 
 	dragIt(event: any) {
 		// p
-		event = event || window.event;
 		var style = this.els.topCont.style,
 			pos = this.position(event, this._mouseDiff);
-		(style.left = pos.x + "px"), (style.top = pos.y + "px");
+		style.left = pos.x + "px";
+		style.top = pos.y + "px";
 	}
 
-	posScrol() {
+	positionMouse() {
 		//X
-		var docel = document.documentElement,
-			docbody = document.body;
+		var document_element = document.documentElement,
+			document_body = document.body;
 		return {
-			x: docel.scrollLeft || docbody.scrollLeft,
-			y: docel.scrollTop || docbody.scrollTop,
-			w: docel.clientWidth || window.innerWidth || docbody.clientWidth,
-			h: docel.clientHeight || window.innerHeight || docbody.clientHeight
+			x: document_element.scrollLeft || document_body.scrollLeft,
+			y: document_element.scrollTop || document_body.scrollTop,
+			w:
+				document_element.clientWidth ||
+				window.innerWidth ||
+				document_body.clientWidth,
+			h:
+				document_element.clientHeight ||
+				window.innerHeight ||
+				document_body.clientHeight
 		};
 	}
 }

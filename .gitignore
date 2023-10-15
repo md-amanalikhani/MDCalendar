@@ -5,6 +5,7 @@ dist/
 src/css/
 src/js/
 src/browser
+.gitex
 
 # Logs
 logs

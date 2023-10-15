@@ -2,7 +2,7 @@
 export default class en_US {
 	//extend SHDateLanguage_en_US {
 	static NAME: string = "English";
-	static IS_RTL: boolean = true;
+	static IS_RTL: boolean = false;
 
 	static FIRST_DAY_OF_WEEK: number = 0; // first day of week for this locale; 0 = Satarday, 1 = Sunday, etc.
 
@@ -15,11 +15,10 @@ export default class en_US {
 	static WEEKEND: number | number[] = 6; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
 
 	static AM: string = "am"; //MERIDIEN_SHORT_NAMES
-
 	static PM: string = "pm"; //MERIDIEN_SHORT_NAMES
+	static MERIDIEN_SHORT_NAMES: string[] = ["AM", "PM"];
 
-	static MONTH_NAME: string[] = [
-		//MONTH_FULL_NAMES
+	static MONTH_FULL_NAMES: string[] = [
 		"Farvardin",
 		"Ordibehesht",
 		"Khordad",
@@ -34,8 +33,7 @@ export default class en_US {
 		"Esfand"
 	];
 
-	static SHORT_MONTH_NAME: string[] = [
-		//MONTH_SHORT_NAMES
+	static MONTH_SHORT_NAMES: string[] = [
 		"Far",
 		"Ord",
 		"Kho",
@@ -50,8 +48,7 @@ export default class en_US {
 		"Esf"
 	];
 
-	static DAY_NAME: string[] = [
-		//DAY_FULL_NAMES
+	static DAY_FULL_NAMES: string[] = [
 		"Saturday",
 		"Sunday",
 		"Monday",
@@ -61,8 +58,7 @@ export default class en_US {
 		"Friday"
 	];
 
-	static SHORT_DAY_NAME: string[] = [
-		//DAY_SHORT_NAMES
+	static DAY_SHORT_NAMES: string[] = [
 		"Sat",
 		"Sun",
 		"Mon",

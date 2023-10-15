@@ -13,10 +13,14 @@ export default class fa_IR {
 	static WEEKEND: number | number[] = 6; // 0 = Sunday, 1 = Monday, etc.
 
 	static AM: string = "am";
+	static AM_LONG: string = "بعد از ظهر";
+	static AM_SHORT: string = "ب‍.ظ";
 
 	static PM: string = "pm";
+	static PM_LONG: string = "قبل از ظهر";
+	static PM_SHORT: string = "ق‍.ظ";
 
-	static MONTH_NAME: string[] = [
+	static MONTH_FULL_NAMES: string[] = [
 		"January",
 		"February",
 		"March",
@@ -31,7 +35,7 @@ export default class fa_IR {
 		"December"
 	];
 
-	static SHORT_MONTH_NAME: string[] = [
+	static MONTH_SHORT_NAMES: string[] = [
 		"Jan",
 		"Feb",
 		"Mar",
@@ -46,7 +50,7 @@ export default class fa_IR {
 		"Dec"
 	];
 
-	static DAY_NAME: string[] = [
+	static DAY_FULL_NAMES: string[] = [
 		"Sunday",
 		"Monday",
 		"Tuesday",
@@ -57,7 +61,7 @@ export default class fa_IR {
 		"Sunday"
 	];
 
-	static SHORT_DAY_NAME: string[] = [
+	static DAY_SHORT_NAMES: string[] = [
 		"Su",
 		"Mo",
 		"Tu",

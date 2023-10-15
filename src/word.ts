@@ -141,7 +141,7 @@ export default class Word {
 	 */
 	static getMonthName(language_word = Word.LANGUAGE_WORD): string[] {
 		const cls = Word.getClassLanguage(language_word);
-		return cls.MONTH_NAME;
+		return cls.MONTH_FULL_NAMES;
 	}
 
 	/**
@@ -152,7 +152,7 @@ export default class Word {
 	 */
 	static getShortMonthName(language_word = Word.LANGUAGE_WORD): string[] {
 		const cls = Word.getClassLanguage(language_word);
-		return cls.SHORT_MONTH_NAME;
+		return cls.MONTH_SHORT_NAMES;
 	}
 
 	/**
@@ -163,7 +163,7 @@ export default class Word {
 	 */
 	static getDayName(language_word = Word.LANGUAGE_WORD): string[] {
 		const cls = Word.getClassLanguage(language_word);
-		return cls.DAY_NAME;
+		return cls.DAY_FULL_NAMES;
 	}
 
 	/**
@@ -174,6 +174,6 @@ export default class Word {
 	 */
 	static getshortDayName(language_word = Word.LANGUAGE_WORD): string[] {
 		const cls = Word.getClassLanguage(language_word);
-		return cls.SHORT_DAY_NAME;
+		return cls.DAY_SHORT_NAMES;
 	}
 }
