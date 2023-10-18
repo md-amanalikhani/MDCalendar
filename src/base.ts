@@ -9,7 +9,7 @@
  */
 import Word from "./word.js";
 import Selection, { SelectionType } from "./selection.js";
-import SHDate from "@md-akhi/shdatetime";
+import SHDate from "shdate";
 
 export default class SHCalendar {
 	static version: string = "1.0.0";
