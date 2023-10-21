@@ -2,8 +2,11 @@
   "name": "shcalendar",
   "version": "1.0.0",
   "description": "The Calendar Related Extensions - SH (Solar Hijri, Shamsi Hijri, Iranian Hijri)",
-  "unpkg": "https://unpkg.com/hcalendar@latest/dist/shcalendar.min.js",
-  "jsdrive": "https://cdn.jsdelivr.net/npm/shcalendar@latest/dist/shcalendar.min.js",
+  "keywords": [
+    "calendar",
+    "date",
+    "time"
+  ],
   "scripts": {
     "start": "npm run dev",
     "dev": "nodemon --exec \"npm run build\"",
@@ -15,22 +18,29 @@
     "prepare": "husky install"
   },
   "homepage": "https://github.com/md-akhi/SHCalendar-js#readme",
+  "main": "./dist/cjs/base.js",
+  "module": "./dist/mjs/base.js",
+  "types": "./dist/types/base.d.ts",
+  "browser": "./dist/browser/shcalendar.min.js",
+  "npmjs": "https://www.npmjs.com/package/shcalendar",
+  "unpkg": "https://unpkg.com/shcalendar@latest/dist/shcalendar.min.js",
+  "jsdrive": "https://cdn.jsdelivr.net/npm/shcalendar@latest/dist/shcalendar.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/md-akhi/SHCalendar-js.git"
   },
-  "keywords": [
-    "calendar",
-    "date",
-    "time"
-  ],
-  "author": "Mohammad Amanalikhani <md.akhi.ir@gmail.com>",
-  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/md-akhi/SHCalendar-js/issues"
   },
+  "author": "Mohammad Amanalikhani <md.akhi.ir@gmail.com>",
+  "license": "AGPL-3.0",
   "exports": {
-    "type": "./dist/types/base.d.ts"
+    ".": {
+      "browser": "./dist/browser/shcalendar.min.js",
+      "require": "./dist/cjs/base.js",
+      "import": "./dist/mjs/base.js",
+      "types": "./dist/types/base.d.ts"
+    }
   },
   "typesVersions": {
     "*": {
@@ -46,6 +56,7 @@
     "dist": "./dist",
     "src": "./src",
     "tests": "./tests",
+    "man": "./docs",
     "docs": "./docs"
   },
   "files": [
@@ -59,6 +70,13 @@
     "./docs/**/*.md"
   ],
   "devDependencies": {
+    "@babel/core": "^7.22.19",
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/gulp": "^4.0.13",
+    "@types/gulp-babel": "^6.1.30",
+    "@types/gulp-header": "^2.0.2",
+    "@types/gulp-rename": "^2.0.2",
+    "@types/gulp-uglify": "^3.0.8",
     "@babel/preset-env": "^7.16.11",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.1.0",
