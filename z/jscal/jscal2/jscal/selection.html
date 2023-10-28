@@ -1,0 +1,501 @@
+<!DOCTYPE html PUBLIC
+          "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Calendar — Selection object</title>
+
+<link rel="stylesheet" href="jscal/src/css/jscal2_2.css" media="all" />
+<link rel="stylesheet" href="jscal/src/css/gold/gold_2.css" media="all" />
+<link rel="stylesheet" href="jscal/src/css/border-radius_2.css" media="all" />
+
+<script src="jscal/src/js/jscal2_2.js"></script>
+<script src="jscal/src/js/lang/en_2.js"></script>
+
+<style type="text/css">
+  body {
+    background-color: #ffe;
+  }
+  .highlight { color: #f00 !important; font-weight: bold }
+  .highlight2 { color: #090 !important; font-weight: bold }
+  .birthday { background: #fff; font-weight: bold }
+  .birthday.DynarchCalendar-day-selected { background: #89f; font-weight: bold }
+</style>
+
+</head>
+
+<body>
+
+<div class="gsf-page-content">
+<div class="contents">
+<dl>
+<dt>
+<a href="selection.html#sec1">Basics</a>
+</dt>
+<dd>
+<dl>
+<dt>
+<a href="selection.html#sec2">Single selection mode</a>
+</dt>
+<dt>
+<a href="selection.html#sec3">Multiple selection mode</a>
+</dt>
+<dt>
+<a href="selection.html#sec4">Normalization</a>
+</dt>
+</dl>
+</dd>
+<dt>
+<a href="selection.html#sec5">Methods</a>
+</dt>
+<dd>
+<dl>
+<dt>
+<a href="selection.html#sec6">get()</a>
+</dt>
+<dt>
+<a href="selection.html#sec7">set(arg, toggle)</a>
+</dt>
+<dt>
+<a href="selection.html#sec8">reset(arg, toggle)</a>
+</dt>
+<dt>
+<a href="selection.html#sec9">isEmpty()</a>
+</dt>
+<dt>
+<a href="selection.html#sec10">countDays()</a>
+</dt>
+<dt>
+<a href="selection.html#sec11">unselect(date)</a>
+</dt>
+<dt>
+<a href="selection.html#sec12">normalize()</a>
+</dt>
+<dt>
+<a href="selection.html#sec13">clear(nohooks)</a>
+</dt>
+<dt>
+<a href="selection.html#sec14">selectRange(start_date, end_date)</a>
+</dt>
+<dt>
+<a href="selection.html#sec15">getFirstDate()</a>
+</dt>
+<dt>
+<a href="selection.html#sec16">getLastDate()</a>
+</dt>
+<dt>
+<a href="selection.html#sec17">print(format, separator)</a>
+</dt>
+<dt>
+<a href="selection.html#sec18">getDates()</a>
+</dt>
+</dl>
+</dd>
+</dl>
+</div>
+
+
+<h2><a name="sec1" id="sec1"></a>
+<a name="basics" id="basics"></a>Basics</h2>
+
+<p class="first">Each calendar has a <code>selection</code> object which is automatically created when the
+calendar is constructed.</p>
+
+<h3><a name="sec2" id="sec2"></a>
+Single selection mode</h3>
+
+<p class="first">In single selection mode (<code>Calendar.SEL_SINGLE</code>, which is the default), you
+can use <code>selection.set(date_as_number)</code> and <code>selection.get()</code> in order to
+set/retrieve the selection:
+
+
+<div id="sample1"></div>
+<script>
+var cal1 = Calendar.setup({ cont: "sample1", date: 20090501 });
+cal1.selection.set(20090507);
+</script></p>
+
+
+<pre class="src">
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">cal1</span> = Calendar.setup({ <span style="color: #b8860b;">cont</span>: <span style="color: #bc8f8f;">"sample1"</span>, <span style="color: #b8860b;">date</span>: 20090501 });
+cal1.selection.set(20090507);
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">date</span> = cal1.selection.get();
+<span style="color: #b22222;">// now date === 20090507
+</span></pre>
+
+<p>The above code creates a calendar and selects May 5, 2009 (the date when I'm
+writing this).  As you can notice, the selection actually works with integer
+numbers, rather than dates.  This was a design decision that allowed us to
+improve speed and simplify code for various operations.  The calendar
+provides two utility functions to convert between Date object and numeric
+representation: <strong>Calendar.dateToInt</strong> and <strong>Calendar.intToDate</strong>.  Example usage:</p>
+
+<pre class="src">
+<span style="color: #b22222;">// remember that the months start from zero in the JS Date object
+</span><span style="color: #a020f0;">var</span> <span style="color: #b8860b;">date</span> = <span style="color: #a020f0;">new</span> Date(2009, 4, 7);
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">as_number</span> = Calendar.dateToInt(date); <span style="color: #b22222;">// 20090507
+</span><span style="color: #a020f0;">var</span> <span style="color: #b8860b;">as_date</span> = Calendar.intToDate(as_number);
+<span style="color: #b22222;">// now date and as_date are both 5 May 2009
+</span></pre>
+
+<p>When there is no date selection, <code>selection.get()</code> returns null.</p>
+
+
+<h3><a name="sec3" id="sec3"></a>
+Multiple selection mode</h3>
+
+<p class="first">In <code>Calendar.SEL_MULTIPLE</code> mode, multiple dates (or date ranges) can be
+selected.  A date range consists of two or more consecutive dates.  In
+“multiple mode”, the <strong>set()</strong> method receives an array that contains dates
+or date ranges and the <strong>get()</strong> method returns such an array.  Example:
+
+
+<div id="sample2"></div>
+<script>
+var cal2 = Calendar.setup({
+    cont          : "sample2",
+    selectionType : Calendar.SEL_MULTIPLE,
+    date          : 20090501
+});
+cal2.selection.set([
+    20090507,
+    [ 20090512, 20090516 ],
+    20090521,
+    [ 20090527, 20090529 ]
+]);
+</script></p>
+
+
+<p>(gosh, we've built an airplane!).  The above is created with the following code:</p>
+
+<pre class="src">
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">cal2</span> = Calendar.setup({
+    <span style="color: #b8860b;">cont</span>          : <span style="color: #bc8f8f;">"sample2"</span>,
+    <span style="color: #b8860b;">selectionType</span> : Calendar.SEL_MULTIPLE,
+    <span style="color: #b8860b;">date</span>          : 20090501
+});
+cal2.selection.set([
+    20090507,               <span style="color: #b22222;">// a single date
+</span>    [ 20090512, 20090516 ], <span style="color: #b22222;">// a date range (May 12..16)
+</span>    20090521,
+    [ 20090527, 20090529 ]
+]);
+</pre>
+
+<p><a name="init-selection" id="init-selection"></a>
+As a shortcut, when you need to set an initial selection you can also pass
+it as the <code>selection</code> constructor argument, like this:</p>
+
+<pre class="src">
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">cal2</span> = Calendar.setup({
+    <span style="color: #b8860b;">cont</span>          : <span style="color: #bc8f8f;">"sample2"</span>,
+    <span style="color: #b8860b;">selectionType</span> : Calendar.SEL_MULTIPLE,
+    <span style="color: #b8860b;">date</span>          : 20090501,
+    <span style="color: #b8860b;">selection</span>     : [
+        [ 20090527, 20090529 ],
+        20090507,
+        [ 20090512, 20090516 ],
+        20090521
+    ]
+});
+</pre>
+
+<p>As you can see, the selection is now an array whose elements can be dates
+(in numeric repesentation) or date ranges.  A date range is an array of two
+elements where the first one represents the start date, and the second one
+the end date.</p>
+
+<p>When there is no date selection and in <code>SEL_MULTIPLE</code> mode, <code>selection.get()</code>
+returns an empty array.</p>
+
+
+<h3><a name="sec4" id="sec4"></a>
+Normalization</h3>
+
+<p class="first">Here is an example to point out an interesting thing (note you need to use
+Firefox in order to run it, because we use the <code>toSource()</code> Object method to
+display the result).  Click the “show selection” link in order to see what
+<code>selection.get()</code> actually returns.
+
+
+<table align="center"><tr><td>
+<div id="sample3"></div>
+<script>
+var cal3 = Calendar.setup({
+    cont          : "sample3",
+    date          : 20090501,
+    selectionType : Calendar.SEL_MULTIPLE
+});
+cal3.selection.set([
+    20090504,
+    20090505,
+    20090506,
+    20090507,
+    20090508,
+    [ 20090509, 20090514 ]
+]);
+function cal3_showSelection() {
+    alert(cal3.selection.get().toSource());
+};
+</script>
+</td></tr>
+<tr><td align="center">
+<a href="javascript:cal3_showSelection()">show selection</a>
+</td></tr></table></p>
+
+
+<p>Here is the JS code we used:</p>
+
+<pre class="src">
+<span style="color: #a020f0;">var</span> <span style="color: #b8860b;">cal3</span> = Calendar.setup({
+    <span style="color: #b8860b;">cont</span>          : <span style="color: #bc8f8f;">"sample3"</span>,
+    <span style="color: #b8860b;">date</span>          : 20090501,
+    <span style="color: #b8860b;">selectionType</span> : Calendar.SEL_MULTIPLE
+});
+cal3.selection.set([
+    20090504,
+    20090505,
+    20090506,
+    20090507,
+    20090508,
+    [ 20090509, 20090514 ]
+]);
+<span style="color: #a020f0;">function</span> <span style="color: #0000ff;">cal3_showSelection</span>() {
+    alert(cal3.selection.get().toSource());
+};
+</pre>
+
+<p>Note that although we explicitly select 5 days and a range, the selection
+object realizes that the selected days are actually <em>consecutive</em>, so the
+returned array only contains one date range which tells us that all dates
+between and including 4 May and 14 May 2009 are selected.  You can
+experiment on it—select more dates, or unselect some (use CTRL+click or
+SHIFT+click), then click “show selection” again to see what it returns.</p>
+
+<p>If you want to get all the individual dates, you can use
+<code>selection.getDates()</code>, example below:
+
+
+<table align="center"><tr><td>
+<div id="sample4"></div>
+<script>
+var cal4 = Calendar.setup({
+    cont          : "sample4",
+    date          : 20090501,
+    selectionType : Calendar.SEL_MULTIPLE
+});
+cal4.selection.set([
+    20090504,
+    20090505,
+    20090506,
+    20090507,
+    20090508,
+    [ 20090509, 20090514 ]
+]);
+function cal4_showSelection() {
+    alert(cal4.selection.getDates().toSource());
+};
+</script>
+</td></tr>
+<tr><td align="center">
+<a href="javascript:cal4_showSelection()">show selection</a>
+</td></tr></table></p>
+
+
+<p>The only modified part is what we used to display the selection:</p>
+
+<pre class="src">
+<span style="color: #a020f0;">function</span> <span style="color: #0000ff;">cal4_showSelection</span>() {
+    alert(cal4.selection.getDates().toSource());
+};
+</pre>
+
+<p><code>selection.getDates()</code> returns an array of JavaScript <code>Date</code> objects properly
+instantiated to each selected date in the calendar.  Don't try this if you
+select a huge range.</p>
+
+
+
+<h2><a name="sec5" id="sec5"></a>
+Methods</h2>
+
+<p class="first">The selection object has the following methods:</p>
+
+<h3><a name="sec6" id="sec6"></a>
+get()</h3>
+
+<p class="first">Exemplified above, get returns a numeric date in <code>SEL_SINGLE</code> mode, and an
+array of dates or date ranges in <code>SEL_MULTIPLE</code> mode.</p>
+
+
+<h3><a name="sec7" id="sec7"></a>
+set(arg, toggle)</h3>
+
+<p class="first">Changes the current selection.  <strong>arg</strong> can be an array or a date (in numeric form).</p>
+
+<ul>
+<li>If you pass an array, the whole selection is replaced with that array and
+the calendar's <a href="index.html#onSelect">onSelect</a> hooks are called.</li>
+
+<li>If you pass a single number, then the calendar checks to see if that date
+is selected:
+
+<blockquote>
+<p class="quoted">a) if it's already selected and you passed <strong>true</strong> for <strong>toggle</strong>, then the
+date becomes unselected and the calendar's <code>onSelect</code> hooks are
+called; if <strong>toggle</strong> was <strong>false</strong> or not passed, nothing happens.</p>
+</blockquote>
+
+<blockquote>
+<p class="quoted">b) if the date isn't already selected then it becomes selected and the
+calendar's <code>onSelect</code> hooks are called.</p>
+</blockquote></li>
+</ul>
+
+
+<h3><a name="sec8" id="sec8"></a>
+reset(arg, toggle)</h3>
+
+<p class="first">Like set() but clears the selection first.  Here's a sample to show the
+difference:</p>
+
+<pre class="src">
+cal.selection.set(20090501);
+cal.selection.set(20090502);
+cal.selection.set(20090503);
+<span style="color: #b22222;">// cal.selection.get() would now return a range: [ [ 20090501, 20090503 ] ]
+</span>
+cal.selection.reset(20090501);
+cal.selection.reset(20090502);
+cal.selection.reset(20090503);
+<span style="color: #b22222;">// cal.selection.get() now returns 20090503
+</span></pre>
+
+
+<h3><a name="sec9" id="sec9"></a>
+isEmpty()</h3>
+
+<p class="first">Returns <strong>true</strong> if there is no date selected, <strong>false</strong> otherwise.</p>
+
+
+<h3><a name="sec10" id="sec10"></a>
+countDays()</h3>
+
+<p class="first">Returns the number of days selected (counts the dates inside ranges too).</p>
+
+
+<h3><a name="sec11" id="sec11"></a>
+unselect(date)</h3>
+
+<p class="first">Removes the specified date from selection.  This method breaks ranges if
+needed.  For example:</p>
+
+<pre class="src">
+<span style="color: #b22222;">// select all dates from May 1 to May 10 2009
+</span>cal.selection.set([ [ 20090501, 20090510 ] ]);
+
+<span style="color: #b22222;">// now unselect May 5
+</span>cal.selection.unselect(20090505);
+
+<span style="color: #b22222;">// cal.selection.get() would now return the following:
+// [ [ 20090501, 20090504 ], [ 20090506, 20090510 ] ]
+</span></pre>
+
+
+<h3><a name="sec12" id="sec12"></a>
+normalize()</h3>
+
+<p class="first">“Normalizes” the selection array, that is: it sorts it by date (or start
+date in case of ranges), create ranges from consecutive days, join
+consecutive ranges etc.  After calling this method, <code>selection.get()</code> should
+return a minimal array that contains the selected dates or ranges.</p>
+
+<p>You shouldn't need to call this directly.</p>
+
+
+<h3><a name="sec13" id="sec13"></a>
+clear(nohooks)</h3>
+
+<p class="first">Empties the selection.  The <strong>nohooks</strong> argument is optional (default <strong>false</strong>)—if
+you pass <strong>true</strong> then the selection object won't trigger the calendar's
+<code>onSelect</code> hooks.</p>
+
+
+<h3><a name="sec14" id="sec14"></a>
+selectRange(start_date, end_date)</h3>
+
+<p class="first">Adds the <code>[ start_date, end_date ]</code> range to the selection and calls the
+<code>onSelect</code> hooks.</p>
+
+
+<h3><a name="sec15" id="sec15"></a>
+getFirstDate()</h3>
+
+<p class="first">Returns the first selected date in chronological order.</p>
+
+
+<h3><a name="sec16" id="sec16"></a>
+getLastDate()</h3>
+
+<p class="first">Returns the last selected date.</p>
+
+
+<h3><a name="sec17" id="sec17"></a>
+print(format, separator)</h3>
+
+<p class="first">Returns an array that describes the current selection with dates formatted
+according to <strong>format</strong> and range dates joined with <strong>separator</strong> (default &quot; -&gt; &quot;).
+Example:
+
+
+<table align="center"><tr><td>
+<div id="sample5"></div>
+<script>
+var cal5 = new Calendar({
+    cont          : "sample5",
+    selectionType : Calendar.SEL_MULTIPLE
+});
+function cal5_printSelection() {
+    var sel = cal5.selection.print("%Y-%m-%d", " ... ");
+    if (sel.length == 0)
+        sel = "No date selected";
+    else
+        sel = sel.join("\n");
+    alert(sel);
+};
+</script>
+</td></tr>
+<tr><td align="center">
+<a href="javascript:cal5_printSelection()">print selection</a>
+</td></tr></table></p>
+
+
+<p>Select some dates in the calendar above and click “print selection”.  Here
+is the code that displays the selection:</p>
+
+<pre class="src">
+<span style="color: #a020f0;">function</span> <span style="color: #0000ff;">cal5_printSelection</span>() {
+    <span style="color: #a020f0;">var</span> <span style="color: #b8860b;">sel</span> = cal5.selection.print(<span style="color: #bc8f8f;">"%Y-%m-%d"</span>, <span style="color: #bc8f8f;">" ... "</span>);
+    <span style="color: #a020f0;">if</span> (sel.length == 0)
+        sel = <span style="color: #bc8f8f;">"No date selected"</span>;
+    <span style="color: #a020f0;">else</span>
+        sel = sel.join(<span style="color: #bc8f8f;">"\n"</span>);
+    alert(sel);
+};
+</pre>
+
+
+<h3><a name="sec18" id="sec18"></a>
+getDates()</h3>
+
+<p class="first">Returns an array of JavaScript Date objects, one for each selected date.
+This is a flat array (i.e. ranges are “exploded” and all selected dates are
+returned).  This is useful for the case where you're not interested to deal
+with ranges.</p>
+
+
+
+</div>
+
+</body>
+</html>

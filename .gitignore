@@ -1,6 +1,5 @@
 node_modules/
 package-lock.json
-z/
 dist/
 src/css/
 src/js/
