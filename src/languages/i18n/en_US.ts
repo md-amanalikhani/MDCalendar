@@ -6,7 +6,7 @@
 /**
  * class SHDate Language English
  */
-import SHDateLanguage_en_US from "shdate/i18n/en_US";
+import SHDateLanguage_en_US from "shdate/lang/en_US";
 export default class en_US extends SHDateLanguage_en_US {
 	//extend SHDateLanguage_en_US {
 	public static LANGUAGE = "en_US"; //English	en

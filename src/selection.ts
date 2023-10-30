@@ -6,8 +6,8 @@
  * @license https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
  */
 //import SHCalendar from "./index.js";
-import SHDate from "@md-akhi/shdatetime";
-import SHCalendar from "./index.js";
+import SHDate from "shdate";
+import SHCalendar from "./base.js";
 
 enum SelectionType {
 	NONE = 0,

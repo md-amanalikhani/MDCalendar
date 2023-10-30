@@ -2,11 +2,7 @@
   "name": "shcalendar",
   "version": "1.0.0",
   "description": "The Calendar Related Extensions - SH (Solar Hijri, Shamsi Hijri, Iranian Hijri)",
-  "keywords": [
-    "calendar",
-    "date",
-    "time"
-  ],
+  "keywords": ["calendar", "date", "time"],
   "scripts": {
     "start": "npm run dev",
     "dev": "nodemon --exec \"npm run build\"",
@@ -44,12 +40,8 @@
   },
   "typesVersions": {
     "*": {
-      ".": [
-        "dist/types/base.d.ts"
-      ],
-      "./*": [
-        "./dist/types/languages/i18n/*.d.js"
-      ]
+      ".": ["dist/types/base.d.ts"],
+      "./*": ["./dist/types/languages/i18n/*.d.js"]
     }
   },
   "directories": {
@@ -59,16 +51,8 @@
     "man": "./docs",
     "docs": "./docs"
   },
-  "files": [
-    "LICENSE",
-    "README.md",
-    "CHANGELOG.md",
-    "docs",
-    "dist"
-  ],
-  "man": [
-    "./docs/**/*.md"
-  ],
+  "files": ["LICENSE", "README.md", "CHANGELOG.md", "docs", "dist"],
+  "man": ["./docs/**/*.md"],
   "devDependencies": {
     "@babel/core": "^7.22.19",
     "@tsconfig/recommended": "^1.0.2",
@@ -113,17 +97,10 @@
     }
   },
   "lint-staged": {
-    "*.{js}": [
-      "prettier --write",
-      "eslint --fix",
-      "git add"
-    ],
-    "*": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{js}": ["prettier --write", "eslint --fix", "git add"],
+    "*": ["prettier --write", "git add"]
   },
   "dependencies": {
-    "shdate": "^2.1.22"
+    "shdate": "^2.1.25"
   }
 }

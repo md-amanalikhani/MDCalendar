@@ -1269,7 +1269,7 @@ export default class SHCalendar {
 		tooltip && (tooltip.innerHTML = template);
 	}
 
-	printDate(date: SHDate = this.date, str: string) {
+	printDate(date: SHDate = this.date, str: string): any {
 		//S()
 		var month = date.getMonth(),
 			day = date.getDate(),
