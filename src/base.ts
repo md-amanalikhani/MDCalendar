@@ -12,7 +12,7 @@ import Selection, { SelectionType } from "./selection.js";
 import SHDate from "shdate";
 
 export default class SHCalendar {
-	static version: string = "1.0.0";
+	static VERSION: string = "1.0.0";
 	static IS_OPERA = /opera/i.test(navigator.userAgent);
 	static IS_KHTML = /Konqueror|Safari|KHTML/i.test(navigator.userAgent);
 	static IS_IE =
@@ -158,9 +158,9 @@ export default class SHCalendar {
 	_focusEvents: any;
 	_selRangeStart: any;
 	_mouseDiff: any;
-	_firstDateVisible: number | false = false;
-	_lastDateVisible: number | false = false;
-	_lastHoverDate: number | false = false;
+	_firstDateVisible: any = false;
+	_lastDateVisible: any = false;
+	_lastHoverDate: any = false;
 	_showAnim: any;
 	dateFormat: any;
 	input_field: any;
@@ -954,8 +954,8 @@ export default class SHCalendar {
 		var a: any,
 			datedif: any,
 			args: any,
-			min: number | false = false,
-			max: number | false = false,
+			min: any = false,
+			max: any = false,
 			body: HTMLElement,
 			el: HTMLElement,
 			firstChild: any,
@@ -1129,16 +1129,12 @@ export default class SHCalendar {
 		return el.style.display != "none";
 	}
 
-	removeClass(
-		el: HTMLElement | false,
-		old_class?: string | false,
-		new_class?: string | false
-	) {
+	removeClass(el: HTMLElement | false, old_class: any, new_class: any = 0) {
 		// Y
+		var temp_cls: any = [];
 		if (el) {
 			var i: number,
-				cls: string[] = el.className.replace(/^\s+|\s+$/, " ").split(/\x20/),
-				temp_cls = [];
+				cls: any[] = el.className.replace(/^\s+|\s+$/, " ").split(/\x20/);
 			for (i = cls.length - 1; i > 0; i--)
 				if (cls[i] != old_class) temp_cls.push(cls[i]);
 			if (new_class) temp_cls.push(new_class);
@@ -1269,7 +1265,7 @@ export default class SHCalendar {
 		tooltip && (tooltip.innerHTML = template);
 	}
 
-	printDate(date: SHDate = this.date, str: string): any {
+	printDate(date: SHDate = this.date, str: any): any {
 		//S()
 		var month = date.getMonth(),
 			day = date.getDate(),
@@ -1324,9 +1320,9 @@ export default class SHCalendar {
 		var year: any,
 			month: any,
 			day: any,
-			hours: number,
-			minute: number,
-			second: number,
+			hours: number = 0,
+			minute: number = 0,
+			second: number = 0,
 			time: any,
 			u: any,
 			d: any,
@@ -1335,12 +1331,6 @@ export default class SHCalendar {
 		if (!/\S/.test(str)) return "";
 		str = str.replace(/^\s+/, "").replace(/\s+$/, "");
 		if (!date_now) date_now = new SHDate();
-		year = null;
-		month = null;
-		day = null;
-		hours = null; //hours
-		minute = null; //minute
-		second = null; //second
 		time = str.match(/([0-9]{1,2}):([0-9]{1,2})(:[0-9]{1,2})?\s*(am|pm)?/i);
 		if (time) {
 			hours = parseInt(time[1], 10);
@@ -1370,7 +1360,7 @@ export default class SHCalendar {
 					t += charAtNext();
 				return is_unicode_letter(charAt()) ? s(t) : parseInt(t, 10);
 			};
-			const push = (t: any) => {
+			const push = (t) => {
 				c.push(t);
 			};
 			var o,
@@ -1729,7 +1719,7 @@ export default class SHCalendar {
 	}
 
 	getVersion() {
-		return SHCalendar.version;
+		return SHCalendar.VERSION;
 	}
 
 	inputField() {

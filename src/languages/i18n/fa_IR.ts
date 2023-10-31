@@ -6,8 +6,8 @@
 /**
  * class SHDate Language Persian
  */
-import SHDateLanguage_fa_IR from "shdate/lang/fa_IR";
-export default class fa_IR extends SHDateLanguage_fa_IR {
+// import SHDateLanguage_fa_IR from "shdate/lang/fa_IR";
+export default class fa_IR {
 	public static LANGUAGE: string = "fa_IR"; //Persion	fa
 	public static IS_RTL: boolean = true;
 

@@ -297,9 +297,9 @@ export default class Selection {
 		return str;
 	}
 
-	getDates(str?: any) {
+	getDates(str: any) {
 		var date: SHDate,
-			sel: any,
+			sel: any[] | any,
 			string = [];
 		for (var i = 0; i < this.sel.length; i++) {
 			sel = this.sel[i];
