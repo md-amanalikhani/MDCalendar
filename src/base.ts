@@ -1360,7 +1360,7 @@ export default class SHCalendar {
 					t += charAtNext();
 				return is_unicode_letter(charAt()) ? s(t) : parseInt(t, 10);
 			};
-			const push = (t) => {
+			const push = (t: any) => {
 				c.push(t);
 			};
 			var o,

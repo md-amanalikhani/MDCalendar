@@ -271,7 +271,7 @@ export default class Selection {
 	print(format: string, separator: string) {
 		//format, separator)
 		var sel: any,
-			str = [],
+			str: any[] = [],
 			hours: number = this.cal.getHours(),
 			minutes: number = this.cal.getMinutes();
 		if (!separator) separator = " -> ";
@@ -297,10 +297,10 @@ export default class Selection {
 		return str;
 	}
 
-	getDates(str: any) {
+	getDates(str: any = "") {
 		var date: SHDate,
 			sel: any[] | any,
-			string = [];
+			string: any[] = [];
 		for (var i = 0; i < this.sel.length; i++) {
 			sel = this.sel[i];
 			if (sel instanceof Array) {
