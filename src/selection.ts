@@ -223,7 +223,7 @@ export default class Selection {
 					[[date_start, date_end]],
 					SHCalendar.SEL_MULTIPLE,
 					this.cal
-				).getDates(),
+				).getDates(false),
 				(date: SHDate | number) => {
 					if (this.cal.isDisabled(date))
 						throw (
@@ -299,8 +299,8 @@ export default class Selection {
 
 	getDates(str: any = "") {
 		var date: SHDate,
-			sel: any[] | any,
-			string: any[] = [];
+			sel: any,
+			string: any = [];
 		for (var i = 0; i < this.sel.length; i++) {
 			sel = this.sel[i];
 			if (sel instanceof Array) {

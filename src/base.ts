@@ -145,7 +145,7 @@ export default class SHCalendar {
 	};
 	args: any;
 	handlers: any = {};
-	date: SHDate;
+	date: SHDate = new SHDate();
 	time: any;
 	fdow: number;
 	selection: any;
@@ -168,39 +168,29 @@ export default class SHCalendar {
 	static kcmonth: any;
 
 	constructor(args: any = SHCalendar.defaultArgs) {
-		var date: SHDate = new SHDate();
-		this.args = args = this.setArgs(args, SHCalendar.defaultArgs);
-		this.handlers = {};
-		this.args.min = this.setDate(args.min);
-		this.args.max = this.setDate(args.max);
-		this.date = new SHDate();
-		if (args.time === true)
+		this.args = this.mergeData(args, SHCalendar.defaultArgs);
+		this.args.min = this.setDate(this.args.min);
+		this.args.max = this.setDate(this.args.max);
+		if (this.args.time === true)
 			this.time =
-				date.getHours() * 100 +
-				Math.floor(date.getMinutes() / args.minuteStep) * args.minuteStep;
-		this.fdow = args.fdow;
-		this.setFunction(
-			"onChange onSelect onTimeChange onFocus onBlur onClose".split(/\s+/),
-			(evname: string) => {
-				const evn = args[evname];
-				this.handlers[evname] = evn instanceof Array ? evn : [evn];
-			}
+				this.date.getHours() * 100 +
+				Math.floor(this.date.getMinutes() / this.args.minuteStep) *
+					this.args.minuteStep;
+		this.fdow = this.args.fdow;
+		this.setHandler();
+		this.selection = new Selection(
+			this.args.selection,
+			this.args.selectionType,
+			this
 		);
-		this.selection = new Selection(args.selection, args.selectionType, this);
 
 		this.init();
-		//args.trigger && this.manageFields(args.trigger,args.inputField, args.dateFormat),//popup
+		//this.args.trigger && this.manageFields(this.args.trigger,this.args.inputField, this.args.dateFormat),//popup
 	}
 
-	setArgs(args: any, defaultArgs: any): any {
+	mergeData(data: any, defaults: any): any {
 		//E()
-		return { ...defaultArgs, ...args };
-		// let arg,
-		// 	newArgs = {};
-		// for (arg in SHCalendar.defaultArgs)
-		// 	if (SHCalendar.defaultArgs.hasOwnProperty(arg))
-		// 		newArgs[arg] = args[arg] || SHCalendar.defaultArgs[arg];
-		// return newArgs;
+		return { ...defaults, ...data };
 	}
 
 	getElementById(el: HTMLElement | string): HTMLElement {
@@ -225,9 +215,15 @@ export default class SHCalendar {
 		return date;
 	}
 
-	setFunction(event: string[], callback: Function) {
+	setHandler() {
 		//q()
-		for (const key in event) callback(event[key]);
+		const event = "onChange onSelect onTimeChange onFocus onBlur onClose".split(
+			/\s+/
+		);
+		for (const key in event) {
+			const evn: any = event[key];
+			this.handlers[key] = evn instanceof Array ? evn : [evn];
+		}
 	}
 
 	init(): HTMLElement {
@@ -839,15 +835,7 @@ export default class SHCalendar {
 		date %= 1e4;
 		month = Math.floor(date / 100);
 		date %= 100; //day
-		return new SHDate(
-			year,
-			month - 1,
-			date,
-			null == hours ? 12 : hours,
-			null == minute ? 0 : minute,
-			null == second ? 0 : second,
-			null == milliSecond ? 0 : milliSecond
-		);
+		return new SHDate(year, month - 1, date, null == hours ? 12 : hours);
 	}
 
 	static dateToInt(date: number | string | SHDate): number {
@@ -892,7 +880,7 @@ export default class SHCalendar {
 	Animation(args: any, e?: any, n?: any) {
 		//animation
 
-		args = this.setArgs(args, {
+		args = this.mergeData(args, {
 			fps: 50,
 			len: 15,
 			onUpdate: Function(),
@@ -1363,10 +1351,10 @@ export default class SHCalendar {
 			const push = (t: any) => {
 				c.push(t);
 			};
-			var o,
-				l,
-				c = [],
-				is_unicode_letter = (arg) => SHCalendar.isUnicodeLetter(arg);
+			var o: any,
+				l: any,
+				c: any = [],
+				is_unicode_letter = (arg: any) => SHCalendar.isUnicodeLetter(arg);
 			for (l = 0; l < str.length; ) {
 				o = charAt();
 				is_unicode_letter(o)
@@ -1412,7 +1400,7 @@ export default class SHCalendar {
 
 	kcmonth(t: any) {
 		//keyCodeMonth I
-		const e = (e) => {
+		const e = (e: any) => {
 			for (var n = e.length; --n >= 0; )
 				if (e[n].toLowerCase().indexOf(t) == 0) return n + 1;
 		};
