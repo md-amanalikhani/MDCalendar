@@ -9,13 +9,12 @@
 import SHDate from "shdate";
 import SHCalendar from "./base.js";
 
-enum SelectionType {
+export enum SelectionType {
 	NONE = 0,
 	SINGLE = 1,
 	MULTIPLE = 2,
 	WEEK = 3
 }
-export { SelectionType };
 
 export default class Selection {
 	type: any;

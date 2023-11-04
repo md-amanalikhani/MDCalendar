@@ -90,7 +90,12 @@ function cleanCompile(cb) {
  */
 function concatBrowserTS() {
 	return gulp
-		.src(["./src/languages/**/*.ts", "src/*.ts"])
+		.src([
+			"./src/languages/**/*.ts",
+			"src/selection.ts",
+			"src/word.ts",
+			"src/base.ts"
+		])
 		.pipe(concat("shcalendar.ts"))
 		.pipe(replace(/export (default)?/g, ""))
 		.pipe(replace(/import [a-zA-Z_,{ }]* from [0-9a-zA-Z_\/\.\"]*;/g, ""))
@@ -101,6 +106,7 @@ function concatBrowserTS() {
 			)
 		)
 		.pipe(replace(/ ([a-z]{2,3}_[A-Z]{2})(\.)?/g, " SHCalendarLanguage_$1$2"))
+		.pipe(banner('import SHDate from "shdate";'))
 		.pipe(gulp.dest("src/browser"));
 }
 function compileBrowser(cb) {
@@ -112,11 +118,14 @@ function compileBrowser(cb) {
 	});
 }
 function cleanBrowserTS(cb) {
-	return del(["src/browser", "dist/browser/*.d.ts"], cb);
+	return del(["src/browser"], cb);
 }
 function compressBrowserJS() {
 	return gulp
-		.src(["./node_modules/shdate/dist/browser/shdate.js", "dist/shcalendar.js"])
+		.src([
+			// "./node_modules/shdate/dist/browser/shdate.js",
+			"dist/shcalendar.js"
+		])
 		.pipe(concat("shcalendar.js"))
 		.pipe(gulp.dest("dist"))
 		.src("dist/shcalendar.js", { sourcemaps: true })

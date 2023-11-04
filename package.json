@@ -43,9 +43,10 @@
       "browser": "./dist/browser/shcalendar.min.js"
     }
   },
+  "module": "commonjs",
   "typesVersions": {
     "*": {
-      ".": ["dist/types/base.d.ts"]
+      "*": ["./src/*"]
     }
   },
   "directories": {
