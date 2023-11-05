@@ -42,7 +42,7 @@ function replaceDocBlockInfo() {
 		.src(["src/**/*.ts"])
 		.pipe(
 			replace(
-				/\* @(package( [\w\/\-\,\{\}@]+)+)/g,
+				/\* @(package( [\w\/\-\,\{\}@\(\)]+)+)/g,
 				`* @package ${pkg.name} - ${pkg.description}`
 			)
 		)
@@ -89,25 +89,27 @@ function cleanCompile(cb) {
  * combine all .ts files into one
  */
 function concatBrowserTS() {
-	return gulp
-		.src([
-			"./src/languages/**/*.ts",
-			"src/selection.ts",
-			"src/word.ts",
-			"src/base.ts"
-		])
-		.pipe(concat("shcalendar.ts"))
-		.pipe(replace(/export (default)?/g, ""))
-		.pipe(replace(/import [a-zA-Z_,{ }]* from [0-9a-zA-Z_\/\.\"]*;/g, ""))
-		.pipe(
-			replace(
-				/(Languages?|Word|SelectionType|Selection)(\.)?/g,
-				"SHCalendar$1$2"
+	return (
+		gulp
+			.src([
+				"./src/languages/**/*.ts",
+				"src/selection.ts",
+				"src/word.ts",
+				"src/base.ts"
+			])
+			.pipe(concat("shcalendar.ts"))
+			.pipe(replace(/export (default)?/g, ""))
+			.pipe(replace(/import [a-zA-Z_,{ }]* from [0-9a-zA-Z_\/\.\"]*;/g, ""))
+			.pipe(
+				replace(
+					/(Languages?|Word|SelectionType|Selection)(\.)?/g,
+					"SHCalendar$1$2"
+				)
 			)
-		)
-		.pipe(replace(/ ([a-z]{2,3}_[A-Z]{2})(\.)?/g, " SHCalendarLanguage_$1$2"))
-		.pipe(banner('import SHDate from "shdate";'))
-		.pipe(gulp.dest("src/browser"));
+			.pipe(replace(/ ([a-z]{2,3}_[A-Z]{2})(\.)?/g, " SHCalendarLanguage_$1$2"))
+			// .pipe(banner('import SHDate from "shdate";'))
+			.pipe(gulp.dest("src/browser"))
+	);
 }
 function compileBrowser(cb) {
 	//"tsc:browser"
@@ -121,19 +123,22 @@ function cleanBrowserTS(cb) {
 	return del(["src/browser"], cb);
 }
 function compressBrowserJS() {
-	return gulp
-		.src(["node_modules/shdate/dist/browser/shdate.js", "dist/shcalendar.js"], {
-			sourcemaps: true
-		})
-		.pipe(concat("shcalendar.js"))
-		.pipe(babel({ presets: ["@babel/env"] }))
-		.pipe(banner(INFO_DOCBLOCK_LONG))
-		.pipe(gulp.dest("dist"))
-		.pipe(babel({ presets: ["@babel/env"] }))
-		.pipe(uglify())
-		.pipe(rename({ extname: ".min.js" }))
-		.pipe(banner(INFO_DOCBLOCK_SHORT))
-		.pipe(gulp.dest("./dist", { sourcemaps: "." }));
+	return (
+		gulp
+			.src("dist/shcalendar.js", {
+				sourcemaps: true
+			})
+			// .pipe(concat("shcalendar.js"))
+			// .pipe(gulp.dest("dist/v"))
+			.pipe(babel({ presets: ["@babel/env"] }))
+			.pipe(banner(INFO_DOCBLOCK_LONG))
+			.pipe(gulp.dest("dist"))
+			.pipe(babel({ presets: ["@babel/env"] }))
+			.pipe(uglify())
+			.pipe(rename({ extname: ".min.js" }))
+			.pipe(banner(INFO_DOCBLOCK_SHORT))
+			.pipe(gulp.dest("./dist", { sourcemaps: "." }))
+	);
 }
 
 /**

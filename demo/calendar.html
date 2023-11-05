@@ -1,8 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
-		<link rel="stylesheet" type="text/css" href="../src/css/jscal2.css" />
-		<link
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>test browser</title>
+		<!-- <link rel="stylesheet" type="text/css" href="../src/css/jscal2.css" /> -->
+		<!-- <link
 			rel="stylesheet"
 			type="text/css"
 			href="../src/css/reduce-spacing.css"
@@ -12,25 +16,36 @@
 			type="text/css"
 			href="../src/css/border-radius.css"
 		/>
-		<link rel="stylesheet" type="text/css" href="../src/css/gold/gold.css" />
-		<!-- <script type="module" src="./sh.js"></script> -->
-		<!-- <script type="text/javascript" src="../dist/lang/en.js"></script> -->
+		<link rel="stylesheet" type="text/css" href="../src/css/gold/gold.css" /> -->
 	</head>
-	<body style="background: rgba(53, 53, 53, 0.9)">
+	<body>
 		<!-- element that will contain the calendar -->
 		<div id="SHContainer"></div>
 
 		<!-- here we will display selection information -->
 		<div id="calendar-info" style="text-align: center; margin-top: 0.3em"></div>
 
+		<!-- <script type="module" src="./sh.js"></script> -->
+		<!-- <script type="text/javascript" src="../dist/lang/en.js"></script> -->
+
+		<script
+			type="text/javascript"
+			src="../node_modules/shdate/dist/browser/shdate.js"
+		></script>
 		<script type="text/javascript" src="../dist/shcalendar.js"></script>
-		<script type="text/javascript">
+
+		<script>
+			var shdate = new SHDate();
+			document.body.innerHTML = shdate.toDateString();
+			console.log(shdate.toDateString());
+
 			new SHCalendar({
 				cont: "SHContainer",
-				weekNumbers: true,
-				animation: false,
+				date: shdate
+				// weekNumbers: true,
+				// animation: false,
 				//selectionType: SHContainer.SEL_MULTIPLE,
-				showTime: 12
+				// showTime: 12
 				//titleFormat: "%B %Y"
 			});
 		</script>
