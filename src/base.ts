@@ -1,10 +1,10 @@
 /**
  * In the name of Allah, the Beneficent, the Merciful.
- * @package The Calendar Related Extensions - SH (Solar Hijri, Shamsi Hijri, Iranian Hijri)
+ * @package shcalendar - The Calendar Related Extensions - SH (Solar Hijri, Shamsi Hijri, Iranian Hijri) (Solar Hijri, Shamsi Hijri, Iranian Hijri) (Solar Hijri, Shamsi Hijri, Iranian Hijri)
  * @author   Mohammad Amanalikhani
  * @link    http://docs.akhi.ir/js/SHCalendar
  * @copyright   Copyright (C) 2015 - 2022 . All right reserved.
- * @license https://www.gnu.org/licenses/agpl-3.0.en.html AGPL-3.0 License
+ * @license AGPL-3.0 License
  * @version Release: 1.0.0
  */
 import Word from "./word.js";

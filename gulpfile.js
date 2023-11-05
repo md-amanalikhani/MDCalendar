@@ -122,13 +122,10 @@ function cleanBrowserTS(cb) {
 }
 function compressBrowserJS() {
 	return gulp
-		.src([
-			// "./node_modules/shdate/dist/browser/shdate.js",
-			"dist/shcalendar.js"
-		])
+		.src(["node_modules/shdate/dist/browser/shdate.js", "dist/shcalendar.js"], {
+			sourcemaps: true
+		})
 		.pipe(concat("shcalendar.js"))
-		.pipe(gulp.dest("dist"))
-		.src("dist/shcalendar.js", { sourcemaps: true })
 		.pipe(babel({ presets: ["@babel/env"] }))
 		.pipe(banner(INFO_DOCBLOCK_LONG))
 		.pipe(gulp.dest("dist"))

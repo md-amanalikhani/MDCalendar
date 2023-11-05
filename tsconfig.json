@@ -3,7 +3,7 @@
     "strict": true,
     "moduleResolution": "node10",
     "module": "umd",
-    "outDir": "dist/browser",
+    "outDir": "dist",
     "target": "es6",
     "lib": ["dom", "es6"],
     "esModuleInterop": false,
