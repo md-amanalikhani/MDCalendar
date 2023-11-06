@@ -83,7 +83,13 @@ function replaceDocBlockInfo() {
 }
 
 function cleanCompile(cb) {
-	return del(["dist", "src/browser"], cb);
+	return del(
+		[
+			"dist"
+			// , "src/browser"
+		],
+		cb
+	);
 }
 /**
  * combine all .ts files into one
@@ -92,9 +98,9 @@ function concatBrowserTS() {
 	return (
 		gulp
 			.src([
-				"./src/languages/**/*.ts",
-				"src/selection.ts",
-				"src/word.ts",
+				// "./src/languages/**/*.ts",
+				// "src/selection.ts",
+				// "src/word.ts",
 				"src/base.ts"
 			])
 			.pipe(concat("shcalendar.ts"))
@@ -151,7 +157,7 @@ exports.default = gulp.task(
 		concatBrowserTS,
 		compileBrowser,
 		compressBrowserJS,
-		cleanBrowserTS,
+		// cleanBrowserTS,
 		replaceDocBlockInfo
 	)
 );

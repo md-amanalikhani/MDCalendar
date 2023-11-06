@@ -1,4 +1,4 @@
-import SHCalendar from "../src/index.js";
+import SHCalendar from "../src/base.js";
 
 let cal = new SHCalendar();
 

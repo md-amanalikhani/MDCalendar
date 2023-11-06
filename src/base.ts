@@ -7,125 +7,125 @@
  * @license AGPL-3.0 License
  * @version Release: 1.0.0
  */
-import Word from "./word.js";
-import Selection, { SelectionType } from "./selection.js";
+// import Word from "./word.js";
+// import Selection, { SelectionType } from "./selection.js";
 import SHDate from "shdate";
 
 export default class SHCalendar {
 	static VERSION: string = "1.0.0";
-	static IS_OPERA = /opera/i.test(navigator.userAgent);
-	static IS_KHTML = /Konqueror|Safari|KHTML/i.test(navigator.userAgent);
-	static IS_IE =
-		/msie/i.test(navigator.userAgent) &&
-		!SHCalendar.IS_OPERA &&
-		!/mac_powerpc/i.test(navigator.userAgent);
-	static IS_IE6 = SHCalendar.IS_IE && /msie 6/i.test(navigator.userAgent);
-	static IS_GECKO =
-		/gecko/i.test(navigator.userAgent) &&
-		!SHCalendar.IS_KHTML &&
-		!SHCalendar.IS_OPERA &&
-		!SHCalendar.IS_IE;
+	// static IS_OPERA = /opera/i.test(navigator.userAgent);
+	// static IS_KHTML = /Konqueror|Safari|KHTML/i.test(navigator.userAgent);
+	// static IS_IE =
+	// 	/msie/i.test(navigator.userAgent) &&
+	// 	!SHCalendar.IS_OPERA &&
+	// 	!/mac_powerpc/i.test(navigator.userAgent);
+	// static IS_IE6 = SHCalendar.IS_IE && /msie 6/i.test(navigator.userAgent);
+	// static IS_GECKO =
+	// 	/gecko/i.test(navigator.userAgent) &&
+	// 	!SHCalendar.IS_KHTML &&
+	// 	!SHCalendar.IS_OPERA &&
+	// 	!SHCalendar.IS_IE;
 
-	#table_config: any = " align='center' cellspacing='0' cellpadding='0'"; //Q
+	// #table_config: any = " align='center' cellspacing='0' cellpadding='0'"; //Q
 
-	#top_class: any = {
-		//Z
-		"SHCalendar-topCont": "topCont",
-		"SHCalendar-focusLink": "focusLink",
-		SHCalendar: "main",
-		"SHCalendar-topBar": "topBar",
-		"SHCalendar-title": "title",
-		"SHCalendar-dayNames": "dayNames",
-		"SHCalendar-body": "body",
-		"SHCalendar-menu": "menu",
-		"SHCalendar-menu-year": "yearInput",
-		"SHCalendar-bottomBar": "bottomBar",
-		"SHCalendar-tooltip": "tooltip",
-		"SHCalendar-time-hour": "timeHour",
-		"SHCalendar-time-minute": "timeMinute",
-		"SHCalendar-time-am": "timeAM",
-		"SHCalendar-navBtn SHCalendar-prevYear": "navPrevYear",
-		"SHCalendar-navBtn SHCalendar-nextYear": "navNextYear",
-		"SHCalendar-navBtn SHCalendar-prevMonth": "navPrevMonth",
-		"SHCalendar-navBtn SHCalendar-nextMonth": "navNextMonth"
-	};
+	// #top_class: any = {
+	// 	//Z
+	// 	"SHCalendar-topCont": "topCont",
+	// 	"SHCalendar-focusLink": "focusLink",
+	// 	SHCalendar: "main",
+	// 	"SHCalendar-topBar": "topBar",
+	// 	"SHCalendar-title": "title",
+	// 	"SHCalendar-dayNames": "dayNames",
+	// 	"SHCalendar-body": "body",
+	// 	"SHCalendar-menu": "menu",
+	// 	"SHCalendar-menu-year": "yearInput",
+	// 	"SHCalendar-bottomBar": "bottomBar",
+	// 	"SHCalendar-tooltip": "tooltip",
+	// 	"SHCalendar-time-hour": "timeHour",
+	// 	"SHCalendar-time-minute": "timeMinute",
+	// 	"SHCalendar-time-am": "timeAM",
+	// 	"SHCalendar-navBtn SHCalendar-prevYear": "navPrevYear",
+	// 	"SHCalendar-navBtn SHCalendar-nextYear": "navNextYear",
+	// 	"SHCalendar-navBtn SHCalendar-prevMonth": "navPrevMonth",
+	// 	"SHCalendar-navBtn SHCalendar-nextMonth": "navNextMonth"
+	// };
 
-	#control_button: any = {
-		// te
-		"-3": "backYear",
-		"-2": "back",
-		0: "now",
-		2: "fwd",
-		3: "fwdYear"
-	};
+	// #control_button: any = {
+	// 	// te
+	// 	"-3": "backYear",
+	// 	"-2": "back",
+	// 	0: "now",
+	// 	2: "fwd",
+	// 	3: "fwdYear"
+	// };
 
-	#control_key: any = {
-		//ee
-		37: -1,
-		38: -2,
-		39: 1,
-		40: 2
-	};
+	// #control_key: any = {
+	// 	//ee
+	// 	37: -1,
+	// 	38: -2,
+	// 	39: 1,
+	// 	40: 2
+	// };
 
-	#ne: any = {
-		33: -1,
-		34: 1
-	};
+	// #ne: any = {
+	// 	33: -1,
+	// 	34: 1
+	// };
 
-	#math_animation = {
-		//ae
-		elastic_b: function (t: number) {
-			return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t);
-		},
-		magnetic: function (t: number) {
-			return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t);
-		},
-		accel_b: function (t: number) {
-			return (t = 1 - t), 1 - t * t * t * t;
-		},
-		accel_a: function (t: number) {
-			return t * t * t;
-		},
-		accel_ab: function (t: number) {
-			return (t = 1 - t), 1 - Math.sin((t * t * Math.PI) / 2);
-		},
-		accel_ab2: function (t: number) {
-			return (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1);
-		},
-		brakes: function (t: number) {
-			return (t = 1 - t), 1 - Math.sin(t * t * Math.PI);
-		},
-		shake: function (t: number) {
-			return 0.5 > t
-				? -Math.cos(11 * t * Math.PI) * t * t
-				: ((t = 1 - t), Math.cos(11 * t * Math.PI) * t * t);
-		}
-	};
+	// #math_animation = {
+	// 	//ae
+	// 	elastic_b: function (t: number) {
+	// 		return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t);
+	// 	},
+	// 	magnetic: function (t: number) {
+	// 		return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t);
+	// 	},
+	// 	accel_b: function (t: number) {
+	// 		return (t = 1 - t), 1 - t * t * t * t;
+	// 	},
+	// 	accel_a: function (t: number) {
+	// 		return t * t * t;
+	// 	},
+	// 	accel_ab: function (t: number) {
+	// 		return (t = 1 - t), 1 - Math.sin((t * t * Math.PI) / 2);
+	// 	},
+	// 	accel_ab2: function (t: number) {
+	// 		return (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1);
+	// 	},
+	// 	brakes: function (t: number) {
+	// 		return (t = 1 - t), 1 - Math.sin(t * t * Math.PI);
+	// 	},
+	// 	shake: function (t: number) {
+	// 		return 0.5 > t
+	// 			? -Math.cos(11 * t * Math.PI) * t * t
+	// 			: ((t = 1 - t), Math.cos(11 * t * Math.PI) * t * t);
+	// 	}
+	// };
 
-	static SEL_NONE: number = SelectionType.NONE;
-	static SEL_SINGLE: number = SelectionType.SINGLE;
-	static SEL_MULTIPLE: number = SelectionType.MULTIPLE;
-	static SEL_WEEK: number = SelectionType.WEEK;
+	// static SEL_NONE: number = SelectionType.NONE;
+	// static SEL_SINGLE: number = SelectionType.SINGLE;
+	// static SEL_MULTIPLE: number = SelectionType.MULTIPLE;
+	// static SEL_WEEK: number = SelectionType.WEEK;
 
 	static defaultArgs = {
 		cont: null,
 		bottomBar: true,
 		titleFormat: "%b %Y",
 		dateFormat: "%Y-%m-%d",
-		date: true,
+		// date:true,
 		weekNumbers: false,
 		time: true,
-		fdow: Word.getFirstDayOfWeek(),
+		// fdow: Word.getFirstDayOfWeek(),
 		min: null,
 		max: null,
 		showTime: false,
 		timePos: "right",
 		minuteStep: 5,
 		checkRange: false,
-		animation: !SHCalendar.IS_IE6,
-		opacity: SHCalendar.IS_IE ? 1 : 3,
+		// animation: !SHCalendar.IS_IE6,
+		// opacity: SHCalendar.IS_IE ? 1 : 3,
 		selection: [],
-		selectionType: SelectionType.MULTIPLE,
+		// selectionType: SelectionType.MULTIPLE,
 		inputField: null,
 		lang: "en_US",
 		trigger: null,
@@ -145,9 +145,9 @@ export default class SHCalendar {
 	};
 	args: any;
 	handlers: any = {};
-	date: SHDate = new SHDate();
+	// date: any;
 	time: any;
-	fdow: number;
+	// fdow: number;
 	selection: any;
 	els: any = {};
 	_bodyAnim: any;
@@ -167,24 +167,25 @@ export default class SHCalendar {
 	#lang: string = SHCalendar.defaultArgs.lang;
 	static kcmonth: any;
 
-	constructor(args: any = SHCalendar.defaultArgs) {
+	constructor(args: any = SHCalendar.defaultArgs, date: any = false) {
 		this.args = this.mergeData(args, SHCalendar.defaultArgs);
-		this.args.min = this.setDate(this.args.min);
-		this.args.max = this.setDate(this.args.max);
-		if (this.args.time === true)
-			this.time =
-				this.date.getHours() * 100 +
-				Math.floor(this.date.getMinutes() / this.args.minuteStep) *
-					this.args.minuteStep;
-		this.fdow = this.args.fdow;
-		this.setHandler();
-		this.selection = new Selection(
-			this.args.selection,
-			this.args.selectionType,
-			this
-		);
+		// this.date = date;
+		// this.args.min = this.setDate(this.args.min);
+		// this.args.max = this.setDate(this.args.max);
+		// if (this.args.time === true)
+		//  this.time =
+		//  	this.date.getHours() * 100 +
+		//  	Math.floor(this.date.getMinutes() / this.args.minuteStep) *
+		//  		this.args.minuteStep;
+		// this.fdow = this.args.fdow;
+		// this.setHandler();
+		// this.selection = new Selection(
+		// 	this.args.selection,
+		// 	this.args.selectionType,
+		// 	this
+		// );
 
-		this.init();
+		// this.init();
 		//this.args.trigger && this.manageFields(this.args.trigger,this.args.inputField, this.args.dateFormat),//popup
 	}
 
@@ -192,7 +193,7 @@ export default class SHCalendar {
 		//E()
 		return { ...defaults, ...data };
 	}
-
+	/*
 	getElementById(el: HTMLElement | string): HTMLElement {
 		if (typeof el == "string")
 			return document.getElementById(el) as HTMLElement;
@@ -205,12 +206,14 @@ export default class SHCalendar {
 		if (typeof date == "number") return SHCalendar.intToDate(date);
 		if (typeof date == "string") {
 			const [year, month, day] = date.split(/-/);
-			return new SHDate(
+			var cloneDate = this.date.clone();
+			cloneDate.setFullYear(
 				parseInt(year, 10),
 				parseInt(month, 10) - 1,
-				parseInt(day, 10),
-				12
+				parseInt(day, 10)
 			);
+			cloneDate.setHours(12);
+			return cloneDate.instance();
 		}
 		return date;
 	}
@@ -954,7 +957,7 @@ export default class SHCalendar {
 			boffsetHW: any,
 			cloneNode: any,
 			cnstyle: any;
-		/*  v, */
+		//   v,
 		date = this.setDate(date);
 		datedif = this.dateDiff(date, this.date, true);
 		args = this.args;
@@ -1258,7 +1261,7 @@ export default class SHCalendar {
 		var month = date.getMonth(),
 			day = date.getDate(),
 			year = date.getFullYear(),
-			woy = this.getWeekNumber(date)[0],
+			woy = this.getWeekNumber(date),
 			dow = date.getDay(),
 			hours = date.getHours(),
 			h12 = hours >= 12 ? hours - 12 : hours || 12,
@@ -1452,7 +1455,7 @@ export default class SHCalendar {
 	}
 
 	getWeekNumber(date: SHDate) {
-		return date.format("woy");
+		return date.format("Woy")[0][1];
 	}
 
 	getDayOfYear(date: SHDate) {
@@ -1588,12 +1591,15 @@ export default class SHCalendar {
 			is_disabled: boolean,
 			date_info: any;
 		weekend = weekend instanceof Array ? weekend : [weekend];
-		date = new SHDate(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+		var cloneDate = this.date.clone();
+		cloneDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+		cloneDate.setHours(12);
+		date = cloneDate.instance();
 		month_view = date.getMonth();
 		is_wk = this.args.weekNumbers;
 		date.setDate(1);
 		date.setDate(-date.getDay() + 1);
-		date_today = new SHDate();
+		date_today = cloneDate.setTime(Date.now());
 		year_today = date_today.getFullYear();
 		month_today = date_today.getMonth();
 		day_today = date_today.getDate();
@@ -1612,7 +1618,7 @@ export default class SHCalendar {
 			if (is_wk)
 				template.push(
 					"<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>" +
-						this.getWeekNumber(date)[0] +
+						this.getWeekNumber(date) +
 						"</div></td>"
 				);
 			for (vertical = 0; vertical < 7; vertical++, date.setDate(day + 1)) {
@@ -1933,4 +1939,5 @@ export default class SHCalendar {
 				document_body.clientHeight
 		};
 	}
+*/
 }
