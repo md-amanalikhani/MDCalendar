@@ -1,6 +1,6 @@
 /**
  * In the name of Allah, the Beneficent, the Merciful.
- * @package shcalendar - The Calendar Related Extensions SH{Solar Hijri, Shamsi Hijri, Iranian Hijri}
+ * @package shcalendar - The Calendar Related Extensions SH{Shamsi Hijri, Solar Hijri, Iranian Hijri}
  * @author   Mohammad Amanalikhani
  * @copyright   Copyright (C) 2015 - 2022 Open Source Matters,Inc. All right reserved.
  * @license AGPL-3.0 License

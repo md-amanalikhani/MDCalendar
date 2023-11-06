@@ -1,6 +1,6 @@
 /**
  * In the name of Allah, the Beneficent, the Merciful.
- * @package shcalendar - The Calendar Related Extensions SH{Solar Hijri, Shamsi Hijri, Iranian Hijri}
+ * @package shcalendar - The Calendar Related Extensions SH{Shamsi Hijri, Solar Hijri, Iranian Hijri}
  * @link http://git.akhi.ir/js/SHDate | https://github.com/md-akhi/SHCalendar-js#readme
  */
 /**
