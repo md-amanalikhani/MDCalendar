@@ -1,0 +1,59 @@
+.SHCalendar-focused {
+	background-color: #fff;
+}
+
+.SHCalendar-topBar {
+	background: url("brushed-steel.jpg") no-repeat 50% 0;
+}
+
+.SHCalendar-bottomBar {
+	background: url("brushed-steel.jpg") no-repeat 50% 50%;
+}
+
+.SHCalendar-hover-title,
+.SHCalendar-hover-navBtn,
+.SHCalendar-hover-bottomBar-today,
+.SHCalendar-menu table td div.SHCalendar-hover-navBtn {
+	background: #dde url("coolbg.png") repeat-x 0 50%;
+}
+.SHCalendar-hover-title div,
+.SHCalendar-hover-navBtn div {
+	background-color: transparent;
+}
+
+.SHCalendar-pressed-title,
+.SHCalendar-pressed-navBtn,
+.SHCalendar-pressed-bottomBar-today,
+.SHCalendar-menu table td div.SHCalendar-pressed-navBtn {
+	background: #445 url("coolbg.png") repeat-x 0 50%;
+}
+.SHCalendar-pressed-title div,
+.SHCalendar-pressed-navBtn div {
+	background-color: transparent;
+}
+
+.SHCalendar-hover-week,
+.SHCalendar-focused .SHCalendar-hover-week {
+	background: #ddd url("coolbg.png") repeat-x 0 50%;
+}
+
+.SHCalendar {
+	background: url("steel.jpg") no-repeat 50% 30px;
+}
+
+.SHCalendar-day-selected {
+	background-color: #1864fc;
+	color: #fff !important;
+	background-image: url("coolbg.png");
+	background-position: 0 50%;
+	background-repeat: repeat-x;
+}
+
+.SHCalendar-day-today.SHCalendar-day-selected {
+	background-color: #1864fc;
+	color: #fff !important;
+}
+
+.SHCalendar-focused .SHCalendar-body {
+	background: url("../shadow-b.png") repeat-x 0 0;
+}

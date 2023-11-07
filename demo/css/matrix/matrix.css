@@ -1,0 +1,149 @@
+.SHCalendar,
+.SHCalendar-focused {
+	background-color: #242;
+}
+.SHCalendar-focused {
+	border-color: #0f0;
+}
+
+.SHCalendar-topBar,
+.SHCalendar-bottomBar {
+	background-color: #242;
+	color: #0f0;
+	border-color: #080;
+}
+
+.SHCalendar-focused .SHCalendar-topBar,
+.SHCalendar-focused .SHCalendar-bottomBar {
+	background-color: #020;
+	color: #0f0;
+	border-color: #0f0;
+}
+
+.SHCalendar-title div {
+	color: #0f0;
+	text-shadow: 1px 1px 1px #fa0;
+}
+.SHCalendar-pressed-title div {
+	text-shadow: 1px 1px 1px #000;
+}
+
+.SHCalendar-dayNames div {
+	color: #0f0;
+}
+.SHCalendar-dayNames .SHCalendar-weekend {
+	color: #fa0;
+}
+
+.SHCalendar-hover-navBtn div,
+.SHCalendar-hover-title div,
+.SHCalendar-hover-bottomBar-today {
+	border-color: #0f0;
+	background-color: #000;
+	color: #fa0;
+}
+.SHCalendar-menu table td div.SHCalendar-hover-navBtn {
+	border-color: #0f0;
+	background-color: #000;
+	color: #fa0;
+}
+
+.SHCalendar-menu-year {
+	background-color: #000;
+	color: #0f0;
+	border: 1px solid #000;
+}
+
+.SHCalendar-pressed-navBtn div,
+.SHCalendar-pressed-title div,
+.SHCalendar-pressed-bottomBar-today,
+.SHCalendar-menu table td div.SHCalendar-pressed-navBtn {
+	border-color: #000 #0c0 #0c0 #000;
+	background-color: #464;
+	color: #fff;
+}
+
+.SHCalendar-hover-date {
+	border-color: #070;
+	color: #0f0 !important;
+	background-color: #000;
+}
+.SHCalendar-day-othermonth.SHCalendar-hover-date {
+	border-color: #040;
+	color: #2a2;
+}
+.SHCalendar-day {
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+	border-radius: 0;
+}
+
+.SHCalendar-day-disabled {
+}
+
+.SHCalendar-hover-week {
+	background-color: #131 !important;
+}
+
+.SHCalendar-menu {
+	background-color: #040;
+	color: #8f8;
+}
+.SHCalendar-menu-sep {
+	border-color: #000;
+	background-color: #080;
+}
+
+.SHCalendar-day-selected {
+	background-color: #000;
+	border: 1px solid #a90;
+	margin: 0;
+	color: #8f4 !important;
+}
+.SHCalendar-weekNumber {
+	border-color: #272;
+	color: #0c0;
+}
+.SHCalendar-day {
+	color: #0c0;
+}
+.SHCalendar-weekend {
+	color: #fa0;
+}
+.SHCalendar-day-othermonth {
+	color: #070;
+}
+.SHCalendar-day-othermonth.SHCalendar-weekend {
+	color: #850;
+}
+.SHCalendar-day-today {
+	color: #ff0;
+}
+
+.SHCalendar-day-today.SHCalendar-day-selected {
+	background-color: #000;
+}
+
+.SHCalendar-prevMonth div {
+	background-image: url("nav-left.gif");
+}
+
+.SHCalendar-nextMonth div {
+	background-image: url("nav-right.gif");
+}
+
+.SHCalendar-prevYear div {
+	background-image: url("nav-left-x2.gif");
+}
+
+.SHCalendar-nextYear div {
+	background-image: url("nav-right-x2.gif");
+}
+
+.SHCalendar-tooltipCont {
+	background: #242;
+	color: #9bf;
+}
+.SHCalendar-focused .SHCalendar-tooltipCont {
+	background: #020;
+}

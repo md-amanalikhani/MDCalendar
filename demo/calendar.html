@@ -5,18 +5,10 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>test browser</title>
-		<!-- <link rel="stylesheet" type="text/css" href="../src/css/jscal2.css" /> -->
-		<!-- <link
-			rel="stylesheet"
-			type="text/css"
-			href="../src/css/reduce-spacing.css"
-		/>
-		<link
-			rel="stylesheet"
-			type="text/css"
-			href="../src/css/border-radius.css"
-		/>
-		<link rel="stylesheet" type="text/css" href="../src/css/gold/gold.css" /> -->
+		<link rel="stylesheet" type="text/css" href="./css/base.css" />
+		<link rel="stylesheet" type="text/css" href="./css/reduce-spacing.css" />
+		<link rel="stylesheet" type="text/css" href="./css/border-radius.css" />
+		<link rel="stylesheet" type="text/css" href="./css/gold/gold.css" />
 	</head>
 	<body>
 		<!-- element that will contain the calendar -->
@@ -25,19 +17,13 @@
 		<!-- here we will display selection information -->
 		<div id="calendar-info" style="text-align: center; margin-top: 0.3em"></div>
 
-		<!-- <script type="module" src="./sh.js"></script> -->
-		<!-- <script type="text/javascript" src="../dist/lang/en.js"></script> -->
-
-		<!--<script
-			 type="text/javascript"
-			src="../node_modules/shdate/dist/browser/shdate.js"
-		></script> -->
 		<script type="text/javascript" src="../dist/shcalendar.js"></script>
+		<!-- <script type="text/javascript" src="./js/lang/en.js"></script> -->
 
 		<script>
-			var shdate = new SHDate();
+			// var shdate = new SHDate();
 			// document.body.innerHTML = shdate.format("Woy")[0][1];
-			console.log(shdate.format("Woy"));
+			// console.log(shdate.format("YY"));
 
 			new SHCalendar(
 				{

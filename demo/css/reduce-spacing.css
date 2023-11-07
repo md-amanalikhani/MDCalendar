@@ -1,0 +1,50 @@
+.SHCalendar,
+.SHCalendar table {
+	font-size: 10px;
+}
+.SHCalendar-dayNames {
+	padding: 0;
+}
+.SHCalendar-body {
+	padding: 0;
+}
+.SHCalendar-animBody-back {
+	top: 0;
+}
+.SHCalendar-animBody-fwd {
+	top: 0;
+}
+.SHCalendar-animBody-now {
+	top: 0;
+}
+.SHCalendar-first-col {
+	padding-left: 0;
+}
+.SHCalendar-last-col {
+	padding-right: 0;
+}
+.SHCalendar-weekNumber {
+	margin-right: 0;
+	padding-right: 4px !important;
+}
+.SHCalendar-dayNames div,
+.SHCalendar-day,
+.SHCalendar-weekNumber {
+	padding: 1px 2px;
+}
+.SHCalendar-menu-year {
+	font-size: 12px;
+}
+
+.SHCalendar-hover-date {
+	padding: 0px 1px;
+}
+.SHCalendar-day-selected {
+	padding: 0px 1px;
+}
+.SHCalendar-menu table td div {
+	padding: 2px 4px;
+}
+.SHCalendar-menu table td div.SHCalendar-hover-navBtn {
+	padding: 1px 3px;
+}

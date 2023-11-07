@@ -240,8 +240,8 @@ export default class SHCalendar {
 		};
 		const events_IE: any = SHCalendar.IS_IE
 			? {
-					// dblclick: events.mousedown,
-					// keydown: events.keypress
+					dblclick: events.mousedown,
+					keydown: events.keypress
 			  }
 			: {};
 
@@ -306,8 +306,8 @@ export default class SHCalendar {
 	stopEvent(event: MouseEvent) {
 		//stopEvent   N
 		if (SHCalendar.IS_IE) {
-			event.cancelBubble = true;
-			event.returnValue = false;
+			event.cancelBubble = true; // deprecated
+			event.returnValue = false; // deprecated
 		} else {
 			event.preventDefault();
 			event.stopPropagation();
@@ -729,26 +729,29 @@ export default class SHCalendar {
 
 	onBluringTimeout() {
 		//u
-		this._bluringTimeout = setTimeout(this.onBlur, 50);
+		this._bluringTimeout = setTimeout(() => {
+			this.onBlur();
+		}, 50);
 	}
 
 	callHooks(evname: string, ...args: any[]) {
 		var evn = this.handlers[evname];
-		for (var i = 0; i < evn.length; ++i) evn[i](args); // evn[i].apply(this, args);
+		for (let key in evn) {
+			if (evn.hasOwnProperty(key)) {
+				evn[key].apply(this, args);
+			}
+		}
 	}
 
 	getTime() {
-		//return this.time;
 		return this.date.getTime();
 	}
 
 	getHours() {
-		//return Math.floor(this.time / 100);
 		return this.date.getHours();
 	}
 
 	getMinutes() {
-		//return this.time % 100;
 		return this.date.getMinutes();
 	}
 

@@ -1,0 +1,85 @@
+/* This is for Gecko-based browsers */
+
+.SHCalendar {
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.SHCalendar-title,
+.SHCalendar-title div {
+	-moz-border-radius: 0 0 4px 4px;
+	-webkit-border-radius: 0 0 4px 4px;
+	border-radius: 0 0 4px 4px;
+}
+
+.SHCalendar-topBar {
+	-moz-border-radius: 4px 4px 0 0;
+	-webkit-border-radius: 4px;
+	border-radius: 4px 4px 0 0;
+}
+
+.SHCalendar-bottomBar {
+	-moz-border-radius: 0 0 4px 4px;
+	-webkit-border-radius: 0 0 4px 4px;
+	border-radius: 0 0 4px 4px;
+}
+
+.SHCalendar-bottomBar-today {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.SHCalendar-navBtn,
+.SHCalendar-navBtn div {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.SHCalendar-menu {
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.SHCalendar-menu table td div {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.SHCalendar-weekNumber {
+	-moz-border-radius: 4px 0 0 4px;
+	-webkit-border-radius: 4px 0 0 4px;
+	border-radius: 4px 0 0 4px;
+}
+
+.SHCalendar-day {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.SHCalendar-day-disabled {
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+	border-radius: 0;
+}
+
+.SHCalendar-tooltipCont {
+	-moz-border-radius: 0 0 5px 5px;
+	-webkit-border-radius: 5px;
+}
+
+.SHCalendar-time-hour,
+.SHCalendar-time-minute {
+	-moz-border-radius: 3px 0 0 3px;
+	-webkit-border-radius: 3px;
+}
+
+.SHCalendar-time-am {
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
