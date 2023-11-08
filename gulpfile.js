@@ -126,9 +126,9 @@ function compileBrowser(cb) {
 		cb(err);
 	});
 }
-function cleanBrowserTS(cb) {
-	return del(["src/browser"], cb);
-}
+// function cleanBrowserTS(cb) {
+// 	return del(["src/browser"], cb);
+// }
 function compressBrowserJS() {
 	return gulp
 		.src("dist/shcalendar.js", {
@@ -152,6 +152,14 @@ function compressBrowserJS() {
  * Run default.
  */
 exports.default = gulp.task(
+	"dev",
+	gulp.series(cleanCompile, concatBrowserTS, compileBrowser, compressBrowserJS)
+);
+
+/**
+ * Run default.
+ */
+exports.default = gulp.task(
 	"build",
 	gulp.series(
 		cleanCompile,
@@ -162,6 +170,7 @@ exports.default = gulp.task(
 		replaceDocBlockInfo
 	)
 );
+
 function cleanTest(cb) {
 	return del(["dist/test"], cb);
 }

@@ -218,9 +218,14 @@ export default class SHCalendar {
 
 	setHandler() {
 		//q()
-		const event = "onChange onSelect onTimeChange onFocus onBlur onClose".split(
-			/\s+/
-		);
+		const event = [
+			"onChange",
+			"onSelect",
+			"onTimeChange",
+			"onFocus",
+			"onBlur",
+			"onClose"
+		];
 		for (const key in event) {
 			const evn: any = event[key];
 			this.handlers[key] = evn instanceof Array ? evn : [evn];

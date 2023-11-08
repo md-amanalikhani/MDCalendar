@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "start": "gulp test && node dist/test/dev.js",
-    "dev": "nodemon --exec npm start",
+    "dev": "nodemon --exec gulp dev",
     "watch": "tsc -w",
     "build": "gulp build",
     "test": "gulp test && mocha",
