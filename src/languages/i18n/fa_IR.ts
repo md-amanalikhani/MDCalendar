@@ -19,7 +19,7 @@ export default class fa_IR {
 
 	public static WEEK_NAME: string = "هفته";
 
-	public static WEEKEND: number | number[] = 6; // 0 = Sunday, 1 = Monday, etc.
+	public static WEEKEND: number[] = [6]; // 0 = Sunday, 1 = Monday, etc.
 
 	public static AM: string = "am";
 	public static AM_LONG: string = "بعد از ظهر";

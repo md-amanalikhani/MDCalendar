@@ -488,9 +488,9 @@ export default class SHCalendar {
 						? this.splitClass(shc_cls, 0)
 						: "SHCalendar-hover-" + shc_type;
 					if ("date" != shc_type || this.selection.type)
-						this.changeCalss(io, el_type, shc_cls);
+						this.changeClass(io, el_type, shc_cls);
 					if ("date" == shc_type) {
-						this.changeCalss(
+						this.changeClass(
 							io,
 							el_type.parentNode.parentNode,
 							"SHCalendar-hover-week"
@@ -498,9 +498,9 @@ export default class SHCalendar {
 						this._showTooltip(el_type.getAttribute("shc-date"));
 					}
 					if (/^time-hour/.test(shc_type))
-						this.changeCalss(io, this.els.timeHour, "SHCalendar-hover-time");
+						this.changeClass(io, this.els.timeHour, "SHCalendar-hover-time");
 					if (/^time-min/.test(shc_type))
-						this.changeCalss(io, this.els.timeMinute, "SHCalendar-hover-time");
+						this.changeClass(io, this.els.timeMinute, "SHCalendar-hover-time");
 					if (this._lastHoverDate)
 						this.removeClass(
 							this.getElementDate(this._lastHoverDate),
@@ -865,56 +865,56 @@ export default class SHCalendar {
 	}
 
 	getAttributeType(event: any) {
-		// get shc-type
-		//var { target } = event;
-		var target = event.target,
-			temp_target = target;
-		for (; target && target.getAttribute && !target.getAttribute("shc-type"); )
+		let target = event.target;
+		while (target && target.getAttribute && !target.getAttribute("shc-type")) {
 			target = target.parentNode;
-		return (target.getAttribute && target) || temp_target;
+		}
+		return (target.getAttribute && target) || event.target;
 	}
 
 	getElementDate(shc_date: string | number | boolean): HTMLElement | false {
-		var temp_el: HTMLElement | false = false;
 		if (shc_date) {
 			try {
-				this.setNode(this.els.body, function (el: HTMLElement) {
-					if (el.getAttribute("shc-date") == shc_date) throw (temp_el = el!);
+				let temp_el: HTMLElement | false = false;
+				this.setNode(this.els.body, (el: HTMLElement) => {
+					if (el.getAttribute("shc-date") == shc_date) {
+						temp_el = el;
+						throw new Error("Element found");
+					}
 				});
-			} catch (el) {}
+				return temp_el;
+			} catch (error) {
+				return false;
+			}
 		}
-		return temp_el;
+		return false;
 	}
 
-	Animation(args: any, e?: any, n?: any) {
+	Animation(args: any, e?: any, n: number = 0) {
 		//animation
 
 		args = this.mergeData(args, {
 			fps: 50,
 			len: 15,
-			onUpdate: Function(),
-			onStop: Function()
+			onUpdate: () => {},
+			onStop: () => {}
 		});
 		if (SHCalendar.IS_IE) args.len = Math.round(args.len / 2);
 
 		const result = {
-			map: function (t: number, e: number, n: number, a: number) {
-				if (a) {
-					return n + t * (e - n);
-				} else {
-					return e + t * (n - e);
-				}
+			map: (t: number, e: number, n: number, a: number) => {
+				return a ? n + t * (e - n) : e + t * (n - e);
 			},
 			update: () => {
-				var e = args.len;
+				const e = args.len;
 				args.onUpdate(n / e, result.map);
-				if (n == e) result.stop();
-				++n;
+				if (n === e) result.stop();
+				n++;
 			},
 			start: () => {
-				if (e) stop();
+				if (e) result.stop();
 				n = 0;
-				e = setInterval(result.update, 1e3 / args.fps);
+				e = setInterval(result.update, 1000 / args.fps);
 			},
 			stop: () => {
 				if (e) {
@@ -931,17 +931,20 @@ export default class SHCalendar {
 
 	setOpacity(el: any, value?: any) {
 		// set opacity
-		if ("" === value) {
-			if (SHCalendar.IS_IE) el.style.filter = "";
-			else el.style.opacity = "";
-		} else if (null != value) {
-			if (SHCalendar.IS_IE)
-				el.style.filter = "alpha(opacity=" + 100 * value + ")";
-			else el.style.opacity = value;
-		} else if (SHCalendar.IS_IE) {
-			if (/alpha\(opacity=([0-9.])+\)/.test(el.style.opacity))
-				value = parseFloat(RegExp.$1) / 100;
-			else value = parseFloat(el.style.opacity);
+		if (value === "") {
+			el.style.opacity = "";
+			el.style.filter = "";
+		} else if (value != null) {
+			if (SHCalendar.IS_IE) {
+				el.style.filter = `alpha(opacity=${100 * value})`;
+			} else {
+				el.style.opacity = value;
+			}
+		} else if (SHCalendar.IS_IE && el.style.opacity) {
+			const opacityMatch = el.style.opacity.match(/([0-9.]+)/);
+			if (opacityMatch) {
+				value = parseFloat(opacityMatch[1]) / 100;
+			}
 		}
 		return value;
 	}
@@ -970,12 +973,12 @@ export default class SHCalendar {
 		if (this.args.min) min = this.dateDiff(date, this.args.min);
 		if (this.args.max) max = this.dateDiff(date, this.args.max);
 		if (!args.animation) animation = false;
-		this.changeCalss(
+		this.changeClass(
 			false != min && 1 >= min,
 			[this.els.navPrevMonth, this.els.navPrevYear],
 			"SHCalendar-navDisabled"
 		);
-		this.changeCalss(
+		this.changeClass(
 			false != max && max >= -1,
 			[this.els.navNextMonth, this.els.navNextYear],
 			"SHCalendar-navDisabled"
@@ -1056,10 +1059,14 @@ export default class SHCalendar {
 	}
 
 	isDisabled(date: SHDate) {
-		var args = this.args;
-		if (args.min) return this.dateDiff(date, args.min) < 0;
-		else if (args.max) return this.dateDiff(date, args.max) > 0;
-		else if (args.disabled) return args.disabled(date);
+		const { min, max, disabled } = this.args;
+		if (min && this.dateDiff(date, min) < 0) {
+			return true;
+		} else if (max && this.dateDiff(date, max) > 0) {
+			return true;
+		} else if (disabled) {
+			return disabled(date);
+		}
 		return false;
 	}
 
@@ -1067,33 +1074,30 @@ export default class SHCalendar {
 		this.showMenu(!this._menuVisible);
 	}
 
-	refresh(noBody?: boolean) {
-		if (!noBody) this.els.body.innerHTML = this.Day();
-		this.els.title.innerHTML = this.Title();
-		if (this.els.yearInput) this.els.yearInput.value = this.date.getFullYear();
+	refresh(noBody = false) {
+		const { body, title, yearInput } = this.els;
+		noBody ? null : (body.innerHTML = this.Day());
+		title.innerHTML = this.Title();
+		if (yearInput) yearInput.value = this.date.getFullYear();
 	}
 
 	showMenu(visible: boolean) {
-		// show menu
-		var menu: any, offset_height: number;
+		const { menu, title, main, topBar } = this.els;
 		this._menuVisible = visible;
-		this.changeCalss(visible, this.els.title, "SHCalendar-pressed-title");
-		menu = this.els.menu;
+		this.changeClass(visible, title, "SHCalendar-pressed-title");
 		if (menu) {
-			if (SHCalendar.IS_IE6)
-				menu.style.height = this.els.main.offsetHeight + "px";
+			if (SHCalendar.IS_IE6) menu.style.height = main.offsetHeight + "px";
 			if (this.args.animation) {
 				if (this._menuAnim) this._menuAnim.stop();
-				offset_height = this.els.main.offsetHeight;
-				if (SHCalendar.IS_IE6)
-					menu.style.width = this.els.topBar.offsetWidth + "px";
+				const offset_height = main.offsetHeight;
+				if (SHCalendar.IS_IE6) menu.style.width = topBar.offsetWidth + "px";
 				if (visible) {
 					menu.firstChild.style.marginTop = -offset_height + "px";
 					if (this.args.opacity > 0) this.setOpacity(menu, 0);
 					this.styleDisplay(menu, true);
 				}
 				this._menuAnim = this.Animation({
-					onUpdate: function (s: number, i: Function) {
+					onUpdate: (s: number, i: Function) => {
 						menu.firstChild.style.marginTop =
 							i(this.#math_animation.accel_b(s), -offset_height, 0, !visible) +
 							"px";
@@ -1103,7 +1107,7 @@ export default class SHCalendar {
 								i(this.#math_animation.accel_b(s), 0, 0.85, !visible)
 							);
 					},
-					onStop: function () {
+					onStop: () => {
 						if (this.args.opacity > 0) this.setOpacity(menu, 0.85);
 						menu.firstChild.style.marginTop = "";
 						this._menuAnim = null;
@@ -1121,117 +1125,131 @@ export default class SHCalendar {
 	}
 
 	styleDisplay(el: HTMLElement, is_display: boolean): boolean {
-		// display
-		if (is_display != null) el.style.display = is_display ? "" : "none";
-		return el.style.display != "none";
+		if (is_display != null) {
+			el.style.display = is_display ? "" : "none";
+		}
+		return el.style.display !== "none";
 	}
 
 	removeClass(el: HTMLElement | false, old_class: any, new_class: any = 0) {
-		// Y
-		var temp_cls: any = [];
 		if (el) {
-			var i: number,
-				cls: any[] = el.className.replace(/^\s+|\s+$/, " ").split(/\x20/);
-			for (i = cls.length - 1; i > 0; i--)
-				if (cls[i] != old_class) temp_cls.push(cls[i]);
-			if (new_class) temp_cls.push(new_class);
+			const cls: string[] = el.className.trim().split(/\s+/);
+			const temp_cls: string[] = cls.filter((clsName) => clsName !== old_class);
+			if (new_class) {
+				temp_cls.push(new_class);
+			}
 			el.className = temp_cls.join(" ");
-			// if (el.classList as DOMTokenList) {
-			// 	console.log(el.classList);
-			// }
 		}
 		return new_class;
 	}
 
 	addClass(el: HTMLElement | false, new_class: string) {
-		// P
-		return this.removeClass(el, new_class, new_class);
+		if (el) {
+			el.classList.add(new_class);
+		}
 	}
 
 	splitClass(string: string, index: number) {
-		return "SHCalendar-" + string.split(/,/)[index];
+		const parts = string.split(",");
+		if (index >= 0 && index < parts.length) {
+			return "SHCalendar-" + parts[index].trim();
+		}
+		return "";
 	}
 
-	changeCalss(
+	changeClass(
 		is_change: boolean,
 		el: HTMLElement | HTMLElement[],
 		new_class: string
 	) {
-		// R
-		if (el instanceof Array)
-			for (var i = el.length - 1; i >= 0; i--)
-				this.changeCalss(is_change, el[i], new_class);
-		else this.removeClass(el, new_class, is_change ? new_class : false);
+		if (el instanceof Array) {
+			for (let i = el.length - 1; i >= 0; i--) {
+				this.changeClass(is_change, el[i], new_class);
+			}
+		} else {
+			if (is_change) {
+				el.classList.add(new_class);
+			} else {
+				el.classList.remove(new_class);
+			}
+		}
 		return is_change;
 	}
 
+	// dateDiff(first_date: SHDate, second_date: SHDate, is_day: boolean = true) {
+	// 	//H()
+	// 	var first_year: number = first_date.getFullYear(),
+	// 		first_month: number = first_date.getMonth(),
+	// 		first_day: number = is_day ? first_date.getDate() : 0,
+	// 		second_year: number = second_date.getFullYear(),
+	// 		second_month: number = second_date.getMonth(),
+	// 		second_day: number = is_day ? second_date.getDate() : 0;
+	// 	if (second_year > first_year) {
+	// 		return -3;
+	// 	} else if (first_year > second_year) {
+	// 		return 3;
+	// 	} else if (second_month > first_month) {
+	// 		return -2;
+	// 	} else if (first_month > second_month) {
+	// 		return 2;
+	// 	} else if (second_day > first_day) {
+	// 		return -1;
+	// 	} else if (first_day > second_day) {
+	// 		return 1;
+	// 	}
+	// 	return 0;
+	// }
 	dateDiff(first_date: SHDate, second_date: SHDate, is_day: boolean = true) {
-		//H()
-		var first_year: number = first_date.getFullYear(),
-			first_month: number = first_date.getMonth(),
-			first_day: number = is_day ? first_date.getDate() : 0,
-			second_year: number = second_date.getFullYear(),
-			second_month: number = second_date.getMonth(),
-			second_day: number = is_day ? second_date.getDate() : 0;
-		if (second_year > first_year) {
-			return -3;
-		} else if (first_year > second_year) {
-			return 3;
-		} else if (second_month > first_month) {
-			return -2;
-		} else if (first_month > second_month) {
-			return 2;
-		} else if (second_day > first_day) {
-			return -1;
-		} else if (first_day > second_day) {
-			return 1;
+		var diffTime = second_date.getTime() - first_date.getTime();
+		if (is_day) {
+			return Math.round(diffTime / (1000 * 60 * 60 * 24));
+		} else {
+			return Math.round(diffTime / (1000 * 60 * 60 * 24 * 30.436875)); // approximate number of days in a month
 		}
-		return 0;
 	}
 
 	changeDate(shc_btn: any, anim?: any) {
-		// f()
 		if (this._bodyAnim) this._bodyAnim.stop();
-		if (0 != shc_btn) {
-			var date = this.date;
-			date.setDate(1);
-			switch (shc_btn) {
-				case "-Y":
-				case -2:
-					date.setFullYear(date.getFullYear() - 1);
-					break;
-				case "+Y":
-				case 2:
-					date.setFullYear(date.getFullYear() + 1);
-					break;
-				case "-M":
-				case -1:
-					date.setMonth(date.getMonth() - 1);
-					break;
-				case "+M":
-				case 1:
-					date.setMonth(date.getMonth() + 1);
-			}
-		} else date = new SHDate();
+		var date = this.date || new SHDate();
+		date.setDate(1);
+		switch (shc_btn) {
+			case "-Y":
+			case -2:
+				date.setFullYear(date.getFullYear() - 1);
+				break;
+			case "+Y":
+			case 2:
+				date.setFullYear(date.getFullYear() + 1);
+				break;
+			case "-M":
+			case -1:
+				date.setMonth(date.getMonth() - 1);
+				break;
+			case "+M":
+			case 1:
+				date.setMonth(date.getMonth() + 1);
+		}
 		return this.moveTo(date, !anim);
 	}
 
 	hide() {
 		this.callHooks("onClose", this);
 		var top_cont = this.els.topCont,
-			first_child = this.els.body.firstChild,
-			offset_height = first_child.offsetHeight,
-			pos_y = this.getAbsolutePos(top_cont).y;
-
+			first_child = this.els.body.firstChild;
 		if (this.args.animation) {
 			if (this._showAnim) this._showAnim.stop();
 			this._showAnim = this.Animation({
 				onUpdate: (i: number, r: Function) => {
 					if (this.args.opacity > 1) this.setOpacity(top_cont, 1 - i);
 					first_child.style.marginTop =
-						-r(this.#math_animation.accel_b(i), 0, offset_height) + "px";
+						-r(this.#math_animation.accel_b(i), 0, first_child.offsetHeight) +
+						"px";
 					top_cont.style.top =
-						r(this.#math_animation.accel_ab(i), pos_y, pos_y - 10) + "px";
+						r(
+							this.#math_animation.accel_ab(i),
+							this.getAbsolutePos(top_cont).y,
+							this.getAbsolutePos(top_cont).y - 10
+						) + "px";
 				},
 				onStop: () => {
 					top_cont.style.display = "none";
@@ -1240,12 +1258,14 @@ export default class SHCalendar {
 					this._showAnim = null;
 				}
 			});
-		} else top_cont.style.display = "none";
+		} else {
+			top_cont.style.display = "none";
+		}
 		this.input_field = null;
 	}
 
 	_showTooltip(full_date?: number) {
-		var dateInfo,
+		var dateInfo: { tooltip: any },
 			template: string = "",
 			date: SHDate,
 			tooltip = this.els.tooltip;
@@ -1259,12 +1279,12 @@ export default class SHCalendar {
 					"</div>";
 			}
 		}
-		tooltip && (tooltip.innerHTML = template);
+		if (tooltip) {
+			tooltip.innerHTML = template;
+		}
 	}
-
-	printDate(date: SHDate = this.date, str: any): any {
-		//S()
-		var month = date.getMonth(),
+	printDate(date: SHDate = this.date, str: string): string {
+		let month = date.getMonth(),
 			day = date.getDate(),
 			year = date.getFullYear(),
 			woy = this.getWeekNumber(date),
@@ -1274,42 +1294,38 @@ export default class SHCalendar {
 			doy = this.getDayOfYear(date),
 			minutes = date.getMinutes(),
 			second = date.getSeconds(),
-			reg = /%./g;
-		woy = woy instanceof Number ? woy.toString() : woy;
-		var data: any = {
-			"%a": this.getLanguage("sdn")[dow],
-			"%A": this.getLanguage("dn")[dow],
-			"%b": this.getLanguage("smn")[month],
-			"%B": this.getLanguage("mn")[month],
-			"%C": 1 + Math.floor(year / 100),
-			"%d": 10 > day ? "0" + day : day,
-			"%e": day,
-			"%H": 10 > hours ? "0" + hours : hours,
-			"%I": 10 > h12 ? "0" + h12 : h12,
-			"%j": 10 > doy ? "00" + doy : 100 > doy ? "0" + doy : doy,
-			"%k": hours,
-			"%l": h12,
-			"%m": 9 > month ? "0" + (1 + month) : 1 + month,
-			"%o": 1 + month,
-			"%M": 10 > minutes ? "0" + minutes : minutes,
-			"%n": "\n",
-			"%p": hours >= 12 ? "PM" : "AM",
-			"%P": hours >= 12 ? "pm" : "am",
-			"%s": Math.floor(date.getTime() / 1e3),
-			"%S": 10 > second ? "0" + second : second,
-			"%t": "	",
-			"%U": 10 > woy ? "0" + woy : woy,
-			"%W": 10 > woy ? "0" + woy : woy,
-			"%V": 10 > woy ? "0" + woy : woy,
-			"%u": dow + 1,
-			"%w": dow,
-			"%y": ("" + year).substr(2, 2),
-			"%Y": year,
-			"%%": "%"
-		};
-		return str.replace(reg, function (t: any) {
-			return data.hasOwnProperty(t) ? data[t] : t;
-		});
+			data = new Map([
+				["%a", this.getLanguage("sdn")[dow]],
+				["%A", this.getLanguage("dn")[dow]],
+				["%b", this.getLanguage("smn")[month]],
+				["%B", this.getLanguage("mn")[month]],
+				["%C", 1 + Math.floor(year / 100)],
+				["%d", day < 10 ? "0" + day : day],
+				["%e", day],
+				["%H", hours < 10 ? "0" + hours : hours],
+				["%I", h12 < 10 ? "0" + h12 : h12],
+				["%j", doy < 10 ? "00" + doy : doy < 100 ? "0" + doy : doy],
+				["%k", hours],
+				["%l", h12],
+				["%m", month < 9 ? "0" + (1 + month) : 1 + month],
+				["%o", 1 + month],
+				["%M", minutes < 10 ? "0" + minutes : minutes],
+				["%n", "\n"],
+				["%p", hours >= 12 ? "PM" : "AM"],
+				["%P", hours >= 12 ? "pm" : "am"],
+				["%s", Math.floor(date.getTime() / 1e3)],
+				["%S", second < 10 ? "0" + second : second],
+				["%t", "	"],
+				["%U", woy < 10 ? "0" + woy : woy],
+				["%W", woy < 10 ? "0" + woy : woy],
+				["%V", woy < 10 ? "0" + woy : woy],
+				["%u", dow + 1],
+				["%w", dow],
+				["%y", ("" + year).substring(2, 3)],
+				["%Y", year],
+				["%%", "%"]
+			]);
+		return str.replace(/%./g, (t) => (data.has(t) ? data.get(t) : t));
 	}
 
 	static parseDate(str: string, n: any, date_now?: SHDate) {
@@ -1332,9 +1348,10 @@ export default class SHCalendar {
 		if (time) {
 			hours = parseInt(time[1], 10);
 			minute = parseInt(time[2], 10);
-			second = time[3] ? parseInt(time[3].substr(1), 10) : 0;
+			second = time[3] ? parseInt(time[3].substring(1), 10) : 0;
 			str =
-				str.substring(0, time.index) + str.substr(time.index + time[0].length);
+				str.substring(0, time.index) +
+				str.substring(time.index + time[0].length);
 			if (time[4]) {
 				time[4].toLowerCase() == "pm" && 12 > hours
 					? (hours += 12)
@@ -1407,20 +1424,25 @@ export default class SHCalendar {
 		return null;
 	}
 
-	kcmonth(t: any) {
-		//keyCodeMonth I
-		const e = (e: any) => {
-			for (var n = e.length; --n >= 0; )
-				if (e[n].toLowerCase().indexOf(t) == 0) return n + 1;
+	kcmonth(t: string) {
+		const e = (e: string | any[]) => {
+			for (const lang of ["smn", "mn"]) {
+				for (let i = 0; i < e.length; i++) {
+					if (e[i].toLowerCase().startsWith(t)) {
+						return i + 1;
+					}
+				}
+			}
 		};
+
 		return /\S/.test(t)
 			? ((t = t.toLowerCase()),
 			  e(this.getLanguage("smn")) || e(this.getLanguage("mn")))
 			: void 0;
 	}
 
-	static isUnicodeLetter(str: any) {
-		return str.toUpperCase() != str.toLowerCase();
+	static isUnicodeLetter(str: string) {
+		return str.toLowerCase() !== str.toUpperCase();
 	}
 
 	getLanguage(name: string, lang: string = this.#lang): any {
@@ -1452,12 +1474,9 @@ export default class SHCalendar {
 		}
 	}
 
-	setLanguage(lang: any) {
-		//this.#lang = Word.checkLanguage(lang);
-		if (lang) {
-			this.fdow = Word.getFirstDayOfWeek();
-			this.redraw();
-		}
+	setLanguage(lang: string) {
+		this.fdow = Word.getFirstDayOfWeek();
+		this.redraw();
 	}
 
 	getWeekNumber(date: SHDate) {
@@ -1482,204 +1501,198 @@ export default class SHCalendar {
 	}
 
 	template() {
-		//Calendar
-		var template: string[] = [];
-		template.push(
-			"<table class='SHCalendar-topCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div class='SHCalendar'>",
-			SHCalendar.IS_IE
-				? "<a class='SHCalendar-focusLink' href='#'></a>"
-				: "<button class='SHCalendar-focusLink'></button>",
-			"<div class='SHCalendar-topBar'><div shc-type='nav' shc-btn='-Y' shc-cls='hover-navBtn,pressed-navBtn' ",
-			"class='SHCalendar-navBtn SHCalendar-prevYear'><div></div></div><div shc-type='nav' shc-btn='+Y' shc-cls='hover-navBtn,pressed-navBtn' ",
-			"class='SHCalendar-navBtn SHCalendar-nextYear'><div></div></div><div shc-type='nav' shc-btn='-M' shc-cls='hover-navBtn,pressed-navBtn' ",
-			"class='SHCalendar-navBtn SHCalendar-prevMonth'><div></div></div><div shc-type='nav' shc-btn='+M' shc-cls='hover-navBtn,pressed-navBtn' ",
-			"class='SHCalendar-navBtn SHCalendar-nextMonth'><div></div></div><table class='SHCalendar-titleCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div shc-type='title' shc-btn='menu' shc-cls='hover-title,pressed-title' class='SHCalendar-title'><div unselectable='on'>" +
-				this.printDate(this.date, this.args.titleFormat) +
-				"</div></div></td></tr></table><div class='SHCalendar-dayNames'>",
-			this.Weeks(),
-			"</div></div><div class='SHCalendar-body'></div>"
+		const calendarTopCont =
+			"<table class='SHCalendar-topCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div class='SHCalendar'>";
+		const focusLink = SHCalendar.IS_IE
+			? "<a class='SHCalendar-focusLink' href='#'></a>"
+			: "<button class='SHCalendar-focusLink'></button>";
+		const topBar =
+			"<div class='SHCalendar-topBar'><div shc-type='nav' shc-btn='-Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevYear'><div></div></div><div shc-type='nav' shc-btn='+Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextYear'><div></div></div><div shc-type='nav' shc-btn='-M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevMonth'><div></div></div><div shc-type='nav' shc-btn='+M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextMonth'><div></div></div><table class='SHCalendar-titleCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div shc-type='title' shc-btn='menu' shc-cls='hover-title,pressed-title' class='SHCalendar-title'><div unselectable='on'>" +
+			this.printDate(this.date, this.args.titleFormat) +
+			"</div></div></td></tr></table><div class='SHCalendar-dayNames'>" +
+			this.Weeks() +
+			"</div></div>";
+		const body = "<div class='SHCalendar-body'></div>";
+		const bottomBar =
+			this.args.bottomBar || this.args.showTime
+				? "<div class='SHCalendar-bottomBar'>" + this.BottomBar() + "</div>"
+				: "";
+		const menu =
+			"<div class='SHCalendar-menu' style='display: none'>" +
+			this.Menu() +
+			"</div>";
+		const tooltip = "<div class='SHCalendar-tooltip'></div>";
+		const calendar = "</div></td></tr></table>";
+
+		return (
+			calendarTopCont +
+			focusLink +
+			topBar +
+			body +
+			bottomBar +
+			menu +
+			tooltip +
+			calendar
 		);
-		if (this.args.bottomBar || this.args.showTime)
-			template.push(
-				"<div class='SHCalendar-bottomBar'>",
-				this.BottomBar(),
-				"</div>"
-			);
-		template.push(
-			"<div class='SHCalendar-menu' style='display: none'>",
-			this.Menu(),
-			"</div><div class='SHCalendar-tooltip'></div></div></td></tr></table>"
-		);
-		return template.join("");
 	}
 
 	Menu() {
-		//i()
-		var col: number, month: number, month_short_name: string;
-		var template: string[] = [];
-		template.push(
-			"<table height='100%'",
-			" align='center' cellspacing='0' cellpadding='0'",
-			"><tr><td><table style='margin-top: 1.5em'",
-			" align='center' cellspacing='0' cellpadding='0'",
-			">",
-			"<tr><td colspan='3'><input shc-btn='year' class='SHCalendar-menu-year' size='6' value='",
-			this.date.getFullYear().toString(),
-			"' /></td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>",
-			this.date.getFullYear().toString(),
-			"</div></td></tr><tr><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>",
-			this.getLanguage("goToday"),
-			"</div></td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p><table class='SHCalendar-menu-mtable'",
-			" align='center' cellspacing='0' cellpadding='0'",
-			">"
-		);
-		month_short_name = this.getLanguage("smn");
-		for (month = 0; 12 > month; month++) {
-			template.push("<tr>");
-			for (col = 5 - 1; col > 0; col--)
-				template.push(
-					"<td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='m" +
-						month.toString() +
-						"' class='SHCalendar-menu-month'>" +
-						month_short_name[month] +
-						"</div></td>"
-				);
-			template.push("</tr>");
-		}
-		template.push("</table></td></tr></table>");
-		return template.join("");
-	}
+		const yearInput =
+			"<input shc-btn='year' class='SHCalendar-menu-year' size='6' value='" +
+			this.date.getFullYear().toString() +
+			"' />";
+		const todayButton =
+			"<div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>" +
+			this.getLanguage("goToday") +
+			"</div>";
+		const monthShortName = this.getLanguage("smn");
+		const monthTable =
+			"<table class='SHCalendar-menu-mtable' align='center' cellspacing='0' cellpadding='0'>" +
+			Array.from({ length: 12 }, (_, month) => {
+				const monthButtons = Array.from(
+					{ length: 5 },
+					(_, col) =>
+						`<td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='m${month}' class='SHCalendar-menu-month'>${monthShortName[month]}</div></td>`
+				).join("");
+				return `<tr>${monthButtons}</tr>`;
+			}).join("") +
+			"</table>";
 
+		return `<table height='100%' align='center' cellspacing='0' cellpadding='0'><tr><td><table style='margin-top: 1.5em' align='center' cellspacing='0' cellpadding='0'><tr><td colspan='3'>${yearInput}</td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>${this.date
+			.getFullYear()
+			.toString()}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
+	}
 	Weeks() {
-		//Calendar-weekNumber
-		var template: string[] = [];
-		var day: number = 0,
-			weekend: number | number[] = this.getLanguage("weekend");
-		weekend = weekend instanceof Array ? weekend : [weekend];
-		template.push("<table align='center' cellspacing='0' cellpadding='0'><tr>");
-		if (this.args.weekNumbers)
-			template.push(
-				"<td><div class='SHCalendar-weekNumber'>",
-				this.getLanguage("wk"),
-				"</div></td>"
-			);
-		for (var col = 0; 7 > col; col++) {
-			day = (col + this.fdow) % 7;
-			template.push(
-				"<td><div",
-				weekend.indexOf(day) < 0 ? ">" : " class='SHCalendar-weekend'>",
-				this.getLanguage("sdn")[day],
-				"</div></td>"
-			);
-		}
-		template.push("</tr></table>");
-		return template.join("");
+		const weekend = this.getLanguage("weekend");
+		const weekendClass = (day: number) => {
+			return weekend.indexOf(day) < 0 ? "" : " class='SHCalendar-weekend'";
+		};
+		const daysOfWeek = Array.from({ length: 7 }, (_, col) => {
+			const day = (col + this.fdow) % 7;
+			return `<td><div${weekendClass(day)}>${
+				this.getLanguage("sdn")[day]
+			}</div></td>`;
+		}).join("");
+		const weekNumber = this.args.weekNumbers
+			? "<td><div class='SHCalendar-weekNumber'>" +
+			  this.getLanguage("wk") +
+			  "</div></td>"
+			: "";
+
+		return `<table align='center' cellspacing='0' cellpadding='0'><tr>${weekNumber}${daysOfWeek}</tr></table>`;
 	}
 
 	Day(date: SHDate = this.date, fdow: number = this.fdow) {
-		//Calendar-day
-		var template: string[] = [],
-			fulldate: number,
-			year: number,
-			month: number,
-			day: number,
-			date_today: SHDate,
-			fulldate_today: number,
-			year_today: number,
-			month_today: number,
-			day_today: number,
-			month_view: number,
-			weekend: number | number[] = this.getLanguage("weekend"),
-			horizontal: number,
-			vertical: number,
-			is_wk: boolean,
-			is_selected: boolean,
-			is_disabled: boolean,
-			date_info: any;
-		weekend = weekend instanceof Array ? weekend : [weekend];
+		const weekend = this.getLanguage("weekend");
+		const is_wk = this.args.weekNumbers;
+		const date_today = new SHDate();
+		const year_today = date_today.getFullYear();
+		const month_today = date_today.getMonth();
+		const day_today = date_today.getDate();
+		const fulldate_today =
+			1e4 * year_today + 100 * (month_today + 1) + day_today;
+		let template: string[] = [];
+
 		date = new SHDate(date.getFullYear(), date.getMonth(), date.getDate(), 12);
-		month_view = date.getMonth();
-		is_wk = this.args.weekNumbers;
+		const month_view = date.getMonth();
 		date.setDate(1);
-		date.setDate(-date.getDay() + 1);
-		date_today = new SHDate();
-		year_today = date_today.getFullYear();
-		month_today = date_today.getMonth();
-		day_today = date_today.getDate();
-		fulldate_today = 1e4 * year_today + 100 * (month_today + 1) + day_today;
-		//this._lastHoverDate = fulldate_today;
+		date.setDate(date.getDay() + 1);
+
 		template.push(
-			"<table class='SHCalendar-bodyTable'" +
-				" align='center' cellspacing='0' cellpadding='0'" +
-				">"
+			"<table class='SHCalendar-bodyTable' align='center' cellspacing='0' cellpadding='0'>"
 		);
-		for (horizontal = 0; horizontal < 6; horizontal++) {
+
+		for (let horizontal = 0; horizontal < 6; horizontal++) {
 			template.push("<tr class='SHCalendar-week");
-			if (0 == horizontal) template.push(" SHCalendar-first-row");
-			if (5 == horizontal) template.push(" SHCalendar-last-row");
+			if (horizontal === 0) template.push(" SHCalendar-first-row");
+			if (horizontal === 5) template.push(" SHCalendar-last-row");
 			template.push("'>");
-			if (is_wk)
+
+			if (is_wk) {
 				template.push(
-					"<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>" +
-						this.getWeekNumber(date) +
-						"</div></td>"
+					"<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>",
+					this.getWeekNumber(date),
+					"</div></td>"
 				);
-			for (vertical = 0; vertical < 7; vertical++, date.setDate(day + 1)) {
-				day = date.getDate();
-				month = date.getMonth();
-				year = date.getFullYear();
-				fulldate = 1e4 * year + 100 * (month + 1) + day; //14010212
+			}
+			for (let vertical = 0; vertical < 7; vertical++) {
+				const day = date.getDate();
+				const month = date.getMonth();
+				const year = date.getFullYear();
+				const fulldate = 1e4 * year + 100 * (month + 1) + day;
+
 				template.push("<td class='");
-				if (0 == vertical && !is_wk) {
+				if (vertical === 0 && !is_wk) {
 					template.push(" SHCalendar-first-col");
-					if (0 == horizontal) {
+					if (horizontal === 0) {
 						this._firstDateVisible = fulldate;
 					}
 				}
-				if (6 == vertical) {
+				if (vertical === 6) {
 					template.push(" SHCalendar-last-col");
-					if (5 == horizontal) this._lastDateVisible = fulldate;
+					if (horizontal === 5) this._lastDateVisible = fulldate;
 				}
-				is_selected = this.selection.isSelected(fulldate);
+
+				const is_selected = this.selection.isSelected(fulldate);
 				if (is_selected) template.push(" SHCalendar-td-selected");
 				template.push(
 					`'><div shc-type='date' unselectable='on' shc-date='${fulldate.toString()}'`
 				);
-				is_disabled = this.isDisabled(date);
-				if (is_disabled) template.push("disabled='1' ");
+
+				const is_disabled = this.isDisabled(date);
+				if (is_disabled) template.push(" disabled='1' ");
 				template.push("class='SHCalendar-day");
-				if (!(weekend.indexOf(date.getDay()) < 0))
+
+				if (weekend.indexOf(date.getDay()) >= 0)
 					template.push(" SHCalendar-weekend");
-				if (month != month_view) template.push(" SHCalendar-day-othermonth");
+				if (month !== month_view) template.push(" SHCalendar-day-othermonth");
 				if (fulldate === fulldate_today) template.push(" SHCalendar-day-today");
 				if (is_disabled) template.push(" SHCalendar-day-disabled");
 				if (is_selected) template.push(" SHCalendar-day-selected");
-				date_info = this.args.dateInfo(date);
+
+				const date_info = this.args.dateInfo(date);
 				if (is_disabled && date_info.klass)
 					template.push(" " + date_info.klass);
+
 				template.push("'>" + day + "</div></td>");
+				date.setDate(day + 1); // next
 			}
 			template.push("</tr>");
 		}
 		template.push("</table>");
+
 		return template.join("");
 	}
 
 	Time() {
-		//print Calendar-time
-		var template: string[] = [];
+		const template: string[] = [];
+
 		template.push(
-			"<table class='SHCalendar-time'" +
-				" align='center' cellspacing='0' cellpadding='0'" +
-				"><tr><td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'></div></td><td shc-type='time-hour+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td><td rowspan='2' class='SHCalendar-time-sep'></td><td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'></div></td><td shc-type='time-min+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>"
-		),
-			this.args.showTime == 12 &&
-				template.push(
-					"<td rowspan='2' class='SHCalendar-time-sep'></td><td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'></div></td>"
-				),
+			"<table class='SHCalendar-time' align='center' cellspacing='0' cellpadding='0'>",
+			"<tr>",
+			"<td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'></div></td>",
+			"<td shc-type='time-hour+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>",
+			"<td rowspan='2' class='SHCalendar-time-sep'></td>",
+			"<td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'></div></td>",
+			"<td shc-type='time-min+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>"
+		);
+
+		if (this.args.showTime == 12) {
 			template.push(
-				"</tr><tr><td shc-type='time-hour-' shc-cls='hover-time,pressed-time' class='SHCalendar-time-down'></td><td shc-type='time-min-' shc-cls='hover-time,pressed-time' class='SHCalendar-time-down'></td></tr></table>"
+				"<td rowspan='2' class='SHCalendar-time-sep'></td>",
+				"<td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'></div></td>"
 			);
+		}
+
+		template.push(
+			"</tr>",
+			"<tr>",
+			"<td shc-type='time-hour-' shc-cls='hover-time,pressed-time' class='SHCalendar-time-down'></td>",
+			"<td shc-type='time-min-' shc-cls='hover-time,pressed-time' class='SHCalendar-time-down'></td>",
+			"</tr>",
+			"</table>"
+		);
+
 		return template.join("");
 	}
 
@@ -1691,27 +1704,37 @@ export default class SHCalendar {
 			"</div>"
 		);
 	}
-
 	BottomBar() {
-		// o
-		var template: string[] = [];
+		const template: string[] = [];
+
 		template.push(
-			"<table",
-			"align='center' cellspacing='0' cellpadding='0'",
-			" style='width:100%'><tr>"
+			"<table align='center' cellspacing='0' cellpadding='0' style='width:100%'><tr>"
 		);
-		if (this.args.showTime && this.args.timePos == "left")
+
+		if (this.args.showTime && this.args.timePos === "left") {
 			template.push("<td>", this.Time(), "</td>");
+		}
+
 		if (this.args.bottomBar) {
 			template.push(
-				"<td><table align='center' cellspacing='0' cellpadding='0'><tr><td><div shc-btn='today' shc-cls='hover-bottomBar-today,pressed-bottomBar-today' shc-type='bottomBar-today' class='SHCalendar-bottomBar-today'>",
+				"<td>",
+				"<table align='center' cellspacing='0' cellpadding='0'><tr>",
+				"<td>",
+				"<div shc-btn='today' shc-cls='hover-bottomBar-today,pressed-bottomBar-today' shc-type='bottomBar-today' class='SHCalendar-bottomBar-today'>",
 				this.getLanguage("today"),
-				"</div></td></tr></table></td>"
+				"</div>",
+				"</td>",
+				"</tr></table>",
+				"</td>"
 			);
 		}
-		if (this.args.showTime && this.args.timePos == "right")
+
+		if (this.args.showTime && this.args.timePos === "right") {
 			template.push("<td>", this.Time(), "</td>");
+		}
+
 		template.push("</tr></table>");
+
 		return template.join("");
 	}
 
@@ -1721,7 +1744,9 @@ export default class SHCalendar {
 
 	inputField() {
 		// C
-		var field, sel, print;
+		var field: { tagName: string; value: any; innerHTML: any },
+			sel: { print: (arg0: any) => any },
+			print: any;
 		this.refresh();
 		field = this.input_field;
 		sel = this.selection;

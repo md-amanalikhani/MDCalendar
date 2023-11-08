@@ -20,7 +20,7 @@ export default class en_US {
 
 	public static WEEK_NAME: string = "wk";
 
-	public static WEEKEND: number | number[] = 6; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
+	public static WEEKEND: number[] = [6]; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
 
 	public static AM: string = "am"; //MERIDIEN_SHORT_NAMES
 	public static PM: string = "pm"; //MERIDIEN_SHORT_NAMES
