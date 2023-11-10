@@ -11,6 +11,33 @@ import Word from "./word.js";
 import Selection, { SelectionType } from "./selection.js";
 import SHDate from "shdate";
 
+class SHDateCalendar extends SHDate {
+	constructor(...args: any) {
+		super(args);
+	}
+	nextDate() {
+		this.setDate(this.getDate() + 1);
+	}
+	prevDate() {
+		this.setDate(this.getDate() - 1);
+	}
+	nextMonth() {
+		this.setMonth(this.getMonth() + 1);
+	}
+	prevMonth() {
+		this.setMonth(this.getMonth() - 1);
+	}
+	nextYear() {
+		this.setFullYear(this.getFullYear() + 1);
+	}
+	prevYear() {
+		this.setFullYear(this.getFullYear() - 1);
+	}
+	setDay(day: number) {
+		this.getDay();
+		this.setDate(day - this.getDay() + this.getDate());
+	}
+}
 export default class SHCalendar {
 	static VERSION: string = "1.0.0";
 	static IS_OPERA = /opera/i.test(navigator.userAgent);
@@ -116,8 +143,8 @@ export default class SHCalendar {
 		weekNumbers: false,
 		time: true,
 		fdow: Word.getFirstDayOfWeek(),
-		min: null,
-		max: null,
+		min: false,
+		max: false,
 		showTime: false,
 		timePos: "right",
 		minuteStep: 5,
@@ -126,22 +153,22 @@ export default class SHCalendar {
 		opacity: SHCalendar.IS_IE ? 1 : 3,
 		selection: [],
 		selectionType: SelectionType.MULTIPLE,
-		inputField: null,
+		inputField: false,
 		lang: "en_US",
-		trigger: null,
+		trigger: false,
 		align: "Bl/ / /T/r",
 		multiCtrl: true,
 		fixed: false,
 		reverseWheel: false,
 		noScroll: false,
-		disabled: Function(),
-		dateInfo: Function(),
-		onChange: Function(),
-		onSelect: Function(),
-		onTimeChange: Function(),
-		onFocus: Function(),
-		onBlur: Function(),
-		onClose: Function()
+		disabled: false,
+		dateInfo: false,
+		onChange: false,
+		onSelect: false,
+		onTimeChange: false,
+		onFocus: false,
+		onBlur: false,
+		onClose: false
 	};
 	args: any;
 	handlers: any = {};
@@ -359,28 +386,19 @@ export default class SHCalendar {
 	}
 
 	mouseClick(io: boolean, event: MouseEvent | any) {
-		var el_type: any,
-			timeOut: any,
-			shc_btn: any,
-			shc_type: string,
-			shc_date: any,
-			selection: any,
-			events: any,
-			shc_cls: string,
-			u: Function,
-			el_date: any;
-		el_type = this.getAttributeType(event);
+		var timeOut: any, selection: any, events: any, el_date: any;
+		const el_type = this.getAttributeType(event);
 		if (el_type && !el_type.getAttribute("disabled")) {
-			shc_btn = el_type.getAttribute("shc-btn");
-			shc_type = el_type.getAttribute("shc-type");
-			shc_date = el_type.getAttribute("shc-date");
+			const shc_btn = el_type.getAttribute("shc-btn");
+			const shc_type = el_type.getAttribute("shc-type");
+			const shc_date = el_type.getAttribute("shc-date");
 			selection = this.selection;
 			if (io) {
 				events = {
 					mouseover: (event: any) => this.stopEvent(event),
 					mousemove: (event: any) => this.stopEvent(event),
 					mouseup: (event?: any) => {
-						var shc_cls = el_type.getAttribute("shc-cls");
+						const shc_cls = el_type.getAttribute("shc-cls");
 						if (shc_cls) this.removeClass(el_type, this.splitClass(shc_cls, 1));
 						clearTimeout(timeOut);
 						this.removeEvent(document, events); //, true
@@ -388,7 +406,7 @@ export default class SHCalendar {
 					}
 				};
 				setTimeout(() => this.focus(), 1);
-				shc_cls = el_type.getAttribute("shc-cls");
+				const shc_cls = el_type.getAttribute("shc-cls");
 				if (shc_cls) this.addClass(el_type, this.splitClass(shc_cls, 1));
 				if ("menu" == shc_btn) {
 					this.toggleMenu();
@@ -462,7 +480,7 @@ export default class SHCalendar {
 				this.moveTo(new SHDate(), true);
 				this.showMenu(false);
 			} else if (/^m([0-9]+)/.test(shc_btn)) {
-				shc_date = new SHDate(this.date);
+				const shc_date = new SHDate(this.date);
 				shc_date.setDate(1);
 				shc_date.setMonth(parseInt(RegExp.$1));
 				shc_date.setFullYear(this._getInputYear());
@@ -1065,7 +1083,7 @@ export default class SHCalendar {
 		} else if (max && this.dateDiff(date, max) > 0) {
 			return true;
 		} else if (disabled) {
-			return disabled(date);
+			return this.args.disabled(date);
 		}
 		return false;
 	}
@@ -1287,7 +1305,7 @@ export default class SHCalendar {
 		let month = date.getMonth(),
 			day = date.getDate(),
 			year = date.getFullYear(),
-			woy = this.getWeekNumber(date),
+			woy = date.getWeekOfYear()[1],
 			dow = date.getDay(),
 			hours = date.getHours(),
 			h12 = hours >= 12 ? hours - 12 : hours || 12,
@@ -1479,10 +1497,6 @@ export default class SHCalendar {
 		this.redraw();
 	}
 
-	getWeekNumber(date: SHDate) {
-		return date.format("Woy")[0][1];
-	}
-
 	getDayOfYear(date: SHDate) {
 		return date.format("Doy")[0];
 
@@ -1562,28 +1576,28 @@ export default class SHCalendar {
 			.getFullYear()
 			.toString()}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
 	}
+
 	Weeks() {
-		const weekend = this.getLanguage("weekend");
-		const weekendClass = (day: number) => {
-			return weekend.indexOf(day) < 0 ? "" : " class='SHCalendar-weekend'";
-		};
-		const daysOfWeek = Array.from({ length: 7 }, (_, col) => {
-			const day = (col + this.fdow) % 7;
-			return `<td><div${weekendClass(day)}>${
-				this.getLanguage("sdn")[day]
-			}</div></td>`;
-		}).join("");
 		const weekNumber = this.args.weekNumbers
 			? "<td><div class='SHCalendar-weekNumber'>" +
 			  this.getLanguage("wk") +
 			  "</div></td>"
 			: "";
+		const daysOfWeek = Array.from({ length: 7 }, (_, col) => {
+			const day = (col + this.fdow) % 7;
+			return `<td><div${
+				this.isWeekend(day) ? " class='SHCalendar-weekend'" : ""
+			}>${this.getLanguage("sdn")[day]}</div></td>`;
+		}).join("");
 
 		return `<table align='center' cellspacing='0' cellpadding='0'><tr>${weekNumber}${daysOfWeek}</tr></table>`;
 	}
 
+	isWeekend(day: number): boolean {
+		return this.getLanguage("weekend").indexOf(day) >= 0;
+	}
+
 	Day(date: SHDate = this.date, fdow: number = this.fdow) {
-		const weekend = this.getLanguage("weekend");
 		const is_wk = this.args.weekNumbers;
 		const date_today = new SHDate();
 		const year_today = date_today.getFullYear();
@@ -1593,10 +1607,10 @@ export default class SHCalendar {
 			1e4 * year_today + 100 * (month_today + 1) + day_today;
 		let template: string[] = [];
 
-		date = new SHDate(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+		date.setHours(12, 0);
 		const month_view = date.getMonth();
 		date.setDate(1);
-		date.setDate(date.getDay() + 1);
+		date.setDate(7 - date.getDay());
 
 		template.push(
 			"<table class='SHCalendar-bodyTable' align='center' cellspacing='0' cellpadding='0'>"
@@ -1610,9 +1624,9 @@ export default class SHCalendar {
 
 			if (is_wk) {
 				template.push(
-					"<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>",
-					this.getWeekNumber(date),
-					"</div></td>"
+					`<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>${
+						date.getWeekOfYear()[1]
+					}</div></td>`
 				);
 			}
 			for (let vertical = 0; vertical < 7; vertical++) {
@@ -1643,19 +1657,19 @@ export default class SHCalendar {
 				if (is_disabled) template.push(" disabled='1' ");
 				template.push("class='SHCalendar-day");
 
-				if (weekend.indexOf(date.getDay()) >= 0)
-					template.push(" SHCalendar-weekend");
+				if (this.isWeekend(date.getDay())) template.push(" SHCalendar-weekend");
 				if (month !== month_view) template.push(" SHCalendar-day-othermonth");
 				if (fulldate === fulldate_today) template.push(" SHCalendar-day-today");
 				if (is_disabled) template.push(" SHCalendar-day-disabled");
 				if (is_selected) template.push(" SHCalendar-day-selected");
 
-				const date_info = this.args.dateInfo(date);
-				if (is_disabled && date_info.klass)
-					template.push(" " + date_info.klass);
+				if (this.args.dateInfo) {
+					const date_info = this.args.dateInfo(date);
+					if (is_disabled && date_info.klass)
+						template.push(" " + date_info.klass);
+				}
 
 				template.push("'>" + day + "</div></td>");
-				date.setDate(day + 1); // next
 			}
 			template.push("</tr>");
 		}
