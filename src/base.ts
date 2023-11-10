@@ -35,7 +35,7 @@ class SHDateCalendar extends SHDate {
 	}
 	setDay(day: number) {
 		this.getDay();
-		this.setDate(day - this.getDay() + this.getDate());
+		this.setDate(6 - day - 6 - this.getDay() + this.getDate());
 	}
 }
 export default class SHCalendar {
