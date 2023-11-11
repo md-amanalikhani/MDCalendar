@@ -221,7 +221,6 @@ export default class SHCalendar {
 
 	constructor(args: any = SHCalendar.defaultArgs, date: SHDate = new SHDate()) {
 		this.args = this.mergeData(args, SHCalendar.defaultArgs);
-		console.log(date.toDateString());
 		this.date = date;
 		this.args.min = this.setDate(this.args.min);
 		this.args.max = this.setDate(this.args.max);
@@ -1043,6 +1042,7 @@ export default class SHCalendar {
 			a = 2;
 			datedif = 0;
 		}
+
 		this.date = SHCalendar.intToDate(date);
 		this.refresh(!!animation);
 		this.callHooks("onChange", date, animation);
@@ -1126,7 +1126,7 @@ export default class SHCalendar {
 
 	refresh(noBody = false) {
 		const { body, title, yearInput } = this.els;
-		noBody ? null : (body.innerHTML = this.Day());
+		if (!noBody) body.innerHTML = this.Day();
 		title.innerHTML = this.Title();
 		if (yearInput) yearInput.value = this.date.getFullYear();
 	}
@@ -1632,23 +1632,22 @@ export default class SHCalendar {
 	}
 
 	Day(date: SHDate = this.date, fdow: number = this.fdow) {
-		const is_wk = this.args.weekNumbers;
 		const date_today = new SHDate();
 		const year_today = date_today.getFullYear();
 		const month_today = date_today.getMonth();
 		const day_today = date_today.getDate();
 		const fulldate_today =
 			1e4 * year_today + 100 * (month_today + 1) + day_today;
-		let template: string[] = [];
-
-		date.setHours(12, 0);
 		const month_view = date.getMonth();
-		date.setFullYear(date.getFullYear(), date.getMonth(), 1); //  frist date of the month
-		date.setFullYear(
-			date.getFullYear(),
-			date.getMonth(),
-			6 - 0 - 6 - date.getDay() + date.getDate()
-		); // first date of week
+		const is_wk = this.args.weekNumbers;
+		let template: string[] = [];
+		let date_temp = date.clone();
+
+		date_temp.setHours(12, 0);
+		date_temp.setMonth(date_temp.getMonth(), 1);
+		const [iy, iw] = date_temp.getWeekOfYear(); //  frist date of the month
+		date_temp.setWeek(iy, iw); // first date of week
+		console.log(iy, iw, date_temp.toDateString());
 
 		template.push(
 			"<table class='SHCalendar-bodyTable' align='center' cellspacing='0' cellpadding='0'>"
@@ -1663,14 +1662,14 @@ export default class SHCalendar {
 			if (is_wk) {
 				template.push(
 					`<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>${
-						date.getWeekOfYear()[1]
+						date_temp.getWeekOfYear()[1]
 					}</div></td>`
 				);
 			}
 			for (let vertical = 0; vertical < 7; vertical++) {
-				const day = date.getDate();
-				const month = date.getMonth();
-				const year = date.getFullYear();
+				const day = date_temp.getDate();
+				const month = date_temp.getMonth();
+				const year = date_temp.getFullYear();
 				const fulldate = 1e4 * year + 100 * (month + 1) + day;
 
 				template.push("<td class='");
@@ -1693,12 +1692,13 @@ export default class SHCalendar {
 					`'><div shc-type='date' unselectable='on' shc-date='${fulldate.toString()}'`
 				);
 
-				const is_disabled = this.isDisabled(date);
+				const is_disabled = this.isDisabled(date_temp);
 				if (is_disabled) template.push(" disabled='1' ");
 
 				template.push("class='SHCalendar-day");
 
-				if (this.isWeekend(date.getDay())) template.push(" SHCalendar-weekend");
+				if (this.isWeekend(date_temp.getDay()))
+					template.push(" SHCalendar-weekend");
 				if (month !== month_view) template.push(" SHCalendar-day-othermonth");
 				if (fulldate === fulldate_today) template.push(" SHCalendar-day-today");
 				if (is_disabled) template.push(" SHCalendar-day-disabled");
@@ -1712,10 +1712,24 @@ export default class SHCalendar {
 
 				template.push("'>" + day + "</div></td>");
 
-				date.setFullYear(
-					date.getFullYear(),
-					date.getMonth(),
-					date.getDate() + 1
+				console.log(
+					"S",
+					date_temp.toDateString(),
+					date_temp.getFullYear(),
+					date_temp.getMonth(),
+					date_temp.getDate() + 1
+				);
+				date_temp.setFullYear(
+					date_temp.getFullYear(),
+					date_temp.getMonth(),
+					date_temp.getDate() + 1
+				);
+				console.log(
+					"E",
+					date_temp.toDateString(),
+					date_temp.getFullYear(),
+					date_temp.getMonth(),
+					date_temp.getDate() + 1
 				);
 			}
 			template.push("</tr>");
