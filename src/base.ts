@@ -15,6 +15,17 @@ class SHDateCalendar extends SHDate {
 	constructor(...args: any) {
 		super(args);
 	}
+	tomorrow() {
+		this.setTime(SHDate.now());
+		this.nextDate();
+	}
+	today() {
+		this.setTime(SHDate.now());
+	}
+	yesterday() {
+		this.setTime(SHDate.now());
+		this.prevDate();
+	}
 	nextDate() {
 		this.setDate(this.getDate() + 1);
 	}
@@ -27,6 +38,14 @@ class SHDateCalendar extends SHDate {
 	prevMonth() {
 		this.setMonth(this.getMonth() - 1);
 	}
+	nextWeek() {
+		const [iy, iw] = this.getWeekOfYear();
+		this.setWeek(iy, iw + 1);
+	}
+	prevWeek() {
+		const [iy, iw] = this.getWeekOfYear();
+		this.setWeek(iy, iw - 1);
+	}
 	nextYear() {
 		this.setFullYear(this.getFullYear() + 1);
 	}
@@ -36,6 +55,12 @@ class SHDateCalendar extends SHDate {
 	setDay(day: number) {
 		this.getDay();
 		this.setDate(6 - day - 6 - this.getDay() + this.getDate());
+	}
+	nextDay() {
+		this.setDay(this.getDay() + 1);
+	}
+	prevDay() {
+		this.setDay(this.getDay() - 1);
 	}
 }
 export default class SHCalendar {
@@ -196,6 +221,7 @@ export default class SHCalendar {
 
 	constructor(args: any = SHCalendar.defaultArgs, date: SHDate = new SHDate()) {
 		this.args = this.mergeData(args, SHCalendar.defaultArgs);
+		console.log(date.toDateString());
 		this.date = date;
 		this.args.min = this.setDate(this.args.min);
 		this.args.max = this.setDate(this.args.max);
@@ -213,7 +239,13 @@ export default class SHCalendar {
 		);
 
 		this.init();
-		//this.args.trigger && this.manageFields(this.args.trigger,this.args.inputField, this.args.dateFormat),//popup
+
+		if (this.args.trigger)
+			this.manageFields(
+				this.args.trigger,
+				this.args.inputField,
+				this.args.dateFormat
+			); //popup
 	}
 
 	mergeData(data: any, defaults: any): any {
@@ -1289,12 +1321,14 @@ export default class SHCalendar {
 			tooltip = this.els.tooltip;
 		if (full_date) {
 			date = SHCalendar.intToDate(full_date);
-			dateInfo = this.args.dateInfo(date);
-			if (dateInfo && dateInfo.tooltip) {
-				template =
-					"<div class='SHCalendar-tooltipCont'>" +
-					this.printDate(date, dateInfo.tooltip) +
-					"</div>";
+			if (this.args.dateInfo) {
+				dateInfo = this.args.dateInfo(date);
+				if (dateInfo && dateInfo.tooltip) {
+					template =
+						"<div class='SHCalendar-tooltipCont'>" +
+						this.printDate(date, dateInfo.tooltip) +
+						"</div>";
+				}
 			}
 		}
 		if (tooltip) {
@@ -1609,8 +1643,12 @@ export default class SHCalendar {
 
 		date.setHours(12, 0);
 		const month_view = date.getMonth();
-		date.setDate(1);
-		date.setDate(7 - date.getDay());
+		date.setFullYear(date.getFullYear(), date.getMonth(), 1); //  frist date of the month
+		date.setFullYear(
+			date.getFullYear(),
+			date.getMonth(),
+			6 - 0 - 6 - date.getDay() + date.getDate()
+		); // first date of week
 
 		template.push(
 			"<table class='SHCalendar-bodyTable' align='center' cellspacing='0' cellpadding='0'>"
@@ -1636,6 +1674,7 @@ export default class SHCalendar {
 				const fulldate = 1e4 * year + 100 * (month + 1) + day;
 
 				template.push("<td class='");
+
 				if (vertical === 0 && !is_wk) {
 					template.push(" SHCalendar-first-col");
 					if (horizontal === 0) {
@@ -1649,12 +1688,14 @@ export default class SHCalendar {
 
 				const is_selected = this.selection.isSelected(fulldate);
 				if (is_selected) template.push(" SHCalendar-td-selected");
+
 				template.push(
 					`'><div shc-type='date' unselectable='on' shc-date='${fulldate.toString()}'`
 				);
 
 				const is_disabled = this.isDisabled(date);
 				if (is_disabled) template.push(" disabled='1' ");
+
 				template.push("class='SHCalendar-day");
 
 				if (this.isWeekend(date.getDay())) template.push(" SHCalendar-weekend");
@@ -1670,11 +1711,16 @@ export default class SHCalendar {
 				}
 
 				template.push("'>" + day + "</div></td>");
+
+				date.setFullYear(
+					date.getFullYear(),
+					date.getMonth(),
+					date.getDate() + 1
+				);
 			}
 			template.push("</tr>");
 		}
 		template.push("</table>");
-
 		return template.join("");
 	}
 
