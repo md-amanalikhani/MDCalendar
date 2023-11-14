@@ -25,16 +25,14 @@
 			// document.body.innerHTML = shdate.format("Woy")[0][1];
 			// console.log(shdate.format("YY"));
 
-			new SHCalendar(
-				{
-					cont: "SHContainer",
-					weekNumbers: true
-					// animation: false,
-					//selectionType: SHContainer.SEL_MULTIPLE,
-					// showTime: 12
-					//titleFormat: "%B %Y"
-				}
-			);
+			new SHCalendar({
+				cont: "SHContainer",
+				weekNumbers: true,
+				// animation: true,
+				selectionType: SHContainer.SEL_MULTIPLE,
+				showTime: 12,
+				titleFormat: "%B %Y"
+			});
 		</script>
 	</body>
 </html>

@@ -295,11 +295,11 @@ export default class SHCalendar {
 		var el = this.getElementById(this.args.cont);
 		els = this.els = {};
 		const events: any = {
-			// mousedown: (event: any) => this.mouseClick(true, event),
-			// mouseup: (event: any) => this.mouseClick(false, event),
+			mousedown: (event: any) => this.mouseClick(true, event),
+			mouseup: (event: any) => this.mouseClick(false, event),
 			mouseover: (event: any) => this.mouseHover(true, event),
-			mouseout: (event: any) => this.mouseHover(false, event)
-			// keypress: (event: KeyboardEvent) => this.keypress(event)
+			mouseout: (event: any) => this.mouseHover(false, event),
+			keypress: (event: KeyboardEvent) => this.keypress(event)
 		};
 		const events_IE: any = SHCalendar.IS_IE
 			? {
@@ -311,10 +311,10 @@ export default class SHCalendar {
 		const events_wheel: any = !this.args.noScroll
 			? SHCalendar.IS_GECKO
 				? {
-						// DOMMouseScroll: (event: any) => this.wheelCHTime(event)
+						DOMMouseScroll: (event: any) => this.wheelCHTime(event)
 				  }
 				: {
-						// mousewheel: (event: any) => this.wheelCHTime(event)
+						mousewheel: (event: any) => this.wheelCHTime(event)
 				  }
 			: {};
 		el.innerHTML = this.template();
@@ -1555,9 +1555,9 @@ export default class SHCalendar {
 			? "<a class='SHCalendar-focusLink' href='#'></a>"
 			: "<button class='SHCalendar-focusLink'></button>";
 		const topBar =
-			"<div class='SHCalendar-topBar'><div shc-type='nav' shc-btn='-Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevYear'><div></div></div><div shc-type='nav' shc-btn='+Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextYear'><div></div></div><div shc-type='nav' shc-btn='-M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevMonth'><div></div></div><div shc-type='nav' shc-btn='+M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextMonth'><div></div></div><table class='SHCalendar-titleCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div shc-type='title' shc-btn='menu' shc-cls='hover-title,pressed-title' class='SHCalendar-title'><div unselectable='on'>" +
-			this.printDate(this.date, this.args.titleFormat) +
-			"</div></div></td></tr></table><div class='SHCalendar-dayNames'>" +
+			"<div class='SHCalendar-topBar'><div shc-type='nav' shc-btn='-Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevYear'><div></div></div><div shc-type='nav' shc-btn='+Y' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextYear'><div></div></div><div shc-type='nav' shc-btn='-M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-prevMonth'><div></div></div><div shc-type='nav' shc-btn='+M' shc-cls='hover-navBtn,pressed-navBtn' class='SHCalendar-navBtn SHCalendar-nextMonth'><div></div></div><table class='SHCalendar-titleCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div shc-type='title' shc-btn='menu' shc-cls='hover-title,pressed-title' class='SHCalendar-title'>" +
+			this.Title() +
+			"</div></td></tr></table><div class='SHCalendar-dayNames'>" +
 			this.Weeks() +
 			"</div></div>";
 		const body = "<div class='SHCalendar-body'></div>";
@@ -1581,6 +1581,15 @@ export default class SHCalendar {
 			menu +
 			tooltip +
 			calendar
+		);
+	}
+
+	Title() {
+		//Title
+		return (
+			"<div unselectable='on'>" +
+			this.printDate(this.date, this.args.titleFormat) +
+			"</div>"
 		);
 	}
 
@@ -1632,22 +1641,20 @@ export default class SHCalendar {
 	}
 
 	Day(date: SHDate = this.date, fdow: number = this.fdow) {
-		const date_today = new SHDate();
-		const year_today = date_today.getFullYear();
-		const month_today = date_today.getMonth();
-		const day_today = date_today.getDate();
+		const today = new SHDate();
+		const year_today = today.getFullYear();
+		const month_today = today.getMonth();
+		const day_today = today.getDate();
 		const fulldate_today =
 			1e4 * year_today + 100 * (month_today + 1) + day_today;
 		const month_view = date.getMonth();
 		const is_wk = this.args.weekNumbers;
 		let template: string[] = [];
-		let date_temp = date.clone();
 
-		date_temp.setHours(12, 0);
-		date_temp.setMonth(date_temp.getMonth(), 1);
-		const [iy, iw] = date_temp.getWeekOfYear(); //  frist date of the month
-		date_temp.setWeek(iy, iw); // first date of week
-		console.log(iy, iw, date_temp.toDateString());
+		date.setHours(12, 0);
+		date.setMonth(date.getMonth(), 1);
+		const [iy, iw] = date.getWeekOfYear(); //  frist date of the month
+		date.setWeek(iy, iw); // first date of week
 
 		template.push(
 			"<table class='SHCalendar-bodyTable' align='center' cellspacing='0' cellpadding='0'>"
@@ -1662,14 +1669,14 @@ export default class SHCalendar {
 			if (is_wk) {
 				template.push(
 					`<td class='SHCalendar-first-col'><div class='SHCalendar-weekNumber'>${
-						date_temp.getWeekOfYear()[1]
+						date.getWeekOfYear()[1]
 					}</div></td>`
 				);
 			}
 			for (let vertical = 0; vertical < 7; vertical++) {
-				const day = date_temp.getDate();
-				const month = date_temp.getMonth();
-				const year = date_temp.getFullYear();
+				const day = date.getDate();
+				const month = date.getMonth();
+				const year = date.getFullYear();
 				const fulldate = 1e4 * year + 100 * (month + 1) + day;
 
 				template.push("<td class='");
@@ -1692,13 +1699,12 @@ export default class SHCalendar {
 					`'><div shc-type='date' unselectable='on' shc-date='${fulldate.toString()}'`
 				);
 
-				const is_disabled = this.isDisabled(date_temp);
+				const is_disabled = this.isDisabled(date);
 				if (is_disabled) template.push(" disabled='1' ");
 
 				template.push("class='SHCalendar-day");
 
-				if (this.isWeekend(date_temp.getDay()))
-					template.push(" SHCalendar-weekend");
+				if (this.isWeekend(date.getDay())) template.push(" SHCalendar-weekend");
 				if (month !== month_view) template.push(" SHCalendar-day-othermonth");
 				if (fulldate === fulldate_today) template.push(" SHCalendar-day-today");
 				if (is_disabled) template.push(" SHCalendar-day-disabled");
@@ -1712,25 +1718,7 @@ export default class SHCalendar {
 
 				template.push("'>" + day + "</div></td>");
 
-				console.log(
-					"S",
-					date_temp.toDateString(),
-					date_temp.getFullYear(),
-					date_temp.getMonth(),
-					date_temp.getDate() + 1
-				);
-				date_temp.setFullYear(
-					date_temp.getFullYear(),
-					date_temp.getMonth(),
-					date_temp.getDate() + 1
-				);
-				console.log(
-					"E",
-					date_temp.toDateString(),
-					date_temp.getFullYear(),
-					date_temp.getMonth(),
-					date_temp.getDate() + 1
-				);
+				date.setMonth(date.getMonth(), date.getDate() + 1);
 			}
 			template.push("</tr>");
 		}
@@ -1770,14 +1758,6 @@ export default class SHCalendar {
 		return template.join("");
 	}
 
-	Title() {
-		//Title
-		return (
-			"<div unselectable='on'>" +
-			this.printDate(this.date, this.args.titleFormat) +
-			"</div>"
-		);
-	}
 	BottomBar() {
 		const template: string[] = [];
 
