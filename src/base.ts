@@ -496,9 +496,9 @@ export default class SHCalendar {
 					!/^(SHCalendar-(topBar|bottomBar|weekend|weekNumber|menu(-sep)?))?$/.test(
 						el_date.className
 					) ||
-					this.args.cont
+					this.args.cont ||
+					(events.mousemove = (event: any) => this.dragIt(event))
 				) {
-					events.mousemove = (event: any) => this.dragIt(event);
 					this._mouseDiff = this.position(
 						event,
 						this.getAbsolutePos(this.els.topCont)
@@ -836,23 +836,19 @@ export default class SHCalendar {
 		this.els.timeMinute.innerHTML = minute.toString().padStart(2, "0");
 	}
 
-	setTime(time: number | null, nohooks?: boolean) {
-		//time, [ nohooks ]
-		var input_field, selection, print;
+	setTime(time: number | null, nohooks: boolean = false) {
 		if (this.args.showTime) {
-			time = null != time ? time : this.time;
-			this.time = time;
+			this.time = time !== null ? time : this.time;
 			if (!nohooks) {
-				this.callHooks("onTimeChange", time);
-				input_field = this.args.inputField;
-				selection = this.selection;
+				this.callHooks("onTimeChange", this.time);
+				const input_field = this.args.inputField;
 				if (input_field) {
-					print = selection.print(this.args.dateFormat);
-					if (/input|textarea/i.test(input_field.tagName)) {
-						input_field.value = print;
-					} else {
-						input_field.innerHTML = print;
-					}
+					const print = this.selection.print(this.args.dateFormat);
+					input_field[
+						input_field.tagName.toLowerCase() === "input"
+							? "value"
+							: "innerHTML"
+					] = print;
 				}
 			}
 		}
@@ -873,34 +869,31 @@ export default class SHCalendar {
 			case "time-min-":
 				this.setMinutes(this.getMinutes() - this.args.minuteStep);
 				break;
+			default:
+				return;
 		}
-		return;
 	}
 
 	static intToDate(
 		date: SHDate | number | string,
-		hours?: number,
-		minute?: number,
-		second?: number,
-		milliSecond?: number
+		hours: number = 12,
+		minute: number = 0
 	): SHDate {
 		//A()
-		var year: number, month: number;
-
 		if (date instanceof SHDate) return date;
 		date = typeof date == "number" ? date : parseInt(date, 10);
-		year = Math.floor(date / 1e4);
+		const year: number = Math.floor(date / 1e4);
 		date %= 1e4;
-		month = Math.floor(date / 100);
+		const month: number = Math.floor(date / 100);
 		date %= 100; //day
-		return new SHDate(year, month - 1, date, null == hours ? 12 : hours);
+		return new SHDate(year, month - 1, date, hours, minute);
 	}
 
 	static dateToInt(date: SHDate | number | string): number {
 		//L()
 		if (date instanceof SHDate)
 			return (
-				date.getFullYear() * 1e4 + (date.getMonth() + 1) * 100 + date.getDate()
+				date.getFullYear() * 1e4 + (date.getMonth() + 1) * 1e2 + date.getDate()
 			);
 		return typeof date == "string" ? parseInt(date, 10) : date;
 	}
@@ -922,21 +915,15 @@ export default class SHCalendar {
 	}
 
 	getElementDate(shc_date: string | number | boolean): HTMLElement | false {
+		let el_s: HTMLElement | false = false;
 		if (shc_date) {
-			try {
-				let temp_el: HTMLElement | false = false;
-				this.setNode(this.els.body, (el: HTMLElement) => {
-					if (el.getAttribute("shc-date") == shc_date) {
-						temp_el = el;
-						throw new Error("Element found");
-					}
-				});
-				return temp_el;
-			} catch (error) {
-				return false;
-			}
+			this.setNode(this.els.body, (el: HTMLElement) => {
+				if (el.getAttribute("shc-date") == shc_date) {
+					el_s = el;
+				}
+			});
 		}
-		return false;
+		return el_s;
 	}
 
 	Animation(args: any, e?: any, n: number = 0) {
