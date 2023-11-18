@@ -46,9 +46,7 @@
   "module": "commonjs",
   "typesVersions": {
     "*": {
-      "*": [
-        "./src/*"
-      ]
+      "*": ["./src/*"]
     }
   },
   "directories": {
@@ -58,16 +56,8 @@
     "man": "./docs",
     "docs": "./docs"
   },
-  "files": [
-    "LICENSE",
-    "README.md",
-    "CHANGELOG.md",
-    "docs",
-    "dist"
-  ],
-  "man": [
-    "./docs/**/*.md"
-  ],
+  "files": ["LICENSE", "README.md", "CHANGELOG.md", "docs", "dist"],
+  "man": ["./docs/**/*.md"],
   "dependencies": {
     "shdate": "^2.1.26"
   },
@@ -113,14 +103,7 @@
     }
   },
   "lint-staged": {
-    "*.{js}": [
-      "prettier --write",
-      "eslint --fix",
-      "git add"
-    ],
-    "*": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{js}": ["prettier --write", "eslint --fix", "git add"],
+    "*": ["prettier --write", "git add"]
   }
 }
