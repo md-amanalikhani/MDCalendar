@@ -440,6 +440,7 @@ export default class SHCalendar {
 				if ("menu" == shc_btn) {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
+					console.log(shc_btn, this.date.toDateString());
 					if (this.stepDate(shc_btn)) {
 						const time_out = () => {
 							if (this.stepDate(shc_btn, true)) {
@@ -504,12 +505,13 @@ export default class SHCalendar {
 					this.addEvent(document, events); //, true
 				}
 			} else if ("today" == shc_btn) {
+				const date = new SHDate();
 				if (!(this._menuVisible || selection.type != SelectionType.SINGLE))
-					selection.set(new SHDate());
-				this.moveTo(new SHDate(), true);
+					selection.set(date);
+				this.moveTo(date, true);
 				this.showMenu(false);
 			} else if (/^m([0-9]+)/.test(shc_btn)) {
-				const shc_date = new SHDate(this.date);
+				const shc_date = this.date;
 				shc_date.setFullYear(
 					this._getInputYear(),
 					+shc_btn.replace(/^m([0-9]+)/, "$1"),
@@ -574,15 +576,16 @@ export default class SHCalendar {
 			shc_type = el_type.getAttribute("shc-type");
 			wheelStep = event.wheelDelta ? event.wheelDelta / 120 : -event.detail / 3;
 			wheelStep = 0 > wheelStep ? -1 : wheelStep > 0 ? 1 : 0;
+			const date = this.date;
 			if (this.args.reverseWheel) wheelStep = -wheelStep;
 			if (/^(time-(hour|min))/.test(shc_type)) {
 				switch (RegExp.$1) {
 					case "time-hour":
-						this.setHours(this.date.getHours() + wheelStep);
+						this.setHours(date.getHours() + wheelStep);
 						break;
 					case "time-min":
 						this.setMinutes(
-							this.date.getMinutes() + this.args.minuteStep * wheelStep
+							date.getMinutes() + this.args.minuteStep * wheelStep
 						);
 				}
 				this.stopEvent(event);
@@ -615,7 +618,7 @@ export default class SHCalendar {
 			char_code = event.charCode || key_code;
 			r = this.#control_key[key_code];
 			if ("year" == shc_btn && 13 == key_code) {
-				date = new SHDate(this.date);
+				const date = this.date;
 				date.setDate(1);
 				date.setFullYear(this._getInputYear());
 				this.moveTo(date, true);
@@ -657,7 +660,7 @@ export default class SHCalendar {
 				for (m = 0; ++m < 12; ) {
 					MN = month_name[(d + m) % 12].toLowerCase();
 					if (MN.indexOf(char_code) == 0) {
-						date = new SHDate(this.date);
+						const date = this.date;
 						date.setDate(1);
 						date.setMonth((d + m) % 12);
 						this.moveTo(date, true);
@@ -853,18 +856,19 @@ export default class SHCalendar {
 	stepTime(shc_type: string) {
 		// d()
 		const { minuteStep } = this.args;
+		const date = this.date;
 		switch (shc_type) {
 			case "time-hour+":
-				this.setHours(this.date.getHours() + 1);
+				this.setHours(date.getHours() + 1);
 				break;
 			case "time-hour-":
-				this.setHours(this.date.getHours() - 1);
+				this.setHours(date.getHours() - 1);
 				break;
 			case "time-min+":
-				this.setMinutes(this.date.getMinutes() + minuteStep);
+				this.setMinutes(date.getMinutes() + minuteStep);
 				break;
 			case "time-min-":
-				this.setMinutes(this.date.getMinutes() - minuteStep);
+				this.setMinutes(date.getMinutes() - minuteStep);
 				break;
 			default:
 				return;
@@ -1253,9 +1257,10 @@ export default class SHCalendar {
 		return 0;
 	}
 
-	stepDate(shc_btn: any, anim?: any) {
-		if (this._bodyAnim) this._bodyAnim.stop();
-		const date = shc_btn ? new SHDate(this.date) : new SHDate();
+	stepDate(shc_btn: any, anim: any = false) {
+		console.log("stepDate", this.date.toDateString());
+		const date = shc_btn ? this.date : new SHDate();
+		console.log("S", date.toDateString());
 		switch (shc_btn) {
 			case "-Y":
 			case -2:
@@ -1272,7 +1277,11 @@ export default class SHCalendar {
 			case "+M":
 			case 1:
 				date.setFullYear(date.getFullYear(), date.getMonth() + 1, 1);
+			default:
+				break;
 		}
+		console.log("E", date.toDateString());
+		if (this._bodyAnim) this._bodyAnim.stop();
 		return this.moveTo(date, !anim);
 	}
 
@@ -1335,7 +1344,7 @@ export default class SHCalendar {
 			dow = date.getDay(),
 			hours = date.getHours(),
 			h12 = hours >= 12 ? hours - 12 : hours || 12,
-			doy = this.getDayOfYear(date),
+			doy = date.getDayOfYear(),
 			minutes = date.getMinutes(),
 			second = date.getSeconds(),
 			data = new Map([
@@ -1522,10 +1531,6 @@ export default class SHCalendar {
 		this.redraw();
 	}
 
-	getDayOfYear(date: SHDate) {
-		return date.getDayOfYear();
-	}
-
 	template() {
 		const calendarTopCont =
 			"<table class='SHCalendar-topCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div class='SHCalendar'>";
@@ -1572,9 +1577,10 @@ export default class SHCalendar {
 	}
 
 	Menu() {
+		const year = this.date.getFullYear();
 		const yearInput =
 			"<input shc-btn='year' class='SHCalendar-menu-year' size='6' value='" +
-			this.date.getFullYear() +
+			year +
 			"' />";
 		const todayButton =
 			"<div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>" +
@@ -1594,7 +1600,7 @@ export default class SHCalendar {
 			}).join("") +
 			"</table>";
 
-		return `<table height='1e2%' align='center' cellspacing='0' cellpadding='0'><tr><td><table style='margin-top: 1.5em' align='center' cellspacing='0' cellpadding='0'><tr><td colspan='3'>${yearInput}</td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>${this.date.getFullYear()}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
+		return `<table height='1e2%' align='center' cellspacing='0' cellpadding='0'><tr><td><table style='margin-top: 1.5em' align='center' cellspacing='0' cellpadding='0'><tr><td colspan='3'>${yearInput}</td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>${year}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
 	}
 
 	Weeks() {
