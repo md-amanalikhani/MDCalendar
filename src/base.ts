@@ -988,17 +988,17 @@ export default class SHCalendar {
 		return value;
 	}
 
-	moveTo(date: SHDate | number | string, animation?: boolean | number) {
+	moveTo(date: SHDate | number, animation?: boolean | number) {
 		//date , animation
 		var a: any,
 			min: any = false,
 			max: any = false,
-			math_animation: any,
+			func_animation: any,
 			body_offset: any,
 			el_clone_node: any,
 			el_clone_node_style: any;
 		//   v,
-		date = this.setDate(date);
+		date = SHCalendar.intToDate(date);
 		let compare_date = this.compareDate(date, this.date, true);
 		const {
 			min: args_min,
@@ -1036,7 +1036,7 @@ export default class SHCalendar {
 			a = 2;
 			compare_date = 0;
 		}
-		this.date = SHCalendar.intToDate(date);
+		this.date = date as SHDate;
 		this.refresh(!!animation);
 		this.callHooks("onChange", date, animation);
 		if (!(!animation || (0 == compare_date && 2 == animation))) {
@@ -1052,9 +1052,9 @@ export default class SHCalendar {
 				els_body
 			);
 			this.setOpacity(body_first_child, 0.7);
-			if (a) math_animation = this.#math_animation.brakes;
-			else if (0 == compare_date) math_animation = this.#math_animation.shake;
-			else math_animation = this.#math_animation.accel_ab2;
+			if (a) func_animation = this.#math_animation.brakes;
+			else if (0 == compare_date) func_animation = this.#math_animation.shake;
+			else func_animation = this.#math_animation.accel_ab2;
 			const ddbool = compare_date * compare_date > 4;
 			const body_first_child_offset = ddbool
 				? body_first_child.offsetTop
@@ -1066,7 +1066,7 @@ export default class SHCalendar {
 				body_offset = body_first_child_offset - body_offset;
 			else {
 				body_offset = Math.round(body_offset / 7);
-				2 == a && (body_offset = -body_offset);
+				if (2 == a) body_offset = -body_offset;
 			}
 			if (!(a || 0 == compare_date)) {
 				el_clone_node = el.cloneNode(true);
@@ -1078,12 +1078,12 @@ export default class SHCalendar {
 				els_body.appendChild(el_clone_node);
 			}
 			body_first_child.style.visibility = "hidden";
-			el.innerHTML = this.Day();
+			el.innerHTML = this.Day(date as SHDate);
 			const tis = this;
 			this._bodyAnim = this.Animation({
 				onUpdate: function (t: number, e: Function) {
 					var n: any,
-						i = math_animation(t);
+						i = func_animation(t);
 					if (el_clone_node) n = e(i, body_offset, 2 * body_offset) + "px";
 					if (a)
 						el_style[ddbool ? "marginTop" : "marginLeft"] =
@@ -1092,7 +1092,7 @@ export default class SHCalendar {
 						if (ddbool || 0 == compare_date) {
 							el_style.marginTop =
 								e(
-									0 == compare_date ? math_animation(t * t) : i,
+									0 == compare_date ? func_animation(t * t) : i,
 									0,
 									body_offset
 								) + "px";
@@ -1136,7 +1136,7 @@ export default class SHCalendar {
 
 	refresh(noBody = false) {
 		const { body, title, yearInput } = this.els;
-		if (!noBody) body.innerHTML = this.Day();
+		if (!noBody) body.innerHTML = this.Day(this.date);
 		title.innerHTML = this.Title();
 		if (yearInput) yearInput.value = this.date.getFullYear();
 	}
@@ -1258,29 +1258,38 @@ export default class SHCalendar {
 	}
 
 	stepDate(shc_btn: any, anim: any = false) {
+		var year: number, month: number;
 		console.log("stepDate", this.date.toDateString());
-		const date = shc_btn ? this.date : new SHDate();
-		console.log("S", date.toDateString());
+		const date = this.date;
 		switch (shc_btn) {
 			case "-Y":
 			case -2:
-				date.setFullYear(date.getFullYear() - 1, date.getMonth(), 1);
+				year = date.getFullYear() - 1;
+				month = date.getMonth();
 				break;
 			case "-M":
 			case -1:
-				date.setFullYear(date.getFullYear(), date.getMonth() - 1, 1);
+				year = date.getFullYear();
+				month = date.getMonth() - 1;
 				break;
 			case "+Y":
 			case 2:
-				date.setFullYear(date.getFullYear() + 1, date.getMonth(), 1);
+				year = date.getFullYear() + 1;
+				month = date.getMonth();
 				break;
 			case "+M":
 			case 1:
-				date.setFullYear(date.getFullYear(), date.getMonth() + 1, 1);
+				year = date.getFullYear() + 1;
+				month = date.getMonth();
+				break;
 			default:
+				const date_now = new SHDate();
+				year = date_now.getFullYear();
+				month = date_now.getMonth();
 				break;
 		}
-		console.log("E", date.toDateString());
+		date.setFullYear(year, month, 1);
+		console.log(year, month, "E", date.toDateString());
 		if (this._bodyAnim) this._bodyAnim.stop();
 		return this.moveTo(date, !anim);
 	}
@@ -1623,7 +1632,7 @@ export default class SHCalendar {
 		return this.getLanguage("weekend").indexOf(day) >= 0;
 	}
 
-	Day(date: SHDate = this.date, fdow: number = this.fdow) {
+	Day(date: SHDate, fdow: number = this.fdow) {
 		const today = new SHDate();
 		const year_today = today.getFullYear();
 		const month_today = today.getMonth();
