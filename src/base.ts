@@ -440,7 +440,6 @@ export default class SHCalendar {
 				if ("menu" == shc_btn) {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
-					console.log(shc_btn, this.date.toDateString());
 					if (this.stepDate(shc_btn)) {
 						const time_out = () => {
 							if (this.stepDate(shc_btn, true)) {
@@ -511,13 +510,13 @@ export default class SHCalendar {
 				this.moveTo(date, true);
 				this.showMenu(false);
 			} else if (/^m([0-9]+)/.test(shc_btn)) {
-				const shc_date = this.date;
-				shc_date.setFullYear(
+				const date = this.date;
+				date.setFullYear(
 					this._getInputYear(),
 					+shc_btn.replace(/^m([0-9]+)/, "$1"),
 					1
 				);
-				this.moveTo(shc_date, true);
+				this.moveTo(date, true);
 				this.showMenu(false);
 			} else if ("time-am" == shc_type) {
 				this.setHours(this.date.getHours() + 12);
@@ -703,7 +702,7 @@ export default class SHCalendar {
 							date_int < this._firstDateVisible ||
 							date_int > this._lastDateVisible
 						)
-							this.moveTo(date_int);
+							this.moveTo(date);
 					} else
 						date_int =
 							39 > key_code ? this._lastDateVisible : this._firstDateVisible;
@@ -988,7 +987,7 @@ export default class SHCalendar {
 		return value;
 	}
 
-	moveTo(date: SHDate | number, animation?: boolean | number) {
+	moveTo(date: SHDate, animation?: boolean | number) {
 		//date , animation
 		var a: any,
 			min: any = false,
@@ -998,8 +997,8 @@ export default class SHCalendar {
 			el_clone_node: any,
 			el_clone_node_style: any;
 		//   v,
-		date = SHCalendar.intToDate(date);
-		let compare_date = this.compareDate(date, this.date, true);
+		let date_comparison = this.dateComparison(date, this.date, true);
+		console.log(this.date.toDateString(), date.toDateString(), date_comparison);
 		const {
 			min: args_min,
 			max: args_max,
@@ -1013,8 +1012,8 @@ export default class SHCalendar {
 			navNextYear: els_navNextYear,
 			body: els_body
 		} = this.els;
-		if (args_min) min = this.compareDate(date, args_min);
-		if (args_max) max = this.compareDate(date, args_max);
+		if (args_min) min = this.dateComparison(date, args_min);
+		if (args_max) max = this.dateComparison(date, args_max);
 		if (!args_animation) animation = false;
 		this.toggleClass(
 			false != min && 1 >= min,
@@ -1029,17 +1028,17 @@ export default class SHCalendar {
 		if (min < -1) {
 			date = args_min;
 			a = 1;
-			compare_date = 0;
+			date_comparison = 0;
 		}
 		if (max > 1) {
 			date = args_max;
 			a = 2;
-			compare_date = 0;
+			date_comparison = 0;
 		}
 		this.date = date as SHDate;
 		this.refresh(!!animation);
 		this.callHooks("onChange", date, animation);
-		if (!(!animation || (0 == compare_date && 2 == animation))) {
+		if (!(!animation || (0 == date_comparison && 2 == animation))) {
 			if (this._bodyAnim) this._bodyAnim.stop();
 			const {
 				firstChild: body_first_child,
@@ -1048,27 +1047,28 @@ export default class SHCalendar {
 			} = els_body;
 			const el = this.createElement(
 				"div",
-				"SHCalendar-animBody-" + this.#control_button[compare_date],
+				"SHCalendar-animBody-" + this.#control_button[date_comparison],
 				els_body
 			);
 			this.setOpacity(body_first_child, 0.7);
 			if (a) func_animation = this.#math_animation.brakes;
-			else if (0 == compare_date) func_animation = this.#math_animation.shake;
+			else if (0 == date_comparison)
+				func_animation = this.#math_animation.shake;
 			else func_animation = this.#math_animation.accel_ab2;
-			const ddbool = compare_date * compare_date > 4;
+			const ddbool = date_comparison * date_comparison > 4;
 			const body_first_child_offset = ddbool
 				? body_first_child.offsetTop
 				: body_first_child.offsetLeft;
 			const el_style = el.style;
 			var body_offset = ddbool ? body_offset_height : body_offset_width;
-			if (compare_date < 0) body_offset += body_first_child_offset;
-			else if (compare_date > 0)
+			if (date_comparison < 0) body_offset += body_first_child_offset;
+			else if (date_comparison > 0)
 				body_offset = body_first_child_offset - body_offset;
 			else {
 				body_offset = Math.round(body_offset / 7);
 				if (2 == a) body_offset = -body_offset;
 			}
-			if (!(a || 0 == compare_date)) {
+			if (!(a || 0 == date_comparison)) {
 				el_clone_node = el.cloneNode(true);
 				el_clone_node_style = el_clone_node.style;
 				//v = 2 * body_offset;
@@ -1089,18 +1089,18 @@ export default class SHCalendar {
 						el_style[ddbool ? "marginTop" : "marginLeft"] =
 							e(i, body_offset, 0) + "px";
 					else {
-						if (ddbool || 0 == compare_date) {
+						if (ddbool || 0 == date_comparison) {
 							el_style.marginTop =
 								e(
-									0 == compare_date ? func_animation(t * t) : i,
+									0 == date_comparison ? func_animation(t * t) : i,
 									0,
 									body_offset
 								) + "px";
-							if (0 != compare_date) el_clone_node_style.marginTop = n;
+							if (0 != date_comparison) el_clone_node_style.marginTop = n;
 						}
-						if (!(ddbool && 0 != compare_date)) {
+						if (!(ddbool && 0 != date_comparison)) {
 							el_style.marginLeft = e(i, 0, body_offset) + "px";
-							if (0 != compare_date) el_clone_node_style.marginLeft = n;
+							if (0 != date_comparison) el_clone_node_style.marginLeft = n;
 						}
 					}
 					if (args_opacity > 2 && el_clone_node) {
@@ -1120,9 +1120,9 @@ export default class SHCalendar {
 
 	isDisabled(date: SHDate) {
 		const { min, max, disabled } = this.args;
-		if (min && this.compareDate(date, min) < 0) {
+		if (min && this.dateComparison(date, min) < 0) {
 			return true;
-		} else if (max && this.compareDate(date, max) > 0) {
+		} else if (max && this.dateComparison(date, max) > 0) {
 			return true;
 		} else if (disabled) {
 			return this.args.disabled(date);
@@ -1235,7 +1235,7 @@ export default class SHCalendar {
 		return is_change;
 	}
 
-	compareDate(
+	dateComparison(
 		first_date: SHDate,
 		second_date: SHDate,
 		is_day: boolean = false
@@ -1279,8 +1279,8 @@ export default class SHCalendar {
 				break;
 			case "+M":
 			case 1:
-				year = date.getFullYear() + 1;
-				month = date.getMonth();
+				year = date.getFullYear();
+				month = date.getMonth() + 1;
 				break;
 			default:
 				const date_now = new SHDate();
