@@ -53,13 +53,13 @@ export default class Selection {
 			this.normalize();
 			if (!is_change) this.onChange();
 		} else {
-			date = SHCalendar.dateToInt(date);
-			if (type || !this.isSelected(date)) {
-				if (type) this.sel = [date];
-				else this.sel.splice(this.findInsertPos(date), 0, date);
+			const date_int = SHCalendar.dateToInt(date);
+			if (type || !this.isSelected(date_int)) {
+				if (type) this.sel = [date_int];
+				else this.sel.splice(this.findInsertPos(date_int), 0, date_int);
 				this.normalize();
 				if (!is_change) this.onChange();
-			} else if (is_select) this.unselect(date, is_change);
+			} else if (is_select) this.unselect(date_int, is_change);
 		}
 	}
 

@@ -124,33 +124,38 @@ export default class SHCalendar {
 		34: 1
 	};
 
-	#math_animation = {
+	#func_animation = {
 		//ae
-		elastic_b: function (t: number) {
-			return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t);
+		elastic_b: function (pos: number) {
+			return 1 - Math.cos(5.5 * -pos * Math.PI) / Math.pow(2, 7 * pos);
 		},
-		magnetic: function (t: number) {
-			return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t);
+		magnetic: function (pos: number) {
+			return 1 - Math.cos(10.5 * pos * pos * pos * Math.PI) / Math.exp(4 * pos);
 		},
-		accel_b: function (t: number) {
-			return (t = 1 - t), 1 - t * t * t * t;
+		accel_b: function (pos: number) {
+			pos = 1 - pos;
+			return 1 - pos * pos * pos * pos;
 		},
-		accel_a: function (t: number) {
-			return t * t * t;
+		accel_a: function (pos: number) {
+			return pos * pos * pos;
 		},
-		accel_ab: function (t: number) {
-			return (t = 1 - t), 1 - Math.sin((t * t * Math.PI) / 2);
+		accel_ab: function (pos: number) {
+			pos = 1 - pos;
+			return 1 - Math.sin((pos * pos * Math.PI) / 2);
 		},
-		accel_ab2: function (t: number) {
-			return (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1);
+		accel_ab2: function (pos: number) {
+			pos /= 0.5;
+			if (pos < 1) return 0.5 * pos * pos;
+			return -0.5 * (--pos * (pos - 2) - 1);
 		},
-		brakes: function (t: number) {
-			return (t = 1 - t), 1 - Math.sin(t * t * Math.PI);
+		brakes: function (pos: number) {
+			pos = 1 - pos;
+			return 1 - Math.sin(pos * pos * Math.PI);
 		},
-		shake: function (t: number) {
-			return 0.5 > t
-				? -Math.cos(11 * t * Math.PI) * t * t
-				: ((t = 1 - t), Math.cos(11 * t * Math.PI) * t * t);
+		shake: function (pos: number) {
+			if (0.5 > pos) return -Math.cos(11 * pos * Math.PI) * pos * pos;
+			pos = 1 - pos;
+			return Math.cos(11 * pos * Math.PI) * pos * pos;
 		}
 	};
 
@@ -164,7 +169,7 @@ export default class SHCalendar {
 		bottomBar: true,
 		titleFormat: "%b %Y",
 		dateFormat: "%Y-%m-%d",
-		// date:true,
+		date: new SHDate(),
 		weekNumbers: false,
 		time: true,
 		fdow: Word.getFirstDayOfWeek(),
@@ -219,9 +224,9 @@ export default class SHCalendar {
 	#lang: string = SHCalendar.defaultArgs.lang;
 	static kcmonth: any;
 
-	constructor(args: any = SHCalendar.defaultArgs, date: SHDate = new SHDate()) {
+	constructor(args: any = SHCalendar.defaultArgs) {
 		this.args = this.mergeData(args, SHCalendar.defaultArgs);
-		this.date = date;
+		this.date = this.setDate(this.args.date);
 		this.args.min = this.setDate(this.args.min);
 		this.args.max = this.setDate(this.args.max);
 		if (this.args.time === true)
@@ -286,7 +291,8 @@ export default class SHCalendar {
 	}
 
 	init(): HTMLElement {
-		var el = this.getElementById(this.args.cont);
+		const { cont: args_cont, noScroll: args_noScroll } = this.args;
+		var el = this.getElementById(args_cont);
 		const els = this.els;
 		const events: any = {
 			mousedown: (event: any) => this.mouseClick(true, event),
@@ -302,7 +308,7 @@ export default class SHCalendar {
 			  }
 			: {};
 
-		const events_wheel: any = !this.args.noScroll
+		const events_wheel: any = !args_noScroll
 			? SHCalendar.IS_GECKO
 				? {
 						DOMMouseScroll: (event: any) => this.wheelCHTime(event)
@@ -317,16 +323,22 @@ export default class SHCalendar {
 			if (class_name) els[class_name] = el;
 			if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
-		this.addEvent(els.main, { ...events, ...events_IE, ...events_wheel });
+		const {
+			main: els_main,
+			focusLink: els_focus_link,
+			yearInput: els_year_input
+		} = els;
+		this.addEvent(els_main, { ...events, ...events_IE, ...events_wheel });
+		const tis = this;
 		this._focusEvents = {
-			focus: (event: any) => this.onFocus(),
-			blur: (event: any) => this.onBluringTimeout()
+			focus: (event: any) => tis.onFocus(),
+			blur: (event: any) => tis.onBluringTimeout()
 		};
-		this.addEvent(els.focusLink, this._focusEvents);
-		els.yearInput && this.addEvent(els.yearInput, this._focusEvents);
+		this.addEvent(els_focus_link, this._focusEvents);
+		if (els_year_input) this.addEvent(els_year_input, this._focusEvents);
 
 		this.moveTo(this.date, false);
-		this.setTime(null, true);
+		this.setTime(this.time, true);
 		return els.topCont;
 	}
 
@@ -415,38 +427,40 @@ export default class SHCalendar {
 	}
 
 	mouseClick(io: boolean, event: MouseEvent | any) {
-		var timeOut: any, selection: any, events: any, el_date: any;
+		var timeOut: any, events: any, el_date: any;
 		const el_type = this.getAttributeType(event);
 		if (el_type && !el_type.getAttribute("disabled")) {
-			const shc_btn = el_type.getAttribute("shc-btn");
 			const shc_type = el_type.getAttribute("shc-type");
+			const shc_btn = el_type.getAttribute("shc-btn");
 			const shc_date = el_type.getAttribute("shc-date");
-			selection = this.selection;
+			const selection = this.selection;
+			const tis = this;
 			if (io) {
 				events = {
-					mouseover: (event: any) => this.stopEvent(event),
-					mousemove: (event: any) => this.stopEvent(event),
+					mouseover: (event: any) => tis.stopEvent(event),
+					mousemove: (event: any) => tis.stopEvent(event),
 					mouseup: (event?: any) => {
 						const shc_cls = el_type.getAttribute("shc-cls");
-						if (shc_cls) this.removeClass(el_type, this.getClass(shc_cls, 1));
+						if (shc_cls) tis.removeClass(el_type, tis.getClass(shc_cls, 1));
 						clearTimeout(timeOut);
-						this.removeEvent(document, events); //, true
+						tis.removeEvent(document, events); //, true
 						events = null;
 					}
 				};
-				setTimeout(() => this.focus(), 1);
+				setTimeout(() => tis.focus(), 1);
 				const shc_cls = el_type.getAttribute("shc-cls");
 				if (shc_cls) this.addClass(el_type, this.getClass(shc_cls, 1));
 				if ("menu" == shc_btn) {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
 					if (this.stepDate(shc_btn)) {
+						const tis = this;
 						const time_out = () => {
-							if (this.stepDate(shc_btn, true)) {
+							if (tis.stepDate(shc_btn, true)) {
 								timeOut = setTimeout(time_out, 40);
 							} else {
 								events.mouseup();
-								this.stepDate(shc_btn);
+								tis.stepDate(shc_btn);
 							}
 						};
 						timeOut = setTimeout(time_out, 350);
@@ -458,8 +472,9 @@ export default class SHCalendar {
 				} else if ("time-am" == shc_type) {
 					this.addEvent(document, events); //, true
 				} else if (/^time/.test(shc_type)) {
+					const tis = this;
 					const time_out = (type: string = shc_type) => {
-						this.stepTime(type);
+						tis.stepTime(type);
 						timeOut = setTimeout(time_out, 1e2);
 					};
 					this.stepTime(shc_type);
@@ -753,7 +768,7 @@ export default class SHCalendar {
 				this.els.yearInput = el;
 			} else if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
-		this.setTime(null, true);
+		this.setTime(this.time, true);
 	}
 
 	focus() {
@@ -809,40 +824,34 @@ export default class SHCalendar {
 
 	setHours(H24: number) {
 		const { timeAM, timeHour } = this.els;
-		if (0 > H24) {
-			H24 += 24;
-		}
-		//this.setTime(1e2 * (H % 24) + (this.time % 1e2));
-
+		if (H24 < 0) H24 += 24;
+		H24 %= 24;
+		this.setTime(1e2 * (H24 % 24) + (this.time % 1e2));
 		this.date.setHours(H24);
 		if (this.args.showTime == 12) {
-			if (0 == H24) {
-				H24 = 12;
-			}
-			if (H24 > 12) {
-				H24 -= 12;
-			}
-			timeAM.innerHTML = this.getLanguage(12 > H24 ? "AM" : "PM");
+			if (H24 < 0) H24 += 12;
+			timeAM.innerHTML = this.getLanguage(H24 < 12 ? "AM" : "PM");
+			H24 = H24 % 12 || 12;
 		}
 		timeHour.innerHTML = H24.toString().padStart(2, "0");
 	}
 
 	setMinutes(minute: number) {
+		const { minuteStep } = this.args,
+			{ timeMinute } = this.els;
 		if (minute < 0) minute += 60;
-		const { minuteStep } = this.args;
 		minute = Math.trunc(minute / minuteStep) * minuteStep;
-		//this.setTime(1e2 * this.date.getHours() + (M % 60));
+		this.setTime(1e2 * this.date.getHours() + (minute % 60));
 		this.date.setMinutes(minute);
-		const { timeMinute } = this.els;
 		timeMinute.innerHTML = minute.toString().padStart(2, "0");
 	}
 
-	setTime(time: number | null, nohooks: boolean = false) {
+	setTime(time: number, nohooks: boolean = false) {
 		const { inputField, showTime, dateFormat } = this.args;
 		if (showTime) {
-			this.time = time !== null ? time : this.time;
+			this.time = time;
 			if (!nohooks) {
-				this.callHooks("onTimeChange", this.time);
+				this.callHooks("onTimeChange", time);
 				if (inputField) {
 					inputField[
 						inputField.tagName.toLowerCase() === "input" ? "value" : "innerHTML"
@@ -927,39 +936,44 @@ export default class SHCalendar {
 		return el_s;
 	}
 
-	Animation(args: any, e?: any, n: number = 0) {
+	Animation(args: any, interval_id?: any, step: number = 0) {
 		//animation
 
 		args = this.mergeData(args, {
-			fps: 50,
-			len: 15,
+			fps: 50, //frames per second (rate)
+			len: 15, // all step
 			onUpdate: () => {},
 			onStop: () => {}
 		});
 		if (SHCalendar.IS_IE) args.len = Math.round(args.len / 2);
-
+		const args_len = args.len;
+		const args_fps = args.fps;
 		const result = {
-			map: (t: number, e: number, n: number, a: number) => {
-				if (a) return n + t * (e - n);
-				return e + t * (n - e);
+			map: (
+				math_animation: number,
+				offset_height: number,
+				offset: number,
+				visible: number
+			) => {
+				if (visible) return offset + math_animation * (offset_height - offset);
+				return offset_height + math_animation * (offset - offset_height);
 			},
 			update: () => {
-				const e = args.len;
-				args.onUpdate(n / e, result.map);
-				if (n === e) result.stop();
-				n++;
+				args.onUpdate(step / args_len, result.map);
+				if (step === args_len) result.stop();
+				step++;
 			},
 			start: () => {
-				if (e) result.stop();
-				n = 0;
-				e = setInterval(result.update, 1000 / args.fps);
+				if (interval_id) result.stop();
+				step = 0;
+				interval_id = setInterval(result.update, 1000 / args_fps);
 			},
 			stop: () => {
-				if (e) {
-					clearInterval(e);
-					e = null;
+				if (interval_id) {
+					clearInterval(interval_id);
+					interval_id = null;
 				}
-				args.onStop(n / args.len, result.map);
+				args.onStop(step / args_len, result.map);
 			},
 			args: args
 		};
@@ -989,16 +1003,15 @@ export default class SHCalendar {
 
 	moveTo(date: SHDate, animation?: boolean | number) {
 		//date , animation
-		var a: any,
+		var stop_move: any,
 			min: any = false,
 			max: any = false,
 			func_animation: any,
-			body_offset: any,
+			body_offset_height_width: any,
 			el_clone_node: any,
 			el_clone_node_style: any;
 		//   v,
 		let date_comparison = this.dateComparison(date, this.date, true);
-		console.log(this.date.toDateString(), date.toDateString(), date_comparison);
 		const {
 			min: args_min,
 			max: args_max,
@@ -1016,7 +1029,7 @@ export default class SHCalendar {
 		if (args_max) max = this.dateComparison(date, args_max);
 		if (!args_animation) animation = false;
 		this.toggleClass(
-			false != min && 1 >= min,
+			false != min && min <= 1,
 			[els_navPrevMonth, els_navPrevYear],
 			"SHCalendar-navDisabled"
 		);
@@ -1027,15 +1040,15 @@ export default class SHCalendar {
 		);
 		if (min < -1) {
 			date = args_min;
-			a = 1;
+			stop_move = 1;
 			date_comparison = 0;
 		}
 		if (max > 1) {
 			date = args_max;
-			a = 2;
+			stop_move = 2;
 			date_comparison = 0;
 		}
-		this.date = date as SHDate;
+		this.date = date;
 		this.refresh(!!animation);
 		this.callHooks("onChange", date, animation);
 		if (!(!animation || (0 == date_comparison && 2 == animation))) {
@@ -1051,61 +1064,76 @@ export default class SHCalendar {
 				els_body
 			);
 			this.setOpacity(body_first_child, 0.7);
-			if (a) func_animation = this.#math_animation.brakes;
+			if (stop_move) func_animation = this.#func_animation.brakes;
 			else if (0 == date_comparison)
-				func_animation = this.#math_animation.shake;
-			else func_animation = this.#math_animation.accel_ab2;
-			const ddbool = date_comparison * date_comparison > 4;
-			const body_first_child_offset = ddbool
+				func_animation = this.#func_animation.shake;
+			else func_animation = this.#func_animation.accel_ab2;
+			const is_date_comparison_bigger_four =
+				date_comparison * date_comparison > 4;
+			const body_first_child_offset_top_left = is_date_comparison_bigger_four
 				? body_first_child.offsetTop
 				: body_first_child.offsetLeft;
 			const el_style = el.style;
-			var body_offset = ddbool ? body_offset_height : body_offset_width;
-			if (date_comparison < 0) body_offset += body_first_child_offset;
+			var body_offset_height_width = is_date_comparison_bigger_four
+				? body_offset_height
+				: body_offset_width;
+			if (date_comparison < 0)
+				body_offset_height_width += body_first_child_offset_top_left;
 			else if (date_comparison > 0)
-				body_offset = body_first_child_offset - body_offset;
+				body_offset_height_width =
+					body_first_child_offset_top_left - body_offset_height_width;
 			else {
-				body_offset = Math.round(body_offset / 7);
-				if (2 == a) body_offset = -body_offset;
+				body_offset_height_width = Math.round(body_offset_height_width / 7);
+				if (2 == stop_move)
+					body_offset_height_width = -body_offset_height_width;
 			}
-			if (!(a || 0 == date_comparison)) {
+			if (!(stop_move || 0 == date_comparison)) {
 				el_clone_node = el.cloneNode(true);
 				el_clone_node_style = el_clone_node.style;
-				//v = 2 * body_offset;
+				//v = 2 * body_offset_height_width;
 				el_clone_node.appendChild(body_first_child.cloneNode(true));
-				el_clone_node_style[ddbool ? "marginTop" : "marginLeft"] =
-					body_offset + "px";
+				el_clone_node_style[
+					is_date_comparison_bigger_four ? "marginTop" : "marginLeft"
+				] = body_offset_height_width + "px";
 				els_body.appendChild(el_clone_node);
 			}
 			body_first_child.style.visibility = "hidden";
-			el.innerHTML = this.Day(date as SHDate);
+			el.innerHTML = this.Day(date);
 			const tis = this;
 			this._bodyAnim = this.Animation({
-				onUpdate: function (t: number, e: Function) {
-					var n: any,
-						i = func_animation(t);
-					if (el_clone_node) n = e(i, body_offset, 2 * body_offset) + "px";
-					if (a)
-						el_style[ddbool ? "marginTop" : "marginLeft"] =
-							e(i, body_offset, 0) + "px";
+				onUpdate: function (pos: number, func_map: Function) {
+					var n: any;
+					const math_anime = func_animation(pos);
+					if (el_clone_node)
+						n =
+							func_map(
+								math_anime,
+								body_offset_height_width,
+								2 * body_offset_height_width
+							) + "px";
+					if (stop_move)
+						el_style[
+							is_date_comparison_bigger_four ? "marginTop" : "marginLeft"
+						] = func_map(math_anime, body_offset_height_width, 0) + "px";
 					else {
-						if (ddbool || 0 == date_comparison) {
+						if (is_date_comparison_bigger_four || 0 == date_comparison) {
 							el_style.marginTop =
-								e(
-									0 == date_comparison ? func_animation(t * t) : i,
+								func_map(
+									0 == date_comparison ? func_animation(pos * pos) : math_anime,
 									0,
-									body_offset
+									body_offset_height_width
 								) + "px";
 							if (0 != date_comparison) el_clone_node_style.marginTop = n;
 						}
-						if (!(ddbool && 0 != date_comparison)) {
-							el_style.marginLeft = e(i, 0, body_offset) + "px";
+						if (!(is_date_comparison_bigger_four && 0 != date_comparison)) {
+							el_style.marginLeft =
+								func_map(math_anime, 0, body_offset_height_width) + "px";
 							if (0 != date_comparison) el_clone_node_style.marginLeft = n;
 						}
 					}
 					if (args_opacity > 2 && el_clone_node) {
-						tis.setOpacity(el_clone_node, 1 - i);
-						tis.setOpacity(el, i);
+						tis.setOpacity(el_clone_node, 1 - math_anime);
+						tis.setOpacity(el, math_anime);
 					}
 				},
 				onStop: function () {
@@ -1158,14 +1186,18 @@ export default class SHCalendar {
 				}
 				const tis = this;
 				this._menuAnim = this.Animation({
-					onUpdate: (s: number, i: Function) => {
+					onUpdate: (pos: number, func_map: Function) => {
 						menu.firstChild.style.marginTop =
-							i(tis.#math_animation.accel_b(s), -offset_height, 0, !visible) +
-							"px";
+							func_map(
+								tis.#func_animation.accel_b(pos),
+								-offset_height,
+								0,
+								!visible
+							) + "px";
 						if (tis.args.opacity > 0)
 							tis.setOpacity(
 								menu,
-								i(tis.#math_animation.accel_b(s), 0, 0.85, !visible)
+								func_map(tis.#func_animation.accel_b(pos), 0, 0.85, !visible)
 							);
 					},
 					onStop: () => {
@@ -1240,16 +1272,16 @@ export default class SHCalendar {
 		second_date: SHDate,
 		is_day: boolean = false
 	) {
-		const yearComparison = first_date.getFullYear() - second_date.getFullYear();
+		const yearComparison = second_date.getFullYear() - first_date.getFullYear();
 		if (yearComparison !== 0) {
 			return yearComparison > 0 ? -3 : 3;
 		}
-		const monthComparison = first_date.getMonth() - second_date.getMonth();
+		const monthComparison = second_date.getMonth() - first_date.getMonth();
 		if (monthComparison !== 0) {
 			return monthComparison > 0 ? -2 : 2;
 		}
 		if (is_day) {
-			const dayComparison = first_date.getDate() - second_date.getDate();
+			const dayComparison = second_date.getDate() - first_date.getDate();
 			if (dayComparison !== 0) {
 				return dayComparison > 0 ? -1 : 1;
 			}
@@ -1258,71 +1290,67 @@ export default class SHCalendar {
 	}
 
 	stepDate(shc_btn: any, anim: any = false) {
-		var year: number, month: number;
-		console.log("stepDate", this.date.toDateString());
-		const date = this.date;
+		const date = this.date.clone();
+		const year = date.getFullYear();
+		const month = date.getMonth();
+		console.log(date.toDateString());
 		switch (shc_btn) {
-			case "-Y":
-			case -2:
-				year = date.getFullYear() - 1;
-				month = date.getMonth();
-				break;
-			case "-M":
-			case -1:
-				year = date.getFullYear();
-				month = date.getMonth() - 1;
-				break;
 			case "+Y":
 			case 2:
-				year = date.getFullYear() + 1;
-				month = date.getMonth();
+				date.setFullYear(year + 1, month, 1);
+				break;
+			case "-Y":
+			case -2:
+				date.setFullYear(year - 1, month, 1);
 				break;
 			case "+M":
 			case 1:
-				year = date.getFullYear();
-				month = date.getMonth() + 1;
+				date.setFullYear(year, month + 1, 1);
+				break;
+			case "-M":
+			case -1:
+				date.setFullYear(year, month - 1, 1);
 				break;
 			default:
-				const date_now = new SHDate();
-				year = date_now.getFullYear();
-				month = date_now.getMonth();
-				break;
+				return;
 		}
-		date.setFullYear(year, month, 1);
-		console.log(year, month, "E", date.toDateString());
+		console.log(year, month, date.toDateString());
 		if (this._bodyAnim) this._bodyAnim.stop();
 		return this.moveTo(date, !anim);
 	}
 
 	hide() {
 		this.callHooks("onClose", this);
-		var top_cont = this.els.topCont,
-			first_child = this.els.body.firstChild;
+		const { topCont: els_top_cont } = this.els,
+			{ firstChild: body_first_child } = this.els.body;
 		if (this.args.animation) {
 			if (this._showAnim) this._showAnim.stop();
 			const tis = this;
 			this._showAnim = this.Animation({
-				onUpdate: (i: number, r: Function) => {
-					if (tis.args.opacity > 1) tis.setOpacity(top_cont, 1 - i);
-					first_child.style.marginTop =
-						-r(tis.#math_animation.accel_b(i), 0, first_child.offsetHeight) +
-						"px";
-					top_cont.style.top =
-						r(
-							tis.#math_animation.accel_ab(i),
-							tis.getAbsolutePos(top_cont).y,
-							tis.getAbsolutePos(top_cont).y - 10
+				onUpdate: (pos: number, func_map: Function) => {
+					if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, 1 - pos);
+					body_first_child.style.marginTop =
+						-func_map(
+							tis.#func_animation.accel_b(pos),
+							0,
+							body_first_child.offsetHeight
+						) + "px";
+					els_top_cont.style.top =
+						func_map(
+							tis.#func_animation.accel_ab(pos),
+							tis.getAbsolutePos(els_top_cont).y,
+							tis.getAbsolutePos(els_top_cont).y - 10
 						) + "px";
 				},
 				onStop: () => {
-					top_cont.style.display = "none";
-					first_child.style.marginTop = "";
-					if (tis.args.opacity > 1) tis.setOpacity(top_cont, "");
+					els_top_cont.style.display = "none";
+					body_first_child.style.marginTop = "";
+					if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, "");
 					tis._showAnim = null;
 				}
 			});
 		} else {
-			top_cont.style.display = "none";
+			els_top_cont.style.display = "none";
 		}
 		this.input_field = null;
 	}
@@ -1336,7 +1364,7 @@ export default class SHCalendar {
 				if (dateInfo && dateInfo.tooltip) {
 					template =
 						"<div class='SHCalendar-tooltipCont'>" +
-						this.printDate(date, dateInfo.tooltip) +
+						this.format(date, dateInfo.tooltip) +
 						"</div>";
 				}
 			}
@@ -1345,14 +1373,15 @@ export default class SHCalendar {
 			this.els.tooltip.innerHTML = template;
 		}
 	}
-	printDate(date: SHDate = this.date, str: string): string {
-		let month = date.getMonth(),
+
+	format(date: SHDate = this.date, str: string): string {
+		const month = date.getMonth(),
 			day = date.getDate(),
 			year = date.getFullYear(),
 			woy = date.getWeekOfYear()[1],
 			dow = date.getDay(),
-			hours = date.getHours(),
-			h12 = hours >= 12 ? hours - 12 : hours || 12,
+			h24 = date.getHours(),
+			h12 = h24 >= 12 ? h24 % 12 : h24 || 12,
 			doy = date.getDayOfYear(),
 			minutes = date.getMinutes(),
 			second = date.getSeconds(),
@@ -1364,17 +1393,17 @@ export default class SHCalendar {
 				["%C", 1 + Math.trunc(year / 1e2)],
 				["%d", day < 10 ? "0" + day : day],
 				["%e", day],
-				["%H", hours < 10 ? "0" + hours : hours],
+				["%H", h24 < 10 ? "0" + h24 : h24],
 				["%I", h12 < 10 ? "0" + h12 : h12],
 				["%j", doy < 10 ? "00" + doy : doy < 1e2 ? "0" + doy : doy],
-				["%k", hours],
+				["%k", h24],
 				["%l", h12],
 				["%m", month < 9 ? "0" + (1 + month) : 1 + month],
 				["%o", 1 + month],
 				["%M", minutes < 10 ? "0" + minutes : minutes],
 				["%n", "\n"],
-				["%p", hours >= 12 ? "PM" : "AM"],
-				["%P", hours >= 12 ? "pm" : "am"],
+				["%p", h24 >= 12 ? "PM" : "AM"],
+				["%P", h24 >= 12 ? "pm" : "am"],
 				["%s", Math.trunc(date.getTime() / 1e3)],
 				["%S", second < 10 ? "0" + second : second],
 				["%t", "	"],
@@ -1387,7 +1416,9 @@ export default class SHCalendar {
 				["%Y", year],
 				["%%", "%"]
 			]);
-		return str.replace(/%./g, (t) => (data.has(t) ? data.get(t) : t));
+		return str.replace(/%./g, (item) =>
+			data.has(item) ? data.get(item) : item
+		);
 	}
 
 	static parseDate(str: string, n: any, date_now?: SHDate) {
@@ -1580,7 +1611,7 @@ export default class SHCalendar {
 		//Title
 		return (
 			"<div unselectable='on'>" +
-			this.printDate(this.date, this.args.titleFormat) +
+			this.format(this.date, this.args.titleFormat) +
 			"</div>"
 		);
 	}
@@ -1632,13 +1663,14 @@ export default class SHCalendar {
 		return this.getLanguage("weekend").indexOf(day) >= 0;
 	}
 
-	Day(date: SHDate, fdow: number = this.fdow) {
+	Day(date_now: SHDate, fdow: number = this.fdow) {
 		const today = new SHDate();
 		const year_today = today.getFullYear();
 		const month_today = today.getMonth();
 		const day_today = today.getDate();
 		const fulldate_today =
 			1e4 * year_today + 1e2 * (month_today + 1) + day_today;
+		const date = date_now.clone();
 		const month_view = date.getMonth();
 		const is_wk = this.args.weekNumbers;
 		let template: string[] = [];
@@ -1707,9 +1739,7 @@ export default class SHCalendar {
 					if (is_disabled && date_info.klass)
 						template.push(" " + date_info.klass);
 				}
-
 				template.push("'>" + day + "</div></td>");
-
 				date.setMonth(date.getMonth(), date.getDate() + 1);
 			}
 			template.push("</tr>");
@@ -1929,10 +1959,11 @@ export default class SHCalendar {
 				this.setOpacity(top_cont, 0);
 				const tis = this;
 				this._showAnim = this.Animation({
-					onUpdate: function (t: any, e: any) {
+					onUpdate: function (pos: any, func_map: Function) {
 						first_child.style.marginTop =
-							-e(tis.#math_animation.accel_b(t), offsetHeight, 0) + "px";
-						if (tis.args.opacity > 1) tis.setOpacity(top_cont, t);
+							-func_map(tis.#func_animation.accel_b(pos), offsetHeight, 0) +
+							"px";
+						if (tis.args.opacity > 1) tis.setOpacity(top_cont, pos);
 					},
 					onStop: function () {
 						if (tis.args.opacity > 1) tis.setOpacity(top_cont, "");
