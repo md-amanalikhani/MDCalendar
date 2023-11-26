@@ -11,7 +11,7 @@ export default class fa_IR {
 	public static LANGUAGE: string = "fa_IR"; //Persion	fa
 	public static IS_RTL: boolean = true;
 
-	public static FIRST_DAY_OF_WEEK: number = 1; // first day of week for this locale; 0 = Sunday, 1 = Monday, etc.
+	public static FIRST_DAY_OF_WEEK: number = 0; // first day of week for this locale; 0 = Satarday, 1 = Sunday, etc.
 
 	public static GO_TODAY: string = "به امروز";
 
@@ -19,18 +19,7 @@ export default class fa_IR {
 
 	public static WEEK_NAME: string = "هفته";
 
-	public static WEEKEND: number[] = [6]; // 0 = Sunday, 1 = Monday, etc.
-
-	public static AM: string = "am";
-	public static AM_LONG: string = "بعد از ظهر";
-	public static AM_SHORT: string = "ب‍.ظ";
-
-	public static PM: string = "pm";
-	public static PM_LONG: string = "قبل از ظهر";
-	public static PM_SHORT: string = "ق‍.ظ";
-
-	public static SUFFIX: string = "ام";
-
+	public static WEEKEND: number[] = [6]; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
 	public static MERIDIEN_FULL_NAMES: string[] = ["قبل از ظهر", "بعد از ظهر"];
 
 	public static MERIDIEN_SHORT_NAMES: string[] = ["ق‍.ظ", "ب‍.ظ"];
@@ -49,19 +38,6 @@ export default class fa_IR {
 		","
 	];
 
-	public static DIGIT2: string[] = [
-		"٠",
-		"١",
-		"٢",
-		"٣",
-		"٤",
-		"٥",
-		"٦",
-		"٧",
-		"٨",
-		"٩",
-		","
-	];
 	public static MONTH_FULL_NAMES: string[] = [
 		"January",
 		"February",

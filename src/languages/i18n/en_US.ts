@@ -22,9 +22,8 @@ export default class en_US {
 
 	public static WEEKEND: number[] = [6]; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
 
-	public static AM: string = "am"; //MERIDIEN_SHORT_NAMES
-	public static PM: string = "pm"; //MERIDIEN_SHORT_NAMES
-	public static MERIDIEN_SHORT_NAMES: string[] = ["AM", "PM"];
+	public static MERIDIEN_FULL_NAMES: string[] = ["AM", "PM"];
+	public static MERIDIEN_SHORT_NAMES = ["am", "pm"];
 
 	public static MONTH_FULL_NAMES: string[] = [
 		"Farvardin",
@@ -74,5 +73,19 @@ export default class en_US {
 		"Wed",
 		"Thu",
 		"Fri"
+	];
+
+	public static DIGIT: string[] = [
+		"0",
+		"1",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8",
+		"9",
+		"."
 	];
 }

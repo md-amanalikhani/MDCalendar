@@ -15,8 +15,7 @@ export default class Word extends Language {
 	 * @since 1.0.0
 	 */
 	static isRTL(word_language: string = Word.LANGUAGE_WORD): boolean {
-		const cls = Word.getClass(word_language);
-		return cls.IS_RTL;
+		return Word.getClass(word_language).IS_RTL;
 	}
 
 	/**
@@ -26,8 +25,7 @@ export default class Word extends Language {
 	 * @since 1.0.0
 	 */
 	static getFirstDayOfWeek(word_language: string = Word.LANGUAGE_WORD): number {
-		const cls = Word.getClass(word_language);
-		return cls.FIRST_DAY_OF_WEEK;
+		return Word.getClass(word_language).FIRST_DAY_OF_WEEK;
 	}
 
 	/**
@@ -39,8 +37,7 @@ export default class Word extends Language {
 	static getWeekend(
 		word_language: string = Word.LANGUAGE_WORD
 	): number | number[] {
-		const cls = Word.getClass(word_language);
-		return cls.WEEKEND as number | number[];
+		return Word.getClass(word_language).WEEKEND as number | number[];
 	}
 
 	/**
@@ -50,97 +47,108 @@ export default class Word extends Language {
 	 * @since 1.0.0
 	 */
 	static getWeekName(word_language: string = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClass(word_language);
-		return cls.WEEK_NAME;
+		return Word.getClass(word_language).WEEK_NAME;
 	}
 
 	/**
-	 *
+	 * A full textual go to the today
 	 * @param {string} word_language language word
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
 	static getGoToday(word_language: string = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClass(word_language);
-		return cls.GO_TODAY;
+		return Word.getClass(word_language).GO_TODAY;
 	}
 
 	/**
-	 *
+	 * A full textual the today
 	 * @param {string} word_language language word
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
 	static getToday(word_language: string = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClass(word_language);
-		return cls.TODAY;
+		return Word.getClass(word_language).TODAY;
 	}
 
 	/**
-	 *
-	 * @param {string} word_language language word
+	 * Uppercase Ante meridiem and Post meridiem
+	 * @param {number} H24 numeric of hours
+	 * @param {string} word_language word language
 	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
 	 */
-	static getAM(word_language: string = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClass(word_language);
-		return cls.AM;
+	static getMeridienFullNames(
+		H24: number,
+		word_language: string = Word.LANGUAGE_WORD
+	): string {
+		return Word.getClass(word_language).MERIDIEN_FULL_NAMES[H24 > 11 ? 1 : 0];
 	}
 
 	/**
-	 *
-	 * @param {string} word_language language word
-	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
+	 * Lowercase Ante meridiem and Post meridiem, two letters
+	 * @param {number} H24 numeric of hours
+	 * @param {string} word_language word language
+	 * @return {string} Ante/Post meridiem, two letters
 	 */
-	static getPM(word_language: string = Word.LANGUAGE_WORD): string {
-		const cls = Word.getClass(word_language);
-		return cls.PM;
+	static getMeridienShortNames(
+		H24: number,
+		word_language: string = Word.LANGUAGE_WORD
+	): string {
+		return Word.getClass(word_language).MERIDIEN_SHORT_NAMES[H24 > 11 ? 1 : 0];
 	}
 
 	/**
-	 *
-	 * @param {string} word_language language word
-	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
+	 * A full textual representation of a month
+	 * @param {number} month numeric of a month
+	 * @param {string} word_language word language
+	 * @return {string} A full textual of a month
 	 */
-	static getMonthName(word_language: string = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClass(word_language);
-		return cls.MONTH_FULL_NAMES;
-	}
-
-	/**
-	 *
-	 * @param {string} word_language language word
-	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
-	 */
-	static getShortMonthName(
+	static getMonthFullNames(
+		month: number,
 		word_language: string = Word.LANGUAGE_WORD
 	): string[] {
-		const cls = Word.getClass(word_language);
-		return cls.MONTH_SHORT_NAMES;
+		return Word.getClass(word_language).MONTH_FULL_NAMES;
 	}
 
 	/**
-	 *
-	 * @param {string} word_language language word
-	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
+	 * A short textual representation of a month, three letters
+	 * @param {number} month numeric of a month
+	 * @param {string} word_language word language
+	 * @return {string} A short textual of a month, three letters
 	 */
-	static getDayName(word_language: string = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClass(word_language);
-		return cls.DAY_FULL_NAMES;
+	static getMonthShortNames(
+		month: number,
+		word_language: string = Word.LANGUAGE_WORD
+	): string[] {
+		return Word.getClass(word_language).MONTH_SHORT_NAMES;
 	}
 
 	/**
-	 *
-	 * @param {string} word_language language word
-	 * @return string Ante/Post meridiem
-	 * @since 1.0.0
+	 * A full textual representation of the day of the week
+	 * @param {number} dow numeric of the day of the week
+	 * @param {string} word_language word language
+	 * @param {number} FDOW numeric of the first day of the week
+	 * @return {string} A full textual the day of the week
 	 */
-	static getshortDayName(word_language: string = Word.LANGUAGE_WORD): string[] {
-		const cls = Word.getClass(word_language);
-		return cls.DAY_SHORT_NAMES;
+	static getDayFullNames(
+		dow: number,
+		word_language: string = Word.LANGUAGE,
+		FDOW: number = Word.FIRST_DAY_OF_WEEK
+	): string[] {
+		return Word.getClass(word_language).DAY_FULL_NAMES;
+	}
+
+	/**
+	 * A short textual representation of the day of the week, three letters
+	 * @param {number} dow numeric of the day of the week
+	 * @param {string} word_language word language
+	 * @param {number} FDOW numeric of the first day of the week
+	 * @return {string} A short textual of a day, three letters
+	 */
+	static getDayShortNames(
+		dow: number,
+		word_language: string = Word.LANGUAGE,
+		FDOW: number = Word.FIRST_DAY_OF_WEEK
+	): string[] {
+		return Word.getClass(word_language).DAY_SHORT_NAMES;
 	}
 }

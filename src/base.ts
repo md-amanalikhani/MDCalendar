@@ -1290,10 +1290,9 @@ export default class SHCalendar {
 	}
 
 	stepDate(shc_btn: any, anim: any = false) {
-		const date = this.date.clone();
-		const year = date.getFullYear();
-		const month = date.getMonth();
-		console.log(date.toDateString());
+		const date = this.date.clone(),
+			year = date.getFullYear(),
+			month = date.getMonth();
 		switch (shc_btn) {
 			case "+Y":
 			case 2:
@@ -1314,7 +1313,6 @@ export default class SHCalendar {
 			default:
 				return;
 		}
-		console.log(year, month, date.toDateString());
 		if (this._bodyAnim) this._bodyAnim.stop();
 		return this.moveTo(date, !anim);
 	}
@@ -1364,7 +1362,7 @@ export default class SHCalendar {
 				if (dateInfo && dateInfo.tooltip) {
 					template =
 						"<div class='SHCalendar-tooltipCont'>" +
-						this.format(date, dateInfo.tooltip) +
+						this.format(dateInfo.tooltip, date) +
 						"</div>";
 				}
 			}
@@ -1374,7 +1372,11 @@ export default class SHCalendar {
 		}
 	}
 
-	format(date: SHDate = this.date, str: string): string {
+	format(
+		str: string,
+		date: SHDate = this.date,
+		lang: string = this.#lang
+	): string {
 		const month = date.getMonth(),
 			day = date.getDate(),
 			year = date.getFullYear(),
@@ -1386,10 +1388,10 @@ export default class SHCalendar {
 			minutes = date.getMinutes(),
 			second = date.getSeconds(),
 			data = new Map([
-				["%a", this.getLanguage("sdn")[dow]],
-				["%A", this.getLanguage("dn")[dow]],
-				["%b", this.getLanguage("smn")[month]],
-				["%B", this.getLanguage("mn")[month]],
+				["%a", this.getLanguage("sdn")[dow]], //Word.getShortDayName(lang)
+				["%A", this.getLanguage("dn")[dow]], //Word.getDayName(lang)
+				["%b", this.getLanguage("smn")[month]], //Word.getShortMonthName(lang)
+				["%B", this.getLanguage("mn")[month]], //Word.getMonthName(lang)
 				["%C", 1 + Math.trunc(year / 1e2)],
 				["%d", day < 10 ? "0" + day : day],
 				["%e", day],
@@ -1562,7 +1564,7 @@ export default class SHCalendar {
 			case "dn":
 				return Word.getDayName(lang) as string[];
 			case "sdn":
-				return Word.getshortDayName(lang) as string[];
+				return Word.getShortDayName(lang) as string[];
 		}
 	}
 
@@ -1611,7 +1613,7 @@ export default class SHCalendar {
 		//Title
 		return (
 			"<div unselectable='on'>" +
-			this.format(this.date, this.args.titleFormat) +
+			this.format(this.args.titleFormat, this.date) +
 			"</div>"
 		);
 	}
