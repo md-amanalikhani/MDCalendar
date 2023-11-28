@@ -37,7 +37,7 @@ export default class Word extends Language {
 	static getWeekend(
 		word_language: string = Word.LANGUAGE_WORD
 	): number | number[] {
-		return Word.getClass(word_language).WEEKEND as number | number[];
+		return Word.getClass(word_language).WEEKEND;
 	}
 
 	/**
@@ -76,7 +76,7 @@ export default class Word extends Language {
 	 * @param {string} word_language word language
 	 * @return string Ante/Post meridiem
 	 */
-	static getMeridienFullNames(
+	static getMeridienFullName(
 		H24: number,
 		word_language: string = Word.LANGUAGE_WORD
 	): string {
@@ -89,7 +89,7 @@ export default class Word extends Language {
 	 * @param {string} word_language word language
 	 * @return {string} Ante/Post meridiem, two letters
 	 */
-	static getMeridienShortNames(
+	static getMeridienShortName(
 		H24: number,
 		word_language: string = Word.LANGUAGE_WORD
 	): string {
@@ -102,11 +102,11 @@ export default class Word extends Language {
 	 * @param {string} word_language word language
 	 * @return {string} A full textual of a month
 	 */
-	static getMonthFullNames(
+	static getMonthFullName(
 		month: number,
 		word_language: string = Word.LANGUAGE_WORD
-	): string[] {
-		return Word.getClass(word_language).MONTH_FULL_NAMES;
+	): string {
+		return Word.getClass(word_language).MONTH_FULL_NAMES[month];
 	}
 
 	/**
@@ -115,11 +115,11 @@ export default class Word extends Language {
 	 * @param {string} word_language word language
 	 * @return {string} A short textual of a month, three letters
 	 */
-	static getMonthShortNames(
+	static getMonthShortName(
 		month: number,
 		word_language: string = Word.LANGUAGE_WORD
-	): string[] {
-		return Word.getClass(word_language).MONTH_SHORT_NAMES;
+	): string {
+		return Word.getClass(word_language).MONTH_SHORT_NAMES[month];
 	}
 
 	/**
@@ -129,12 +129,12 @@ export default class Word extends Language {
 	 * @param {number} FDOW numeric of the first day of the week
 	 * @return {string} A full textual the day of the week
 	 */
-	static getDayFullNames(
+	static getDayFullName(
 		dow: number,
 		word_language: string = Word.LANGUAGE,
 		FDOW: number = Word.FIRST_DAY_OF_WEEK
-	): string[] {
-		return Word.getClass(word_language).DAY_FULL_NAMES;
+	): string {
+		return Word.getClass(word_language).DAY_FULL_NAMES[dow];
 	}
 
 	/**
@@ -144,11 +144,11 @@ export default class Word extends Language {
 	 * @param {number} FDOW numeric of the first day of the week
 	 * @return {string} A short textual of a day, three letters
 	 */
-	static getDayShortNames(
+	static getDayShortName(
 		dow: number,
 		word_language: string = Word.LANGUAGE,
 		FDOW: number = Word.FIRST_DAY_OF_WEEK
-	): string[] {
-		return Word.getClass(word_language).DAY_SHORT_NAMES;
+	): string {
+		return Word.getClass(word_language).DAY_SHORT_NAMES[dow];
 	}
 }

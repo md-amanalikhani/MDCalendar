@@ -34,7 +34,7 @@ export default class Selection {
 	}
 
 	get() {
-		return this.type == SHCalendar.SEL_SINGLE ? this.sel[0] : this.sel;
+		return this.type == SelectionType.SINGLE ? this.sel[0] : this.sel;
 	}
 
 	isEmpty() {
@@ -47,7 +47,7 @@ export default class Selection {
 		is_change?: boolean
 	) {
 		//arg, toggle)
-		var type = this.type == SHCalendar.SEL_SINGLE;
+		var type = this.type == SelectionType.SINGLE;
 		if (date instanceof Array) {
 			this.sel = date;
 			this.normalize();
@@ -220,7 +220,7 @@ export default class Selection {
 			this.cal.setFunction(
 				new Selection(
 					[[date_start, date_end]],
-					SHCalendar.SEL_MULTIPLE,
+					SelectionType.MULTIPLE,
 					this.cal
 				).getDates(false),
 				(date: SHDate | number) => {

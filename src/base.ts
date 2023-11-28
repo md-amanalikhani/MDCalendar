@@ -164,47 +164,12 @@ export default class SHCalendar {
 	static SEL_MULTIPLE: number = SelectionType.MULTIPLE;
 	static SEL_WEEK: number = SelectionType.WEEK;
 
-	static defaultArgs = {
-		cont: null,
-		bottomBar: true,
-		titleFormat: "%b %Y",
-		dateFormat: "%Y-%m-%d",
-		date: new SHDate(),
-		weekNumbers: false,
-		time: true,
-		fdow: Word.getFirstDayOfWeek(),
-		min: false,
-		max: false,
-		showTime: false,
-		timePos: "right",
-		minuteStep: 5,
-		checkRange: false,
-		animation: !SHCalendar.IS_IE6,
-		opacity: SHCalendar.IS_IE ? 1 : 3,
-		selection: [],
-		selectionType: SelectionType.MULTIPLE,
-		inputField: false,
-		lang: "en_US",
-		trigger: false,
-		align: "Bl/ / /T/r",
-		multiCtrl: true,
-		fixed: false,
-		reverseWheel: false,
-		noScroll: false,
-		disabled: false,
-		dateInfo: false,
-		onChange: false,
-		onSelect: false,
-		onTimeChange: false,
-		onFocus: false,
-		onBlur: false,
-		onClose: false
-	};
 	args: any;
 	handlers: any = {};
+	#lang: string = SHCalendar.defaultArgs.lang;
 	date: SHDate;
 	time: any;
-	fdow: number;
+	#fdow: number = Word.getFirstDayOfWeek(this.#lang);
 	selection: any;
 	els: any = {};
 	_bodyAnim: any;
@@ -221,8 +186,43 @@ export default class SHCalendar {
 	_showAnim: any;
 	dateFormat: any;
 	input_field: any;
-	#lang: string = SHCalendar.defaultArgs.lang;
 	static kcmonth: any;
+	static defaultArgs = {
+		cont: null,
+		lang: "en_US",
+		date: new SHDate(),
+		dateFormat: "%Y-%m-%d",
+		fdow: Word.getFirstDayOfWeek(),
+		weekNumbers: false,
+		bottomBar: true,
+		showTime: false,
+		time: true,
+		timePos: "right",
+		minuteStep: 5,
+		titleFormat: "%b %Y",
+		checkRange: false,
+		min: false,
+		max: false,
+		animation: !SHCalendar.IS_IE6,
+		opacity: SHCalendar.IS_IE ? 1 : 3,
+		inputField: false,
+		trigger: false,
+		align: "Bl/ / /T/r",
+		multiCtrl: true,
+		fixed: false,
+		reverseWheel: false,
+		selection: [],
+		selectionType: SelectionType.MULTIPLE,
+		noScroll: false,
+		disabled: false,
+		dateInfo: false,
+		onChange: false,
+		onSelect: false,
+		onTimeChange: false,
+		onFocus: false,
+		onBlur: false,
+		onClose: false
+	};
 
 	constructor(args: any = SHCalendar.defaultArgs) {
 		this.args = this.mergeData(args, SHCalendar.defaultArgs);
@@ -234,7 +234,7 @@ export default class SHCalendar {
 				this.date.getHours() * 1e2 +
 				Math.trunc(this.date.getMinutes() / this.args.minuteStep) *
 					this.args.minuteStep;
-		this.fdow = this.args.fdow;
+		this.#fdow = this.args.fdow;
 		this.setHandler();
 		this.selection = new Selection(
 			this.args.selection,
@@ -621,8 +621,6 @@ export default class SHCalendar {
 			date_int: number | false = false,
 			yearInput: any,
 			selection: any,
-			MN,
-			month_name: string,
 			d,
 			m;
 		if (!this._menuAnim) {
@@ -669,11 +667,12 @@ export default class SHCalendar {
 					yearInput.focus();
 					return this.stopEvent(event);
 				}
-				month_name = this.getLanguage("mn");
 				d = event.shiftKey ? -1 : this.date.getMonth();
 				for (m = 0; ++m < 12; ) {
-					MN = month_name[(d + m) % 12].toLowerCase();
-					if (MN.indexOf(char_code) == 0) {
+					const mfn = this.getLanguage("mfn", (d + m) % 12)
+						.toString()
+						.toLowerCase();
+					if (mfn.indexOf(char_code) == 0) {
 						const date = this.date;
 						date.setDate(1);
 						date.setMonth((d + m) % 12);
@@ -830,7 +829,7 @@ export default class SHCalendar {
 		this.date.setHours(H24);
 		if (this.args.showTime == 12) {
 			if (H24 < 0) H24 += 12;
-			timeAM.innerHTML = this.getLanguage(H24 < 12 ? "AM" : "PM");
+			timeAM.innerHTML = Word.getMonthFullName(H24);
 			H24 = H24 % 12 || 12;
 		}
 		timeHour.innerHTML = H24.toString().padStart(2, "0");
@@ -1372,55 +1371,100 @@ export default class SHCalendar {
 		}
 	}
 
+	isRTL(lang: string = this.#lang) {
+		if (Word.isRTL(lang)) return true;
+		return false;
+	}
+
+	getLanguage(
+		name: string,
+		data: number,
+		lang: string = this.#lang
+	): string | number[] {
+		switch (name) {
+			case "goToday":
+				return Word.getGoToday(lang) as string;
+			case "today":
+				return Word.getToday(lang) as string;
+			case "wk":
+				return Word.getWeekName(lang) as string;
+			case "weekend":
+				return Word.getWeekend(lang) as number[];
+			case "mfn":
+				return Word.getMonthFullName(data, lang) as string;
+			case "msn":
+				return Word.getMonthShortName(data, lang) as string;
+			case "dfn":
+				return Word.getDayFullName(data, lang) as string;
+			case "dsn":
+				return Word.getDayShortName(data, lang) as string;
+			default:
+				return "";
+		}
+	}
+
+	setLanguage(fdow: number, lang: string) {
+		this.#fdow = fdow;
+		this.#lang = lang;
+		this.redraw();
+	}
+
 	format(
 		str: string,
 		date: SHDate = this.date,
 		lang: string = this.#lang
-	): string {
-		const month = date.getMonth(),
+	): any {
+		const year = date.getFullYear(),
+			month = date.getMonth(),
 			day = date.getDate(),
-			year = date.getFullYear(),
-			woy = date.getWeekOfYear()[1],
+			doy = date.getDayOfYear(),
+			[iso_year, iso_week] = date.getWeekOfYear(),
 			dow = date.getDay(),
 			h24 = date.getHours(),
-			h12 = h24 >= 12 ? h24 % 12 : h24 || 12,
-			doy = date.getDayOfYear(),
+			h12 = h24 % 12 || 12,
 			minutes = date.getMinutes(),
 			second = date.getSeconds(),
+			pad_zero = (num: number | string, len: number = 2) => {
+				return `${num}`.padStart(len, "0");
+			},
 			data = new Map([
-				["%a", this.getLanguage("sdn")[dow]], //Word.getShortDayName(lang)
-				["%A", this.getLanguage("dn")[dow]], //Word.getDayName(lang)
-				["%b", this.getLanguage("smn")[month]], //Word.getShortMonthName(lang)
-				["%B", this.getLanguage("mn")[month]], //Word.getMonthName(lang)
-				["%C", 1 + Math.trunc(year / 1e2)],
-				["%d", day < 10 ? "0" + day : day],
-				["%e", day],
-				["%H", h24 < 10 ? "0" + h24 : h24],
-				["%I", h12 < 10 ? "0" + h12 : h12],
-				["%j", doy < 10 ? "00" + doy : doy < 1e2 ? "0" + doy : doy],
-				["%k", h24],
-				["%l", h12],
-				["%m", month < 9 ? "0" + (1 + month) : 1 + month],
-				["%o", 1 + month],
-				["%M", minutes < 10 ? "0" + minutes : minutes],
-				["%n", "\n"],
-				["%p", h24 >= 12 ? "PM" : "AM"],
-				["%P", h24 >= 12 ? "pm" : "am"],
-				["%s", Math.trunc(date.getTime() / 1e3)],
-				["%S", second < 10 ? "0" + second : second],
-				["%t", "	"],
-				["%U", woy < 10 ? "0" + woy : woy],
-				["%W", woy < 10 ? "0" + woy : woy],
-				["%V", woy < 10 ? "0" + woy : woy],
-				["%u", dow + 1],
-				["%w", dow],
-				["%y", ("" + year).substring(2, 3)],
-				["%Y", year],
+				["%A", Word.getDayFullName(dow, lang)],
+				["%a", Word.getDayShortName(dow, lang)],
+				["%B", Word.getMonthFullName(month, lang)],
+				["%b", Word.getMonthShortName(month, lang)],
+				["%d", pad_zero(day)],
+				["%e", `${day}`],
+				["%j", pad_zero(doy, 3)],
+				["%m", pad_zero(month + 1)],
+				["%o", `${month + 1}`],
+				["%U", pad_zero(iso_week)],
+				["%W", pad_zero(iso_year, 4)],
+				["%u", `${dow + 1}`],
+				["%w", `${dow}`],
+				["%y", `${year % 1e2}`],
+				["%Y", `${year}`],
+				["%C", `${Math.trunc(year / 1e2) + 1}`],
+				["%H", pad_zero(h24)],
+				["%k", `${h24}`],
+				["%I", pad_zero(h12)],
+				["%l", `${h12}`],
+				["%M", pad_zero(minutes)],
+				["%S", pad_zero(second)],
+				["%p", Word.getMeridienFullName(h24)],
+				["%P", Word.getMeridienShortName(h24)],
+				["%s", `${Math.trunc(date.getTime() / 1e3)}`],
+				["%r", `%I:%M:%S %p`],
+				["%R", `%H:%M`],
+				["%T", `%H:%M:%S`],
+				["%D", `%Y/%m/%d`],
+				["%F", `%Y-%m-%d`],
+				["%t", `\t`],
+				["%n", `\n`],
 				["%%", "%"]
 			]);
-		return str.replace(/%./g, (item) =>
-			data.has(item) ? data.get(item) : item
-		);
+		return str.replace(/%./g, (item) => {
+			return data.has(item) ? data.get(item) : item;
+		});
 	}
 
 	static parseDate(str: string, n: any, date_now?: SHDate) {
@@ -1520,7 +1564,7 @@ export default class SHCalendar {
 
 	kcmonth(t: string) {
 		const e = (e: string | any[]) => {
-			for (const lang of ["smn", "mn"]) {
+			for (const lang of ["msn", "mfn"]) {
 				for (let i = 0; i < e.length; i++) {
 					if (e[i].toLowerCase().startsWith(t)) {
 						return i + 1;
@@ -1531,46 +1575,12 @@ export default class SHCalendar {
 
 		return /\S/.test(t)
 			? ((t = t.toLowerCase()),
-			  e(this.getLanguage("smn")) || e(this.getLanguage("mn")))
+			  e(this.getLanguage("msn")) || e(this.getLanguage("mfn")))
 			: void 0;
 	}
 
 	static isUnicodeLetter(str: string) {
 		return str.toLowerCase() !== str.toUpperCase();
-	}
-
-	getLanguage(name: string, lang: string = this.#lang): any {
-		switch (name) {
-			case "fdow":
-				return Word.getFirstDayOfWeek(lang) as number;
-			case "isrtl":
-				return Word.isRTL(lang) as boolean;
-			case "goToday":
-				return Word.getGoToday(lang) as string;
-			case "today":
-				return Word.getToday(lang) as string;
-			case "wk":
-				return Word.getWeekName(lang) as string;
-			case "weekend":
-				return Word.getWeekend(lang) as number | number[];
-			case "AM":
-				return Word.getAM(lang) as string;
-			case "PM":
-				return Word.getPM(lang) as string;
-			case "mn":
-				return Word.getMonthName(lang) as string[];
-			case "smn":
-				return Word.getShortMonthName(lang) as string[];
-			case "dn":
-				return Word.getDayName(lang) as string[];
-			case "sdn":
-				return Word.getShortDayName(lang) as string[];
-		}
-	}
-
-	setLanguage(lang: string) {
-		this.fdow = Word.getFirstDayOfWeek();
-		this.redraw();
 	}
 
 	template() {
@@ -1628,7 +1638,7 @@ export default class SHCalendar {
 			"<div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>" +
 			this.getLanguage("goToday") +
 			"</div>";
-		const monthShortName = this.getLanguage("smn");
+		const monthShortName = this.getLanguage("msn");
 		var month = 0;
 		const monthTable =
 			"<table class='SHCalendar-menu-mtable' align='center' cellspacing='0' cellpadding='0'>" +
@@ -1652,10 +1662,10 @@ export default class SHCalendar {
 			  "</div></td>"
 			: "";
 		const daysOfWeek = Array.from({ length: 7 }, (_, col) => {
-			const day = (col + this.fdow) % 7;
+			const day = (col + this.#fdow) % 7;
 			return `<td><div${
 				this.isWeekend(day) ? " class='SHCalendar-weekend'" : ""
-			}>${this.getLanguage("sdn")[day]}</div></td>`;
+			}>${this.getLanguage("dsn")[day]}</div></td>`;
 		}).join("");
 
 		return `<table align='center' cellspacing='0' cellpadding='0'><tr>${weekNumber}${daysOfWeek}</tr></table>`;
@@ -1665,7 +1675,7 @@ export default class SHCalendar {
 		return this.getLanguage("weekend").indexOf(day) >= 0;
 	}
 
-	Day(date_now: SHDate, fdow: number = this.fdow) {
+	Day(date_now: SHDate, fdow: number = this.#fdow) {
 		const today = new SHDate();
 		const year_today = today.getFullYear();
 		const month_today = today.getMonth();
