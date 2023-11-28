@@ -1378,26 +1378,27 @@ export default class SHCalendar {
 
 	getLanguage(
 		name: string,
-		data: number,
+		data: number = -1,
 		lang: string = this.#lang
 	): string | number[] {
 		switch (name) {
 			case "goToday":
-				return Word.getGoToday(lang) as string;
+				return Word.getGoToday(lang);
 			case "today":
-				return Word.getToday(lang) as string;
+				return Word.getToday(lang);
 			case "wk":
-				return Word.getWeekName(lang) as string;
+				return Word.getWeekName(lang);
 			case "weekend":
-				return Word.getWeekend(lang) as number[];
+				const weekend = Word.getWeekend(lang);
+				return weekend instanceof Array ? weekend : [weekend];
 			case "mfn":
-				return Word.getMonthFullName(data, lang) as string;
+				return Word.getMonthFullName(data, lang);
 			case "msn":
-				return Word.getMonthShortName(data, lang) as string;
+				return Word.getMonthShortName(data, lang);
 			case "dfn":
-				return Word.getDayFullName(data, lang) as string;
+				return Word.getDayFullName(data, lang);
 			case "dsn":
-				return Word.getDayShortName(data, lang) as string;
+				return Word.getDayShortName(data, lang);
 			default:
 				return "";
 		}
@@ -1427,41 +1428,40 @@ export default class SHCalendar {
 			pad_zero = (num: number | string, len: number = 2) => {
 				return `${num}`.padStart(len, "0");
 			},
-			data = new Map([
-				["%A", Word.getDayFullName(dow, lang)],
-				["%a", Word.getDayShortName(dow, lang)],
-				["%B", Word.getMonthFullName(month, lang)],
-				["%b", Word.getMonthShortName(month, lang)],
-				["%d", pad_zero(day)],
-				["%e", `${day}`],
-				["%j", pad_zero(doy, 3)],
-				["%m", pad_zero(month + 1)],
-				["%o", `${month + 1}`],
-				["%U", pad_zero(iso_week)],
-				["%W", pad_zero(iso_year, 4)],
-				["%u", `${dow + 1}`],
-				["%w", `${dow}`],
-				["%y", `${year % 1e2}`],
-				["%Y", `${year}`],
-				["%C", `${Math.trunc(year / 1e2) + 1}`],
-				["%H", pad_zero(h24)],
-				["%k", `${h24}`],
-				["%I", pad_zero(h12)],
-				["%l", `${h12}`],
-				["%M", pad_zero(minutes)],
-				["%S", pad_zero(second)],
-				["%p", Word.getMeridienFullName(h24)],
-				["%P", Word.getMeridienShortName(h24)],
-				["%s", `${Math.trunc(date.getTime() / 1e3)}`],
-				["%r", `%I:%M:%S %p`],
-				["%R", `%H:%M`],
-				["%T", `%H:%M:%S`],
-				["%D", `%Y/%m/%d`],
-				["%F", `%Y-%m-%d`],
-				["%t", `\t`],
-				["%n", `\n`],
-				["%%", "%"]
-			]);
+			data = new Map();
+		data.set("%A", Word.getDayFullName(dow, lang)),
+			data.set("%a", Word.getDayShortName(dow, lang)),
+			data.set("%B", Word.getMonthFullName(month, lang)),
+			data.set("%b", Word.getMonthShortName(month, lang)),
+			data.set("%d", pad_zero(day)),
+			data.set("%e", `${day}`),
+			data.set("%j", pad_zero(doy, 3)),
+			data.set("%m", pad_zero(month + 1)),
+			data.set("%o", `${month + 1}`),
+			data.set("%U", pad_zero(iso_week)),
+			data.set("%W", pad_zero(iso_year, 4)),
+			data.set("%u", `${dow + 1}`),
+			data.set("%w", `${dow}`),
+			data.set("%y", `${year % 1e2}`),
+			data.set("%Y", `${year}`),
+			data.set("%C", `${Math.trunc(year / 1e2) + 1}`),
+			data.set("%H", pad_zero(h24)),
+			data.set("%k", `${h24}`),
+			data.set("%I", pad_zero(h12)),
+			data.set("%l", `${h12}`),
+			data.set("%M", pad_zero(minutes)),
+			data.set("%S", pad_zero(second)),
+			data.set("%p", Word.getMeridienFullName(h24)),
+			data.set("%P", Word.getMeridienShortName(h24)),
+			data.set("%s", `${Math.trunc(date.getTime() / 1e3)}`),
+			data.set("%r", `%I:%M:%S %p`),
+			data.set("%R", `%H:%M`),
+			data.set("%T", `%H:%M:%S`),
+			data.set("%D", `%Y/%m/%d`),
+			data.set("%F", `%Y-%m-%d`),
+			data.set("%t", `\t`),
+			data.set("%n", `\n`),
+			data.set("%%", "%");
 		return str.replace(/%./g, (item) => {
 			return data.has(item) ? data.get(item) : item;
 		});
@@ -1563,20 +1563,18 @@ export default class SHCalendar {
 	}
 
 	kcmonth(t: string) {
-		const e = (e: string | any[]) => {
-			for (const lang of ["msn", "mfn"]) {
-				for (let i = 0; i < e.length; i++) {
-					if (e[i].toLowerCase().startsWith(t)) {
-						return i + 1;
-					}
+		if (/\S/.test(t)) {
+			t = t.toLowerCase();
+			for (let i = 0; i < 12; i++) {
+				if (this.getLanguage("msn", i).toString().toLowerCase().startsWith(t)) {
+					return i + 1;
+				}
+				if (this.getLanguage("mfn", i).toString().toLowerCase().startsWith(t)) {
+					return i + 1;
 				}
 			}
-		};
-
-		return /\S/.test(t)
-			? ((t = t.toLowerCase()),
-			  e(this.getLanguage("msn")) || e(this.getLanguage("mfn")))
-			: void 0;
+		}
+		return 0;
 	}
 
 	static isUnicodeLetter(str: string) {
@@ -1638,15 +1636,15 @@ export default class SHCalendar {
 			"<div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>" +
 			this.getLanguage("goToday") +
 			"</div>";
-		const monthShortName = this.getLanguage("msn");
 		var month = 0;
 		const monthTable =
 			"<table class='SHCalendar-menu-mtable' align='center' cellspacing='0' cellpadding='0'>" +
 			Array.from({ length: 4 }, (_, i) => {
 				const monthButtons = Array.from({ length: 3 }, (_, j) => {
-					return `<td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='m${month}' class='SHCalendar-menu-month'>${
-						monthShortName[month++]
-					}</div></td>`;
+					return `<td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='m${month}' class='SHCalendar-menu-month'>${this.getLanguage(
+						"msn",
+						month++
+					)}</div></td>`;
 				}).join("");
 				return `<tr>${monthButtons}</tr>`;
 			}).join("") +
@@ -1665,14 +1663,14 @@ export default class SHCalendar {
 			const day = (col + this.#fdow) % 7;
 			return `<td><div${
 				this.isWeekend(day) ? " class='SHCalendar-weekend'" : ""
-			}>${this.getLanguage("dsn")[day]}</div></td>`;
+			}>${this.getLanguage("dsn", day)}</div></td>`;
 		}).join("");
 
 		return `<table align='center' cellspacing='0' cellpadding='0'><tr>${weekNumber}${daysOfWeek}</tr></table>`;
 	}
 
 	isWeekend(day: number): boolean {
-		return this.getLanguage("weekend").indexOf(day) >= 0;
+		return (this.getLanguage("weekend") as number[]).includes(day);
 	}
 
 	Day(date_now: SHDate, fdow: number = this.#fdow) {
@@ -1809,7 +1807,7 @@ export default class SHCalendar {
 				"<table align='center' cellspacing='0' cellpadding='0'><tr>",
 				"<td>",
 				"<div shc-btn='today' shc-cls='hover-bottomBar-today,pressed-bottomBar-today' shc-type='bottomBar-today' class='SHCalendar-bottomBar-today'>",
-				this.getLanguage("today"),
+				`${this.getLanguage("today")}`,
 				"</div>",
 				"</td>",
 				"</tr></table>",

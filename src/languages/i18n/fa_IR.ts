@@ -19,7 +19,8 @@ export default class fa_IR {
 
 	public static WEEK_NAME: string = "هفته";
 
-	public static WEEKEND: number[] = [6]; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
+	public static WEEKEND: number | number[] = 6; //[5, 6]; // 0 = Satarday, 1 = Sunday, etc.
+
 	public static MERIDIEN_FULL_NAMES: string[] = ["قبل از ظهر", "بعد از ظهر"];
 
 	public static MERIDIEN_SHORT_NAMES: string[] = ["ق‍.ظ", "ب‍.ظ"];
