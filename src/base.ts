@@ -1415,53 +1415,53 @@ export default class SHCalendar {
 		date: SHDate = this.date,
 		lang: string = this.#lang
 	): any {
-		const year = date.getFullYear(),
-			month = date.getMonth(),
-			day = date.getDate(),
-			doy = date.getDayOfYear(),
-			[iso_year, iso_week] = date.getWeekOfYear(),
-			dow = date.getDay(),
-			h24 = date.getHours(),
-			h12 = h24 % 12 || 12,
-			minutes = date.getMinutes(),
-			second = date.getSeconds(),
-			pad_zero = (num: number | string, len: number = 2) => {
-				return `${num}`.padStart(len, "0");
-			},
-			data = new Map();
-		data.set("%A", Word.getDayFullName(dow, lang)),
-			data.set("%a", Word.getDayShortName(dow, lang)),
-			data.set("%B", Word.getMonthFullName(month, lang)),
-			data.set("%b", Word.getMonthShortName(month, lang)),
-			data.set("%d", pad_zero(day)),
-			data.set("%e", `${day}`),
-			data.set("%j", pad_zero(doy, 3)),
-			data.set("%m", pad_zero(month + 1)),
-			data.set("%o", `${month + 1}`),
-			data.set("%U", pad_zero(iso_week)),
-			data.set("%W", pad_zero(iso_year, 4)),
-			data.set("%u", `${dow + 1}`),
-			data.set("%w", `${dow}`),
-			data.set("%y", `${year % 1e2}`),
-			data.set("%Y", `${year}`),
-			data.set("%C", `${Math.trunc(year / 1e2) + 1}`),
-			data.set("%H", pad_zero(h24)),
-			data.set("%k", `${h24}`),
-			data.set("%I", pad_zero(h12)),
-			data.set("%l", `${h12}`),
-			data.set("%M", pad_zero(minutes)),
-			data.set("%S", pad_zero(second)),
-			data.set("%p", Word.getMeridienFullName(h24)),
-			data.set("%P", Word.getMeridienShortName(h24)),
-			data.set("%s", `${Math.trunc(date.getTime() / 1e3)}`),
-			data.set("%r", `%I:%M:%S %p`),
-			data.set("%R", `%H:%M`),
-			data.set("%T", `%H:%M:%S`),
-			data.set("%D", `%Y/%m/%d`),
-			data.set("%F", `%Y-%m-%d`),
-			data.set("%t", `\t`),
-			data.set("%n", `\n`),
-			data.set("%%", "%");
+		const year = date.getFullYear();
+		const month = date.getMonth();
+		const day = date.getDate();
+		const doy = date.getDayOfYear();
+		const [iso_year, iso_week] = date.getWeekOfYear();
+		const dow = date.getDay();
+		const h24 = date.getHours();
+		const h12 = h24 % 12 || 12;
+		const minutes = date.getMinutes();
+		const second = date.getSeconds();
+		const data = new Map();
+		data.set("%A", Word.getDayFullName(dow, lang));
+		data.set("%a", Word.getDayShortName(dow, lang));
+		data.set("%B", Word.getMonthFullName(month, lang));
+		data.set("%b", Word.getMonthShortName(month, lang));
+		data.set("%d", `${day}`.padStart(2, "0"));
+		data.set("%e", `${day}`);
+		data.set("%j", `${doy}`.padStart(3, "0"));
+		data.set("%m", `${month + 1}`.padStart(2, "0"));
+		data.set("%o", `${month + 1}`);
+		data.set("%U", `${iso_week}`.padStart(2, "0"));
+		data.set("%W", `${iso_year}`.padStart(4, "0"));
+		data.set("%u", `${dow + 1}`);
+		data.set("%w", `${dow}`);
+		data.set("%y", `${year % 1e2}`);
+		data.set("%Y", `${year}`);
+		data.set("%C", `${Math.trunc(year / 1e2) + 1}`);
+		data.set("%H", `${h24}`.padStart(2, "0"));
+		data.set("%k", `${h24}`);
+		data.set("%I", `${h12}`.padStart(2, "0"));
+		data.set("%l", `${h12}`);
+		data.set("%M", `${minutes}`.padStart(2, "0"));
+		data.set("%S", `${second}`.padStart(2, "0"));
+		data.set("%p", Word.getMeridienFullName(h24));
+		data.set("%P", Word.getMeridienShortName(h24));
+		data.set("%s", `${Math.trunc(date.getTime() / 1e3)}`);
+		data.set(
+			"%r",
+			`${data.get("%I")}:${data.get("%M")}:${data.get("%S")} ${data.get("%p")}`
+		);
+		data.set("%R", `${data.get("%H")}:${data.get("%M")}`);
+		data.set("%T", `${data.get("%H")}:${data.get("%M")}:${data.get("%S")}`);
+		data.set("%D", `${data.get("%Y")}/${data.get("%m")}/${data.get("%d")}`);
+		data.set("%F", `${data.get("%Y")}-${data.get("%m")}-${data.get("%d")}`);
+		data.set("%t", `\t`);
+		data.set("%n", `\n`);
+		data.set("%%", "%");
 		return str.replace(/%./g, (item) => {
 			return data.has(item) ? data.get(item) : item;
 		});
@@ -1650,7 +1650,7 @@ export default class SHCalendar {
 			}).join("") +
 			"</table>";
 
-		return `<table height='1e2%' align='center' cellspacing='0' cellpadding='0'><tr><td><table style='margin-top: 1.5em' align='center' cellspacing='0' cellpadding='0'><tr><td colspan='3'>${yearInput}</td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>${year}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
+		return `<table height='102%' align='center' cellspacing='0' cellpadding='0'><tr><td><table style='margin-top: 1.5em' align='center' cellspacing='0' cellpadding='0'><tr><td colspan='3'>${yearInput}</td><td><div shc-type='menubtn' shc-cls='hover-navBtn,pressed-navBtn' shc-btn='today'>${year}</div></td></tr><tr><td>${todayButton}</td></tr></table><p class='SHCalendar-menu-sep'>&nbsp;</p>${monthTable}</td></tr></table>`;
 	}
 
 	Weeks() {
