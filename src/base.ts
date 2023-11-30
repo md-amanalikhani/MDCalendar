@@ -8,7 +8,7 @@
  * @version Release: 1.0.0
  */
 import Word from "./word.js";
-import Selection, { SelectionType } from "./selection.js";
+import Selection from "./selection.js";
 import SHDate from "shdate";
 
 class SHDateCalendar extends SHDate {
@@ -159,10 +159,10 @@ export default class SHCalendar {
 		}
 	};
 
-	static SEL_NONE: number = SelectionType.NONE;
-	static SEL_SINGLE: number = SelectionType.SINGLE;
-	static SEL_MULTIPLE: number = SelectionType.MULTIPLE;
-	static SEL_WEEK: number = SelectionType.WEEK;
+	static SEL_NONE: number = Selection.SELECTION_TYPE.NONE;
+	static SEL_SINGLE: number = Selection.SELECTION_TYPE.SINGLE;
+	static SEL_MULTIPLE: number = Selection.SELECTION_TYPE.MULTIPLE;
+	static SEL_WEEK: number = Selection.SELECTION_TYPE.WEEK;
 
 	args: any;
 	handlers: any = {};
@@ -205,14 +205,14 @@ export default class SHCalendar {
 		max: false,
 		animation: !SHCalendar.IS_IE6,
 		opacity: SHCalendar.IS_IE ? 1 : 3,
-		inputField: false,
+		input_field: false,
 		trigger: false,
 		align: "Bl/ / /T/r",
 		multiCtrl: true,
 		fixed: false,
 		reverseWheel: false,
 		selection: [],
-		selectionType: SelectionType.MULTIPLE,
+		selectionType: SHCalendar.SEL_MULTIPLE,
 		noScroll: false,
 		disabled: false,
 		dateInfo: false,
@@ -247,7 +247,7 @@ export default class SHCalendar {
 		if (this.args.trigger)
 			this.manageFields(
 				this.args.trigger,
-				this.args.inputField,
+				this.args.input_field,
 				this.args.dateFormat
 			); //popup
 	}
@@ -371,6 +371,7 @@ export default class SHCalendar {
 		else if (el.attachEvent) el.attachEvent("on" + evname, callback);
 		else el["on" + evname] = callback;
 	}
+
 	stopEvent(event: any) {
 		if (event.stopPropagation) {
 			event.preventDefault();
@@ -434,8 +435,8 @@ export default class SHCalendar {
 			const shc_btn = el_type.getAttribute("shc-btn");
 			const shc_date = el_type.getAttribute("shc-date");
 			const selection = this.selection;
-			const tis = this;
 			if (io) {
+				const tis = this;
 				events = {
 					mouseover: (event: any) => tis.stopEvent(event),
 					mousemove: (event: any) => tis.stopEvent(event),
@@ -481,7 +482,7 @@ export default class SHCalendar {
 					timeOut = setTimeout(time_out, 350);
 					this.addEvent(document, events); //, true
 				} else if (shc_date && selection.type) {
-					if (selection.type == SelectionType.MULTIPLE) {
+					if (selection.type == SHCalendar.SEL_MULTIPLE) {
 						if (event.shiftKey && this._selRangeStart) {
 							selection.selectRange(this._selRangeStart, shc_date);
 						} else if (
@@ -494,6 +495,7 @@ export default class SHCalendar {
 							this._selRangeStart = shc_date;
 						}
 					} else {
+						console.log(shc_date, selection.type);
 						selection.set(shc_date);
 						this.moveTo(SHCalendar.intToDate(shc_date), 2);
 					}
@@ -520,7 +522,7 @@ export default class SHCalendar {
 				}
 			} else if ("today" == shc_btn) {
 				const date = new SHDate();
-				if (!(this._menuVisible || selection.type != SelectionType.SINGLE))
+				if (!(this._menuVisible || selection.type != SHCalendar.SEL_SINGLE))
 					selection.set(date);
 				this.moveTo(date, true);
 				this.showMenu(false);
@@ -541,18 +543,15 @@ export default class SHCalendar {
 	}
 
 	mouseHover(io: boolean, event: MouseEvent | any) {
-		// D()
-		var el_type: any, shc_type: string, shc_cls: string;
-		el_type = this.getAttributeType(event);
+		const el_type = this.getAttributeType(event);
 		if (el_type) {
-			shc_type = el_type.getAttribute("shc-type");
+			const shc_type = el_type.getAttribute("shc-type");
 			if (shc_type && !el_type.getAttribute("disabled")) {
 				if (!(io && this._bodyAnim && "date" == shc_type)) {
 					if ("date" != shc_type || this.selection.type) {
-						shc_cls = el_type.getAttribute("shc-cls");
-						shc_cls = shc_cls
-							? this.getClass(shc_cls, 0)
-							: "SHCalendar-hover-" + shc_type;
+						const shc_cls = el_type.getAttribute("shc-cls");
+						if (shc_cls) this.getClass(shc_cls, 0);
+						else "SHCalendar-hover-" + shc_type;
 						this.toggleClass(io, el_type, shc_cls);
 					}
 					if ("date" == shc_type) {
@@ -583,23 +582,22 @@ export default class SHCalendar {
 		//https://rbyers.github.io/scroll-latency.html
 		// https://github.com/WICG/EventListenerOptions/blob/gh-pages/explainer.md
 		// b()
-		var el_type, shc_btn, el_type, wheelStep, shc_type;
-		el_type = this.getAttributeType(event);
+		var wheelStep: any;
+		const el_type = this.getAttributeType(event);
 		if (el_type) {
-			shc_btn = el_type.getAttribute("shc-btn");
-			shc_type = el_type.getAttribute("shc-type");
+			const shc_btn = el_type.getAttribute("shc-btn");
+			const shc_type = el_type.getAttribute("shc-type");
 			wheelStep = event.wheelDelta ? event.wheelDelta / 120 : -event.detail / 3;
 			wheelStep = 0 > wheelStep ? -1 : wheelStep > 0 ? 1 : 0;
-			const date = this.date;
 			if (this.args.reverseWheel) wheelStep = -wheelStep;
 			if (/^(time-(hour|min))/.test(shc_type)) {
 				switch (RegExp.$1) {
 					case "time-hour":
-						this.setHours(date.getHours() + wheelStep);
+						this.setHours(this.date.getHours() + wheelStep);
 						break;
 					case "time-min":
 						this.setMinutes(
-							date.getMinutes() + this.args.minuteStep * wheelStep
+							this.date.getMinutes() + this.args.minuteStep * wheelStep
 						);
 				}
 				this.stopEvent(event);
@@ -731,7 +729,7 @@ export default class SHCalendar {
 					return this.stopEvent(event);
 				}
 				if (13 == key_code && this._lastHoverDate) {
-					selection.type == SelectionType.MULTIPLE &&
+					selection.type == SHCalendar.SEL_MULTIPLE &&
 					(event.shiftKey || event.ctrlKey)
 						? (event.shiftKey &&
 								this._selRangeStart &&
@@ -846,14 +844,16 @@ export default class SHCalendar {
 	}
 
 	setTime(time: number, nohooks: boolean = false) {
-		const { inputField, showTime, dateFormat } = this.args;
+		const { input_field, showTime, dateFormat } = this.args;
 		if (showTime) {
 			this.time = time;
 			if (!nohooks) {
 				this.callHooks("onTimeChange", time);
-				if (inputField) {
-					inputField[
-						inputField.tagName.toLowerCase() === "input" ? "value" : "innerHTML"
+				if (input_field) {
+					input_field[
+						input_field.tagName.toLowerCase() === "input"
+							? "value"
+							: "innerHTML"
 					] = this.selection.print(dateFormat);
 				}
 			}
@@ -1829,29 +1829,23 @@ export default class SHCalendar {
 	}
 
 	inputField() {
-		// C
-		var field: { tagName: string; value: any; innerHTML: any },
-			sel: { print: (arg0: any) => any },
-			print: any;
 		this.refresh();
-		field = this.input_field;
-		sel = this.selection;
-		if (field) {
-			print = sel.print(this.dateFormat);
-			/input|textarea/i.test(field.tagName)
-				? (field.value = print)
-				: (field.innerHTML = print);
+		const input_field = this.input_field;
+		const sel = this.selection;
+		if (input_field) {
+			if (/input|textarea/i.test(input_field.tagName))
+				input_field.value = sel.print(this.dateFormat);
+			else input_field.innerHTML = sel.print(this.dateFormat);
 		}
-		this.callHooks("onSelect", this, sel);
+		this.callHooks("onSelect", sel);
 	}
 
 	popupForField(trigger: string, field: string, date_format: string) {
-		var date: any, i: any, r: any, el_field: any, el_trigger: any;
-		el_field = this.getElementById(field);
-		el_trigger = this.getElementById(trigger);
-		this.input_field = el_field;
+		var date: any, i: any, r: any, el_field: any;
+		this.input_field = el_field = this.getElementById(field);
+		const el_trigger = this.getElementById(trigger);
 		this.dateFormat = date_format;
-		if (this.selection.type == SelectionType.SINGLE) {
+		if (this.selection.type == SHCalendar.SEL_SINGLE) {
 			date = /input|textarea/i.test(el_field.tagName)
 				? el_field.value
 				: el_field.innerText || el_field.textContent;

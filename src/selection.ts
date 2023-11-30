@@ -21,20 +21,23 @@ export default class Selection {
 	sel: any;
 	onChange: Function;
 	cal: any;
+	static readonly SELECTION_TYPE = SelectionType;
 
 	constructor(
 		selection: any[],
 		selection_type: SelectionType,
-		cal: SHCalendar
+		calendar: SHCalendar
 	) {
 		this.type = selection_type;
 		this.sel = selection instanceof Array ? selection : [selection];
-		this.cal = cal;
-		this.onChange = cal.inputField;
+		this.cal = calendar;
+		this.onChange = (event: any) => calendar.inputField();
 	}
 
 	get() {
-		return this.type == SelectionType.SINGLE ? this.sel[0] : this.sel;
+		return this.type == Selection.SELECTION_TYPE.SINGLE
+			? this.sel[0]
+			: this.sel;
 	}
 
 	isEmpty() {
@@ -47,7 +50,7 @@ export default class Selection {
 		is_change?: boolean
 	) {
 		//arg, toggle)
-		var type = this.type == SelectionType.SINGLE;
+		var type = this.type == Selection.SELECTION_TYPE.SINGLE;
 		if (date instanceof Array) {
 			this.sel = date;
 			this.normalize();
@@ -220,7 +223,7 @@ export default class Selection {
 			this.cal.setFunction(
 				new Selection(
 					[[date_start, date_end]],
-					SelectionType.MULTIPLE,
+					Selection.SELECTION_TYPE.MULTIPLE,
 					this.cal
 				).getDates(false),
 				(date: SHDate | number) => {

@@ -1,20 +1,17 @@
-import Language, { Languages } from "./languages/language.js";
+import Language from "./languages/language.js";
 
 /**
  * list of supported languages
  * @since 1.0.0
  */
 export default class Word extends Language {
-	static LANGUAGE_WORD: string = Languages.en_US;
-	static FIRST_DAY_OF_WEEK: number = 0;
-
 	/**
 	 *
 	 * @param {string} word_language language word
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
-	static isRTL(word_language: string = Word.LANGUAGE_WORD): boolean {
+	static isRTL(word_language: string = Word.DEFAULT_LANGUAGE): boolean {
 		return Word.getClass(word_language).IS_RTL;
 	}
 
@@ -24,7 +21,9 @@ export default class Word extends Language {
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
-	static getFirstDayOfWeek(word_language: string = Word.LANGUAGE_WORD): number {
+	static getFirstDayOfWeek(
+		word_language: string = Word.DEFAULT_LANGUAGE
+	): number {
 		return Word.getClass(word_language).FIRST_DAY_OF_WEEK;
 	}
 
@@ -35,7 +34,7 @@ export default class Word extends Language {
 	 * @since 1.0.0
 	 */
 	static getWeekend(
-		word_language: string = Word.LANGUAGE_WORD
+		word_language: string = Word.DEFAULT_LANGUAGE
 	): number | number[] {
 		return Word.getClass(word_language).WEEKEND;
 	}
@@ -46,7 +45,7 @@ export default class Word extends Language {
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
-	static getWeekName(word_language: string = Word.LANGUAGE_WORD): string {
+	static getWeekName(word_language: string = Word.DEFAULT_LANGUAGE): string {
 		return Word.getClass(word_language).WEEK_NAME;
 	}
 
@@ -56,7 +55,7 @@ export default class Word extends Language {
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
-	static getGoToday(word_language: string = Word.LANGUAGE_WORD): string {
+	static getGoToday(word_language: string = Word.DEFAULT_LANGUAGE): string {
 		return Word.getClass(word_language).GO_TODAY;
 	}
 
@@ -66,7 +65,7 @@ export default class Word extends Language {
 	 * @return string Ante/Post meridiem
 	 * @since 1.0.0
 	 */
-	static getToday(word_language: string = Word.LANGUAGE_WORD): string {
+	static getToday(word_language: string = Word.DEFAULT_LANGUAGE): string {
 		return Word.getClass(word_language).TODAY;
 	}
 
@@ -78,7 +77,7 @@ export default class Word extends Language {
 	 */
 	static getMeridienFullName(
 		H24: number,
-		word_language: string = Word.LANGUAGE_WORD
+		word_language: string = Word.DEFAULT_LANGUAGE
 	): string {
 		return Word.getClass(word_language).MERIDIEN_FULL_NAMES[H24 > 11 ? 1 : 0];
 	}
@@ -91,7 +90,7 @@ export default class Word extends Language {
 	 */
 	static getMeridienShortName(
 		H24: number,
-		word_language: string = Word.LANGUAGE_WORD
+		word_language: string = Word.DEFAULT_LANGUAGE
 	): string {
 		return Word.getClass(word_language).MERIDIEN_SHORT_NAMES[H24 > 11 ? 1 : 0];
 	}
@@ -104,7 +103,7 @@ export default class Word extends Language {
 	 */
 	static getMonthFullName(
 		month: number,
-		word_language: string = Word.LANGUAGE_WORD
+		word_language: string = Word.DEFAULT_LANGUAGE
 	): string {
 		return Word.getClass(word_language).MONTH_FULL_NAMES[month];
 	}
@@ -117,7 +116,7 @@ export default class Word extends Language {
 	 */
 	static getMonthShortName(
 		month: number,
-		word_language: string = Word.LANGUAGE_WORD
+		word_language: string = Word.DEFAULT_LANGUAGE
 	): string {
 		return Word.getClass(word_language).MONTH_SHORT_NAMES[month];
 	}
@@ -131,8 +130,8 @@ export default class Word extends Language {
 	 */
 	static getDayFullName(
 		dow: number,
-		word_language: string = Word.LANGUAGE,
-		FDOW: number = Word.FIRST_DAY_OF_WEEK
+		word_language: string = Word.DEFAULT_LANGUAGE,
+		FDOW: number = Word.getFirstDayOfWeek()
 	): string {
 		return Word.getClass(word_language).DAY_FULL_NAMES[dow];
 	}
@@ -146,8 +145,8 @@ export default class Word extends Language {
 	 */
 	static getDayShortName(
 		dow: number,
-		word_language: string = Word.LANGUAGE,
-		FDOW: number = Word.FIRST_DAY_OF_WEEK
+		word_language: string = Word.DEFAULT_LANGUAGE,
+		FDOW: number = Word.getFirstDayOfWeek()
 	): string {
 		return Word.getClass(word_language).DAY_SHORT_NAMES[dow];
 	}
