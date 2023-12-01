@@ -40,54 +40,52 @@ export default class fa_IR {
 	];
 
 	public static MONTH_FULL_NAMES: string[] = [
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"October",
-		"November",
-		"December"
+		"فروردين",
+		"ارديبهشت",
+		"خرداد",
+		"تير",
+		"مرداد",
+		"شهريور",
+		"مهر",
+		"آبان",
+		"آذر",
+		"دي",
+		"بهمن",
+		"اسفند"
 	];
 
 	public static MONTH_SHORT_NAMES: string[] = [
-		"Jan",
-		"Feb",
-		"Mar",
-		"Apr",
-		"May",
-		"Jun",
-		"Jul",
-		"Aug",
-		"Sep",
-		"Oct",
-		"Nov",
-		"Dec"
+		"فرو",
+		"ارد",
+		"خرد",
+		"تير",
+		"مرد",
+		"شهر",
+		"مهر",
+		"آبا",
+		"آذر",
+		"دي",
+		"بهم‍",
+		"اسف‍"
 	];
 
 	public static DAY_FULL_NAMES: string[] = [
-		"Sunday",
-		"Monday",
-		"Tuesday",
-		"Wednesday",
-		"Thursday",
-		"Friday",
-		"Saturday",
-		"Sunday"
+		"شنبه",
+		"يک‌‌شنبه",
+		"دوشنبه",
+		"سه‌ش‍‍‍‍نبه",
+		"چهارشنبه",
+		"پنج‌شنبه",
+		"جمعه"
 	];
 
 	public static DAY_SHORT_NAMES: string[] = [
-		"Su",
-		"Mo",
-		"Tu",
-		"We",
-		"Th",
-		"Fr",
-		"Sa",
-		"Su"
+		"ش‍",
+		"یک",
+		"دو",
+		"س‍ه",
+		"چ‍هار",
+		"پ‍نج",
+		"ج‍"
 	];
 }

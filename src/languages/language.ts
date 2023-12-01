@@ -10,7 +10,7 @@ import Language_en_US from "./i18n/en_US.js";
 /**
  * list of supported languages
  */
-export enum Languages {
+enum Languages {
 	//i18n
 	fa_IR = "fa_IR",
 	en_US = "en_US"

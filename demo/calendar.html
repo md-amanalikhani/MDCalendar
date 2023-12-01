@@ -142,22 +142,30 @@
 									var html = [
 										"<select id='f_language' onchange='changeLanguage(this)'>"
 									];
-									var def = SHCalendar.I18N.__;
-									for (var i in SHCalendar.I18N) {
-										if (!/^_/.test(i)) {
-											var data = SHCalendar.I18N[i];
-											html.push("<option value='", i, "'");
-											if (data === def) html.push(" selected='selected'");
-											html.push(">", data.name, "</option>");
-										}
+									for (const property in SHCalendarWord.LANGUAGES) {
+										html.push(
+											"<option value='",
+											SHCalendarWord.LANGUAGES[property],
+											"'"
+										);
+										const lang = SHCalendarWord.LANGUAGES[property];
+										if (lang === SHCalendar.DEFAULT_ARGS.lang)
+											html.push(" selected='selected'");
+										html.push(">", lang, "</option>");
 									}
 									html.push("</select>");
 									document.write(html.join(""));
 
 									function changeLanguage(select) {
-										LEFT_CAL.setLanguage(select.value);
-										RANGE_CAL_1.setLanguage(select.value);
-										RANGE_CAL_2.setLanguage(select.value);
+										LEFT_CAL.lang = select.value;
+										RANGE_CAL_1.lang = select.value;
+										RANGE_CAL_2.lang = select.value;
+										LEFT_CAL.redraw();
+										RANGE_CAL_1.redraw();
+										RANGE_CAL_2.redraw();
+										// LEFT_CAL.setLanguage(select.value);
+										// RANGE_CAL_1.setLanguage(select.value);
+										// RANGE_CAL_2.setLanguage(select.value);
 									}
 
 									//]]>
@@ -249,14 +257,18 @@
 									for (var i = 0; i < 7; ++i) {
 										html.push("<option value='", i, "'");
 										if (i == LEFT_CAL.fdow) html.push(" selected='selected'");
-										html.push(">", SHCalendar.i18n("dn")[i], "</option>");
+										html.push(
+											">",
+											LEFT_CAL.getSHCalendarLanguage("dsn", i),
+											"</option>"
+										);
 									}
 
 									html.push("</select>");
 									document.write(html.join(""));
 
 									function changeFDOW(select) {
-										LEFT_CAL.fdow = parseInt(select.value, 10);
+										LEFT_CAL.fdow = +select.value;
 										LEFT_CAL.redraw();
 									}
 
@@ -430,7 +442,7 @@
 									});
 									function clearRangeStart() {
 										document.getElementById("f_rangeStart").value = "";
-										LEFT_CAL.args.min = null;
+										LEFT_CAL.args.min = false;
 										LEFT_CAL.redraw();
 									}
 								</script>
@@ -462,7 +474,7 @@
 									});
 									function clearRangeEnd() {
 										document.getElementById("f_rangeEnd").value = "";
-										LEFT_CAL.args.max = null;
+										LEFT_CAL.args.max = false;
 										LEFT_CAL.redraw();
 									}
 								</script>
@@ -480,15 +492,12 @@
 								></textarea>
 								<script type="text/javascript">
 									//<![CDATA[
-
-									LEFT_CAL.addEventListener("onSelect", function () {
-										var ta = document.getElementById("f_selection");
-										ta.value =
+									LEFT_CAL.addEventListener("onselect", () => {
+										document.getElementById("f_selection").value =
 											this.selection.countDays() +
 											" days selected:\n\n" +
 											this.selection.print("%Y/%m/%d %H:%M %p").join("\n");
 									});
-
 									//]]>
 								</script>
 							</td>

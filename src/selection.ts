@@ -9,7 +9,7 @@
 import SHDate from "shdate";
 import SHCalendar from "./base.js";
 
-export enum SelectionType {
+enum SelectionType {
 	NONE = 0,
 	SINGLE = 1,
 	MULTIPLE = 2,
@@ -31,7 +31,7 @@ export default class Selection {
 		this.type = selection_type;
 		this.sel = selection instanceof Array ? selection : [selection];
 		this.cal = calendar;
-		this.onChange = (event: any) => calendar.inputField();
+		this.onChange = () => calendar.inputField();
 	}
 
 	get() {
@@ -66,10 +66,9 @@ export default class Selection {
 		}
 	}
 
-	reset(...args: any[]) {
-		//arg, toggle)
+	reset(date: SHDate | number | number[]) {
 		this.sel = [];
-		this.set(args);
+		this.set(date);
 	}
 
 	countDays() {
@@ -142,18 +141,18 @@ export default class Selection {
 
 	normalize() {
 		var i: number,
-			date: SHDate,
 			date_int: any,
-			sel: any,
 			sel_item: any,
 			sel_item_second: any,
 			sel_item_first: any;
-		this.sel = this.sel.sort(function (sel_first: any, sel_second: any) {
+		const sel = (this.sel = this.sel.sort(function (
+			sel_first: any,
+			sel_second: any
+		) {
 			if (sel_first instanceof Array) sel_first = sel_first[0];
 			if (sel_second instanceof Array) sel_second = sel_second[0];
 			return sel_first - sel_second;
-		});
-		sel = this.sel;
+		}));
 		for (i = sel.length - 1; i >= 0; i--) {
 			sel_item_first = sel[i];
 			if (sel_item_first instanceof Array) {
@@ -167,7 +166,7 @@ export default class Selection {
 			if (sel_item) {
 				date_int =
 					sel_item_first instanceof Array ? sel_item_first[1] : sel_item_first;
-				date = SHCalendar.intToDate(date_int);
+				const date = SHCalendar.intToDate(date_int);
 				date.setDate(date.getDate() + 1);
 				date_int = SHCalendar.dateToInt(date);
 				if (sel_item < date_int) {
@@ -196,8 +195,8 @@ export default class Selection {
 	}
 
 	findInsertPos(date: SHDate | number) {
+		const sel: any = this.sel;
 		var sel_item: any,
-			sel: any = this.sel,
 			i: number = sel.length - 1;
 		do {
 			sel_item = sel[i--];
@@ -207,7 +206,6 @@ export default class Selection {
 	}
 
 	clear(nohooks: any) {
-		//nohooks)
 		this.sel = [];
 		if (!nohooks) this.onChange();
 	}
@@ -244,9 +242,9 @@ export default class Selection {
 	}
 
 	isSelected(date: SHDate | number) {
-		var sel: any, i: number;
+		var i: number;
 		for (i = this.sel.length - 1; i >= 0; i--) {
-			sel = this.sel[i];
+			const sel = this.sel[i];
 			if (
 				(sel instanceof Array && date >= sel[0] && date <= sel[1]) ||
 				date == sel
@@ -257,43 +255,36 @@ export default class Selection {
 	}
 
 	getFirstDate() {
-		var sel = this.sel[0];
-		if (sel && sel instanceof Array) sel = sel[0];
+		const sel = this.sel[0];
+		if (sel && sel instanceof Array) return sel[0];
 		return sel;
 	}
 
 	getLastDate() {
 		if (this.sel.length > 0) {
-			var sel = this.sel[this.sel.length - 1];
-			if (sel && sel instanceof Array) sel = sel[1];
+			const sel = this.sel[this.sel.length - 1];
+			if (sel && sel instanceof Array) return sel[1];
 			return sel;
 		}
 	}
 
-	print(format: string, separator: string) {
-		//format, separator)
-		var sel: any,
-			str: any[] = [],
-			hours: number = this.cal.getHours(),
-			minutes: number = this.cal.getMinutes();
-		if (!separator) separator = " -> ";
+	print(format: string, separator: string = " -> ") {
+		const cal = this.cal,
+			hours: number = cal.getHours(),
+			minutes: number = cal.getMinutes();
+		var str: any[] = [];
+		// if (!separator) separator = " -> ";
 		for (var i: number = 0; i < this.sel.length; i++) {
-			sel = this.sel[i];
+			const sel = this.sel[i];
 			if (sel instanceof Array)
 				str.push(
-					this.cal.printDate(
-						SHCalendar.intToDate(sel[0], hours, minutes),
-						format
-					) +
+					cal.printDate(SHCalendar.intToDate(sel[0], hours, minutes), format) +
 						separator +
-						this.cal.printDate(
-							SHCalendar.intToDate(sel[1], hours, minutes),
-							format
-						)
+						cal.printDate(SHCalendar.intToDate(sel[1], hours, minutes), format)
 				);
 			else
 				str.push(
-					this.cal.printDate(SHCalendar.intToDate(sel, hours, minutes), format)
+					cal.printDate(SHCalendar.intToDate(sel, hours, minutes), format)
 				);
 		}
 		return str;
@@ -302,17 +293,18 @@ export default class Selection {
 	getDates(str: any = "") {
 		var date: SHDate,
 			sel: any,
-			string: any = [];
-		for (var i = 0; i < this.sel.length; i++) {
+			str: any = [],
+			i: number;
+		for (i = 0; i < this.sel.length; i++) {
 			sel = this.sel[i];
 			if (sel instanceof Array) {
 				date = SHCalendar.intToDate(sel[0]);
 				for (sel = sel[1]; SHCalendar.dateToInt(date) < sel; )
-					string.push(str ? this.cal.printDate(date, str) : new SHDate(date)),
+					str.push(str ? this.cal.printDate(date, str) : new SHDate(date)),
 						date.setDate(date.getDate() + 1);
 			} else date = SHCalendar.intToDate(sel);
-			string.push(str ? this.cal.printDate(date, str) : date);
+			str.push(str ? this.cal.printDate(date, str) : date);
 		}
-		return string;
+		return str;
 	}
 }
