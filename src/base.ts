@@ -252,7 +252,6 @@ export default class SHCalendar {
 	}
 
 	mergeData(data: any, defaults: any): any {
-		//E()
 		return { ...defaults, ...data };
 	}
 
@@ -264,7 +263,6 @@ export default class SHCalendar {
 	}
 
 	setDate(date: SHDate | string | number) {
-		//k()
 		if (typeof date == "number") return SHCalendar.intToDate(date);
 		if (typeof date == "string") {
 			const [year, month, day] = date.split(/-/);
@@ -274,7 +272,6 @@ export default class SHCalendar {
 	}
 
 	setHandler() {
-		//q()
 		const event = [
 			"onChange",
 			"onSelect",
@@ -527,7 +524,7 @@ export default class SHCalendar {
 				this.moveTo(date, true);
 				this.showMenu(false);
 			} else if (/^m([0-9]+)/.test(shc_btn)) {
-				const date = this.date;
+				const date = this.date.clone();
 				date.setFullYear(
 					this._getInputYear(),
 					+shc_btn.replace(/^m([0-9]+)/, "$1"),
@@ -1765,17 +1762,17 @@ export default class SHCalendar {
 		template.push(
 			"<table class='SHCalendar-time' align='center' cellspacing='0' cellpadding='0'>",
 			"<tr>",
-			"<td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'></div></td>",
+			"<td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'>12</div></td>",
 			"<td shc-type='time-hour+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>",
 			"<td rowspan='2' class='SHCalendar-time-sep'></td>",
-			"<td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'></div></td>",
+			"<td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'>00</div></td>",
 			"<td shc-type='time-min+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>"
 		);
 
 		if (this.args.showTime == 12) {
 			template.push(
 				"<td rowspan='2' class='SHCalendar-time-sep'></td>",
-				"<td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'></div></td>"
+				"<td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'>AM</div></td>"
 			);
 		}
 
