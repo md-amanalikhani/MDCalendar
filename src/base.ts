@@ -413,15 +413,14 @@ export default class SHCalendar {
 	}
 
 	removeEventListener(evname: string, func: Function) {
-		var evn = this.handlers[evname];
+		const evn = this.handlers[evname];
 		for (var i = evn.length - 1; i >= 0; i--)
 			if (evn[i] === func) evn.splice(i, 1);
 	}
 
 	setNode(els: any, callback: Function) {
-		//W
 		if (!callback(els))
-			for (var el = els.firstChild; el; el = el.nextSibling)
+			for (let el = els.firstChild; el; el = el.nextSibling)
 				if (el.nodeType == 1) this.setNode(el, callback);
 	}
 
@@ -429,11 +428,10 @@ export default class SHCalendar {
 		var _time_out: any, events: any, el_date: any;
 		const el_type = this.getAttributeType(event);
 		if (el_type && !el_type.getAttribute("disabled")) {
-			const selection = this.selection;
 			const shc_type = el_type.getAttribute("shc-type");
 			const shc_btn = el_type.getAttribute("shc-btn");
-			const shc_date = el_type.getAttribute("shc-date");
 			if (io) {
+				const shc_date = el_type.getAttribute("shc-date");
 				const tis = this;
 				events = {
 					mouseover: (event: any) => tis.stopEvent(event),
@@ -453,7 +451,6 @@ export default class SHCalendar {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
 					if (this.stepDate(shc_btn)) {
-						const tis = this;
 						_time_out = () => {
 							if (tis.stepDate(shc_btn, true)) {
 								_time_out = setTimeout(_time_out, 40);
@@ -471,7 +468,6 @@ export default class SHCalendar {
 				} else if ("time-am" == shc_type) {
 					this.addEvent(document, events); //, true
 				} else if (/^time/.test(shc_type)) {
-					const tis = this;
 					_time_out = (type: string = shc_type) => {
 						tis.stepTime(type);
 						_time_out = setTimeout(_time_out, 1e2);
@@ -479,7 +475,8 @@ export default class SHCalendar {
 					this.stepTime(shc_type);
 					_time_out = setTimeout(_time_out, 350);
 					this.addEvent(document, events); //, true
-				} else if (shc_date && selection.type) {
+				} else if (shc_date && this.selection.type) {
+					const selection = this.selection;
 					if (selection.type == SHCalendar.SEL_MULTIPLE) {
 						if (event.shiftKey && this.sel_range_start) {
 							selection.selectRange(this.sel_range_start, shc_date);
@@ -519,8 +516,10 @@ export default class SHCalendar {
 				}
 			} else if ("today" == shc_btn) {
 				const date = new SHDate();
-				if (!(this.menu_visible || selection.type != SHCalendar.SEL_SINGLE))
-					selection.set(date);
+				if (
+					!(this.menu_visible || this.selection.type != SHCalendar.SEL_SINGLE)
+				)
+					this.selection.set(date);
 				this.moveTo(date, true);
 				this.showMenu(false);
 			} else if (/^m([0-9]+)/.test(shc_btn)) {
@@ -1523,8 +1522,8 @@ export default class SHCalendar {
 				is_unicode_letter(o)
 					? push(s(""))
 					: /[0-9]/.test(o)
-					? push(i())
-					: charAtNext();
+					  ? push(i())
+					  : charAtNext();
 			}
 			return c;
 		})();
@@ -1535,22 +1534,23 @@ export default class SHCalendar {
 			/^[0-9]{4}$/.test(y)
 				? ((year = +y), null == month && null == day && null == n && (n = true))
 				: /^[0-9]{1,2}$/.test(y)
-				? ((y = +y),
-				  60 > y
-						? 0 > y || y > 12
-							? 1 > y || y > 31 || (day = y)
-							: d.push(y)
-						: (year = y))
-				: null == month && (month = this.kcmonth(y));
+				  ? ((y = +y),
+				    60 > y
+							? 0 > y || y > 12
+								? 1 > y || y > 31 || (day = y)
+								: d.push(y)
+							: (year = y))
+				  : null == month && (month = this.kcmonth(y));
 		}
 
 		d.length < 2
 			? d.length == 1 &&
 			  (null == day ? (day = d.shift()) : null == month && (month = d.shift()))
 			: n
-			? (null == month && (month = d.shift()), null == day && (day = d.shift()))
-			: (null == day && (day = d.shift()),
-			  null == month && (month = d.shift()));
+			  ? (null == month && (month = d.shift()),
+			    null == day && (day = d.shift()))
+			  : (null == day && (day = d.shift()),
+			    null == month && (month = d.shift()));
 		if (null == year) year = d.length > 0 ? d.shift() : date_now.getFullYear();
 		if (30 > year) year += 2e3;
 		else if (99 > year) year += 1900;
