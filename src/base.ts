@@ -177,7 +177,7 @@ export default class SHCalendar {
 	bluring_time_out: any;
 	focused: any;
 	menu_animation: any;
-	focus_events: any;
+	events_focusing: any;
 	sel_range_start: any;
 	_mouseDiff: any;
 	first_date_visible: any = false;
@@ -328,12 +328,12 @@ export default class SHCalendar {
 		} = els;
 		this.addEvent(els_main, { ...events, ...events_IE, ...events_wheel });
 		const tis = this;
-		this.focus_events = {
-			focus: (event: any) => tis.onFocus(),
-			blur: (event: any) => tis.onBluringTimeout()
+		this.events_focusing = {
+			focus: (event?: any) => tis.onFocus(),
+			blur: (event?: any) => tis.onBluringTimeout()
 		};
-		this.addEvent(els_focus_link, this.focus_events);
-		if (els_year_input) this.addEvent(els_year_input, this.focus_events);
+		this.addEvent(els_focus_link, this.events_focusing);
+		if (els_year_input) this.addEvent(els_year_input, this.events_focusing);
 
 		this.moveTo(this.date, false);
 		this.setTime(this.time, true);
@@ -444,7 +444,7 @@ export default class SHCalendar {
 						events = null;
 					}
 				};
-				setTimeout(() => tis.focus(), 1);
+				setTimeout(() => tis.focusingFocus(), 1);
 				const shc_cls = el_type.getAttribute("shc-cls");
 				if (shc_cls) this.addClass(el_type, this.getClass(shc_cls, 1));
 				if ("menu" == shc_btn) {
@@ -650,14 +650,14 @@ export default class SHCalendar {
 				selection = this.selection;
 				if (" " == char_code) {
 					this.showMenu(true);
-					this.focus();
+					this.focusingFocus();
 					yearInput.focus();
 					yearInput.select();
 					return this.stopEvent(event);
 				}
 				if (char_code >= "0" && "9" >= char_code) {
 					this.showMenu(true);
-					this.focus();
+					this.focusingFocus();
 					yearInput.value = char_code;
 					yearInput.focus();
 					return this.stopEvent(event);
@@ -758,14 +758,14 @@ export default class SHCalendar {
 			var cls = this.#top_class[el.className];
 			if (cls) this.els[cls] = el;
 			if (el.className == "SHCalendar-menu-year") {
-				this.addEvent(el, this.focus_events);
+				this.addEvent(el, this.events_focusing);
 				this.els.yearInput = el;
 			} else if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
 		this.setTime(this.time, true);
 	}
 
-	focus() {
+	focusingFocus() {
 		const { yearInput, focusLink } = this.els;
 		try {
 			if (this.menu_visible) yearInput.focus();
@@ -783,7 +783,7 @@ export default class SHCalendar {
 		this.callHooks("onFocus");
 	}
 
-	blur() {
+	focusingBlur() {
 		const { yearInput, focusLink } = this.els;
 		focusLink.blur();
 		yearInput.blur();
@@ -938,8 +938,8 @@ export default class SHCalendar {
 		args = this.mergeData(args, {
 			fps: 50, //frames per second (rate)
 			len: 15, // all step
-			onUpdate: () => {},
-			onStop: () => {}
+			onUpdate: Function(),
+			onStop: Function()
 		});
 		if (SHCalendar.IS_IE) args.len = Math.round(args.len / 2);
 		const args_len = args.len;
@@ -1202,13 +1202,13 @@ export default class SHCalendar {
 						tis.menu_animation = null;
 						if (!visible) {
 							tis.styleDisplay(menu, false);
-							if (tis.focused) tis.focus();
+							if (tis.focused) tis.focusingFocus();
 						}
 					}
 				});
 			} else {
 				this.styleDisplay(menu, visible);
-				if (this.focused) this.focus();
+				if (this.focused) this.focusingFocus();
 			}
 		}
 	}
@@ -1522,8 +1522,8 @@ export default class SHCalendar {
 				is_unicode_letter(o)
 					? push(s(""))
 					: /[0-9]/.test(o)
-					  ? push(i())
-					  : charAtNext();
+					? push(i())
+					: charAtNext();
 			}
 			return c;
 		})();
@@ -1534,23 +1534,22 @@ export default class SHCalendar {
 			/^[0-9]{4}$/.test(y)
 				? ((year = +y), null == month && null == day && null == n && (n = true))
 				: /^[0-9]{1,2}$/.test(y)
-				  ? ((y = +y),
-				    60 > y
-							? 0 > y || y > 12
-								? 1 > y || y > 31 || (day = y)
-								: d.push(y)
-							: (year = y))
-				  : null == month && (month = this.kcmonth(y));
+				? ((y = +y),
+				  60 > y
+						? 0 > y || y > 12
+							? 1 > y || y > 31 || (day = y)
+							: d.push(y)
+						: (year = y))
+				: null == month && (month = this.kcmonth(y));
 		}
 
 		d.length < 2
 			? d.length == 1 &&
 			  (null == day ? (day = d.shift()) : null == month && (month = d.shift()))
 			: n
-			  ? (null == month && (month = d.shift()),
-			    null == day && (day = d.shift()))
-			  : (null == day && (day = d.shift()),
-			    null == month && (month = d.shift()));
+			? (null == month && (month = d.shift()), null == day && (day = d.shift()))
+			: (null == day && (day = d.shift()),
+			  null == month && (month = d.shift()));
 		if (null == year) year = d.length > 0 ? d.shift() : date_now.getFullYear();
 		if (30 > year) year += 2e3;
 		else if (99 > year) year += 1900;
@@ -1940,7 +1939,7 @@ export default class SHCalendar {
 		}
 		this.showAt(offset.x, offset.y, true);
 		top_cont_style.visibility = "";
-		this.focus();
+		this.focusingFocus();
 	}
 
 	showAt(lpos: any, tpos: any, banim?: any) {

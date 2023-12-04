@@ -1,1407 +1,1728 @@
-
 /**
-	* In The Name Of God
-	* @package MDCalendar
-    * @author   MohammaD (MD) Amanalikhani
-	* @link    http://md-amanalikhani.github.io | http://md.akhi.ir
-	* @copyright   Copyright (C) 2015 - 2020 Open Source Matters,Inc. All right reserved.
-	* @license http://www.php.net/license/3_0.txt  PHP License 3.0
-	* @version Release: 0.1.20
-	*/
-
- var dw=function(obj) {
-    var out = "\n\n";
-	if("object" == typeof obj || "array" == typeof obj)
-		for (var i in obj) {
-			out += i + " : " + obj[i] +"\n";
-		}
-	out += obj +"\n";
-    var pre = document.createElement('pre');
-    pre.innerHTML = out+ "\n\n";
-    document.body.appendChild(pre)
-}
-
-
-/** The Calendar object constructor. */
-Calendar = function() {
-
-	var is_opera, is_khtml, is_ie, is_ie6,is_gecko, Q, Z, te, ee, ne, ae
-	is_opera = /opera/i.test(navigator.userAgent),
-		is_khtml = /Konqueror|Safari|KHTML/i.test(navigator.userAgent),
-        is_ie= /msie/i.test(navigator.userAgent) && !is_opera && !/mac_powerpc/i.test(navigator.userAgent),
-        is_ie6 = is_ie && /msie 6/i.test(navigator.userAgent),
-        is_gecko = /gecko/i.test(navigator.userAgent) && !is_khtml && !is_opera && !is_ie,
-		Q = " align='center' cellspacing='0' cellpadding='0'",
-		Z = {
-        "MDCalendar-topCont": "topCont",
-        "MDCalendar-focusLink": "focusLink",
-        "MDCalendar": "main",
-        "MDCalendar-topBar": "topBar",
-        "MDCalendar-title": "title",
-        "MDCalendar-dayNames": "dayNames",
-        "MDCalendar-body": "body",
-        "MDCalendar-menu": "menu",
-        "MDCalendar-menu-year": "yearInput",
-        "MDCalendar-bottomBar": "bottomBar",
-        "MDCalendar-tooltip": "tooltip",
-        "MDCalendar-time-hour": "timeHour",
-        "MDCalendar-time-minute": "timeMinute",
-        "MDCalendar-time-am": "timeAM",
-        "MDCalendar-navBtn MDCalendar-prevYear": "navPrevYear",
-        "MDCalendar-navBtn MDCalendar-nextYear": "navNextYear",
-        "MDCalendar-navBtn MDCalendar-prevMonth": "navPrevMonth",
-        "MDCalendar-navBtn MDCalendar-nextMonth": "navNextMonth"
-		},
-		te = {
-        "-3": "backYear",
-        "-2": "back",
-        0: "now",
-        2: "fwd",
-        3: "fwdYear"
-		},
-		ee = {
-			37: -1,
-			38: -2,
-			39: 1,
-			40: 2
-		},
-		ne = {
-			33: -1,
-			34: 1
-		},
-		ae = {
-			elastic_b: function(t) {
-				return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t)
-			},
-			magnetic: function(t) {
-				return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t)
-			},
-			accel_b: function(t) {
-				return t = 1 - t, 1 - t * t * t * t
-			},
-			accel_a: function(t) {
-				return t * t * t
-			},
-			accel_ab: function(t) {
-				return t = 1 - t, 1 - Math.sin(t * t * Math.PI / 2)
-			},
-			accel_ab2: function(t) {
-				return (t /= .5) < 1 ? .5 * t * t : -0.5 * (--t * (t - 2) - 1)
-			},
-			brakes: function(t) {
-				return t = 1 - t, 1 - Math.sin(t * t * Math.PI)
-			},
-			shake: function(t) {
-				return .5 > t ? -Math.cos(11 * t * Math.PI) * t * t : (t = 1 - t, Math.cos(11 * t * Math.PI) * t * t)
-			}
-		}
-
-		Calendar.SEL_NONE = 0,
-		Calendar.SEL_SINGLE = 1,
-		Calendar.SEL_MULTIPLE = 2,
-		Calendar.SEL_WEEK = 3,
-		Calendar.lang = {},
-		Calendar.getlang = _//func
-
-	function Calendar (args) {
-		var args = args || {}, date, tis
-			this.args = args = argDiff(args,{
-            cont: null,
-            bottomBar: true,
-            titleFormat: "%b %Y",
-			dateFormat: "%Y-%m-%d",
-            date: true,
-            weekNumbers: false,
-            time: true,
-			fdow: _("fdow"),
-            min: null,
-            max: null,
-            showTime: false,
-            timePos: "right",
-            minuteStep: 5,
-            checkRange: false,
-            animation: !is_ie6,
-            opacity: is_ie ? 1 : 3,
-            selection: [],
-            selectionType: Calendar.SEL_MULTIPLE,
-            inputField: null,
-            trigger: null,
-            align: "Bl/ / /T/r",
-            multiCtrl: true,
-            fixed: false,
-            reverseWheel: false,
-            noScroll: false,
-            disabled: Function(),
-            dateInfo: Function(),
-            onChange: Function(),
-            onSelect: Function(),
-            onTimeChange: Function(),
-            onFocus: Function(),
-            onBlur: Function(),
-            onClose: Function()
-			}),
-			this.handlers = {},
-			date = new Date,
-			args.min = setDate(args.min),
-			args.max = setDate(args.max),
-			args.date === true && (args.date = date),
-			args.time === true && (args.time = date.getHours() * 100 + Math.floor(date.getMinutes() / args.minuteStep) * args.minuteStep),
-			this.date = setDate(args.date),
-			this.time = args.time,
-			this.fdow = args.fdow,
-			tis = this,
-		runAF("onChange onSelect onTimeChange onFocus onBlur onClose".split(/\s+/), function(evname) {
-            var evn = args[evname]
-            evn instanceof Array || (evn = [evn]),
-			tis.handlers[evname] = evn;
-        })
-		this.selection = new Calendar.Selection(args.selection, args.selectionType, inputField, this),
-		args.cont && getElementById(args.cont).appendChild(Create(this))//,
-		//args.trigger && this.manageFields(args.trigger,args.inputField, args.dateFormat),//popup
-		//dw(args)
-	}
-
-	function Create(tis) {
-        var el = CreateElement("div"),
-            els = tis.els = {},
-            event = {
-                mousedown: setEvent(mouseClick, tis, true),
-                mouseup: setEvent(mouseClick, tis, false),
-                mouseover: setEvent(mouseHover, tis, true),
-                mouseout: setEvent(mouseHover, tis, false),
-                keypress: setEvent(keypress, tis)
-            }
-			tis.args.noScroll || (event[is_gecko ? "DOMMouseScroll" : "mousewheel"] = setEvent(wheelCHTime, tis)),
-			is_ie && (event.dblclick = event.mousedown, event.keydown = event.keypress),
-			el.innerHTML = Calendar(tis)
-			W(el.firstChild,
-				function(tis) {
-					var el = {
-						"MDCalendar-topCont": "topCont",
-						"MDCalendar-focusLink": "focusLink",
-						"MDCalendar": "main",
-						"MDCalendar-topBar": "topBar",
-						"MDCalendar-title": "title",
-						"MDCalendar-dayNames": "dayNames",
-						"MDCalendar-body": "body",
-						"MDCalendar-menu": "menu",
-						"MDCalendar-menu-year": "yearInput",
-						"MDCalendar-bottomBar": "bottomBar",
-						"MDCalendar-tooltip": "tooltip",
-						"MDCalendar-time-hour": "timeHour",
-						"MDCalendar-time-minute": "timeMinute",
-						"MDCalendar-time-am": "timeAM",
-						"MDCalendar-navBtn MDCalendar-prevYear": "navPrevYear",
-						"MDCalendar-navBtn MDCalendar-nextYear": "navNextYear",
-						"MDCalendar-navBtn MDCalendar-prevMonth": "navPrevMonth",
-						"MDCalendar-navBtn MDCalendar-nextMonth": "navNextMonth"
-						}[tis.className]
-					el && (els[el] = tis),
-					is_ie && tis.setAttribute("unselectable", "on")
+ * In The Name Of God
+ * @package MDCalendar
+ * @author   MohammaD (MD) Amanalikhani
+ * @link    http://md-amanalikhani.github.io | http://md.akhi.ir
+ * @copyright   Copyright (C) 2015 - 2020 Open Source Matters,Inc. All right reserved.
+ * @license http://www.php.net/license/3_0.txt  PHP License 3.0
+ * @version Release: 0.1.20
+ */
+Calendar = (function () {
+	function t(e) {
+		var n, a, s;
+		(e = e || {}),
+			(this.args = e =
+				E(e, {
+					animation: !ce,
+					cont: null,
+					bottomBar: !0,
+					date: !0,
+					fdow: _("fdow"),
+					min: null,
+					max: null,
+					reverseWheel: !1,
+					selection: [],
+					selectionType: t.SEL_SINGLE,
+					weekNumbers: !1,
+					align: "Bl/ / /T/r",
+					inputField: null,
+					trigger: null,
+					dateFormat: "%Y-%m-%d",
+					multiCtrl: !0,
+					fixed: !1,
+					opacity: le ? 1 : 3,
+					titleFormat: "%b %Y",
+					showTime: !1,
+					timePos: "right",
+					time: !0,
+					minuteStep: 5,
+					noScroll: !1,
+					disabled: se,
+					checkRange: !1,
+					dateInfo: se,
+					onChange: se,
+					onSelect: se,
+					onTimeChange: se,
+					onFocus: se,
+					onBlur: se,
+					onClose: se
+				})),
+			(this.handlers = {}),
+			(n = this),
+			(a = new Date()),
+			(e.min = k(e.min)),
+			(e.max = k(e.max)),
+			e.date === !0 && (e.date = a),
+			e.time === !0 &&
+				(e.time =
+					a.getHours() * 100 +
+					Math.floor(a.getMinutes() / e.minuteStep) * e.minuteStep),
+			(this.date = k(e.date)),
+			(this.time = e.time),
+			(this.fdow = e.fdow),
+			q(
+				"onChange onSelect onTimeChange onFocus onBlur onClose".split(/\s+/),
+				function (t) {
+					var a = e[t];
+					a instanceof Array || (a = [a]), (n.handlers[t] = a);
 				}
 			),
-			addEvent(els.main, event),
-			addEvent([els.focusLink, els.yearInput],
-			tis._focusEvents = {
-				focus: setEvent(onFocus, tis),
-				blur: setEvent(blurTime, tis)
-			}),
-			tis.moveTo(tis.date, false),
-			tis.setTime(null, true)
-		return els.topCont
-    }
-
-	function Calendar(tis) {//Calendar
-        var str = ["<table class='MDCalendar-topCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div class='MDCalendar'>", is_ie ? "<a class='MDCalendar-focusLink' href='#'></a>" : "<button class='MDCalendar-focusLink'></button>", "<div class='MDCalendar-topBar'><div dyc-type='nav' dyc-btn='-Y' dyc-cls='hover-navBtn,pressed-navBtn' ", "class='MDCalendar-navBtn MDCalendar-prevYear'><div></div></div><div dyc-type='nav' dyc-btn='+Y' dyc-cls='hover-navBtn,pressed-navBtn' ", "class='MDCalendar-navBtn MDCalendar-nextYear'><div></div></div><div dyc-type='nav' dyc-btn='-M' dyc-cls='hover-navBtn,pressed-navBtn' ", "class='MDCalendar-navBtn MDCalendar-prevMonth'><div></div></div><div dyc-type='nav' dyc-btn='+M' dyc-cls='hover-navBtn,pressed-navBtn' ", "class='MDCalendar-navBtn MDCalendar-nextMonth'><div></div></div><table class='MDCalendar-titleCont' align='center' cellspacing='0' cellpadding='0'><tr><td><div dyc-type='title' dyc-btn='menu' dyc-cls='hover-title,pressed-title' class='MDCalendar-title'><div unselectable='on'>"  + Calendar.printDate(tis.date, tis.args.titleFormat)  + "</div></div></td></tr></table><div class='MDCalendar-dayNames'>",  weekNumber(tis),  "</div></div><div class='MDCalendar-body'></div>"];
-		(tis.args.bottomBar || tis.args.showTime) && str.push("<div class='MDCalendar-bottomBar'>",  Today(tis),  "</div>"),
-		str.push("<div class='MDCalendar-menu' style='display: none'>",  Menu(tis),  "</div><div class='MDCalendar-tooltip'></div></div></td></tr></table>")
-		return str.join("")
-    }
-
-    function Menu(tis) {//i()
-        var k,i,j
-		str = ["<table height='100%'", " align='center' cellspacing='0' cellpadding='0'", "><tr><td><table style='margin-top: 1.5em'", " align='center' cellspacing='0' cellpadding='0'", ">", "<tr><td colspan='3'><input dyc-btn='year' class='MDCalendar-menu-year' size='6' value='",
-		tis.date.getFullYear(), "' /></td><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>",
-		tis.date.getFullYear(), "</div></td></tr><tr><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>", _("goToday"), "</div></td></tr></table><p class='MDCalendar-menu-sep'>&nbsp;</p><table class='MDCalendar-menu-mtable'", " align='center' cellspacing='0' cellpadding='0'", ">"],
-		shortMN = _("smn")
-		for (i = 0,j = str.length; 12 > i;) {
-			str[j++] = "<tr>"
-            for (k = 5; --k > 0;)
-				str[j++] = "<td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='m" + i + "' class='MDCalendar-menu-month'>" + shortMN[i++] + "</div></td>"
-            str[j++] = "</tr>"
-        }
-		str[j++] = "</table></td></tr></table>"
-        return str.join("")
-    }
-
-    function weekNumber(tis) {//Calendar-weekNumber
-        var e, n = ["<table align='center' cellspacing='0' cellpadding='0'><tr>"],
-            a = 0
-			tis.args.weekNumbers && n.push("<td><div class='MDCalendar-weekNumber'>", _("wk"), "</div></td>")
-		for (; 7 > a;)
-			e = (a++ + tis.fdow) % 7,
-			n.push("<td><div", _("weekend").indexOf(e) < 0 ? ">" : " class='MDCalendar-weekend'>", _("sdn")[e], "</div></td>")
-			n.push("</tr></table>")
-        return n.join("")
-    }
-
-    function Day(tis, date, fdow) {//Calendar-day
-        var monthnow, str = [], i = 0 , wk, dow, datet, day, month, year, horizontal, vertical, dayt, montht, yeart, fulldate, selected, disabled
-			date = date || tis.date,
-			fdow = fdow || tis.fdow,
-			date = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0),
-			monthnow = date.getMonth(),
-			wk = tis.args.weekNumbers,
-			date.setDate(1),
-			dow = (date.getDay() - fdow) % 7,
-			0 > dow && (dow += 7),
-			date.setDate(0 - dow),
-			date.setDate(date.getDate() + 1),
-			datet = new Date,
-			day = datet.getDate(),
-			month = datet.getMonth(),
-			year = datet.getFullYear(),
-			str[i++] = "<table class='MDCalendar-bodyTable'" + " align='center' cellspacing='0' cellpadding='0'" + ">"
-			for (horizontal = 0; 6 > horizontal; ++horizontal) {
-				str[i++] = "<tr class='MDCalendar-week",
-				0 == horizontal && (str[i++] = " MDCalendar-first-row"),
-				5 == horizontal && (str[i++] = " MDCalendar-last-row"),
-				str[i++] = "'>",
-				wk && (str[i++] = "<td class='MDCalendar-first-col'><div class='MDCalendar-weekNumber'>" + getWeekNumber(date) + "</div></td>")
-				for (vertical = 0; 7 > vertical; ++vertical)
-					dayt = date.getDate(),
-					montht = date.getMonth(),
-					yeart = date.getFullYear(),
-					fulldate = 1e4 * yeart + 100 * (montht + 1) + dayt,
-					selected = tis.selection.isSelected(fulldate),
-					disabled = tis.isDisabled(date),
-					str[i++] = "<td class='",
-					0 != vertical || wk || (str[i++] = " MDCalendar-first-col"),
-					0 == vertical && 0 == horizontal && (tis._firstDateVisible = fulldate),
-					6 == vertical && (str[i++] = " MDCalendar-last-col",
-					5 == horizontal && (tis._lastDateVisible = fulldate)),
-					selected && (str[i++] = " MDCalendar-td-selected"),
-					str[i++] = "'><div dyc-type='date' unselectable='on' dyc-date='" + fulldate + "' ",
-					disabled && (str[i++] = "disabled='1' "),
-					str[i++] = "class='MDCalendar-day",
-					_("weekend").indexOf(date.getDay()) < 0 || (str[i++] = " MDCalendar-weekend"),
-					montht != monthnow && (str[i++] = " MDCalendar-day-othermonth"),
-					dayt == day && montht == month && yeart == year && (str[i++] = " MDCalendar-day-today"),
-					disabled && (str[i++] = " MDCalendar-day-disabled"),
-					selected && (str[i++] = " MDCalendar-day-selected"),
-					disabled = tis.args.dateInfo(date),
-					disabled && disabled.klass && (str[i++] = " " + disabled.klass),
-					str[i++] = "'>" + dayt + "</div></td>",
-					date = new Date(yeart, montht, dayt + 1, 12, 0, 0, 0)
-				str[i++] = "</tr>"
-			}
-		str[i++] = "</table>"
-		return str.join("")
-    }
-
-    function Time(tis, e) {//print Calendar-time
-        e.push("<table class='MDCalendar-time'" + " align='center' cellspacing='0' cellpadding='0'" + "><tr><td rowspan='2'><div dyc-type='time-hour' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-hour'></div></td><td dyc-type='time-hour+' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-up'></td><td rowspan='2' class='MDCalendar-time-sep'></td><td rowspan='2'><div dyc-type='time-min' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-minute'></div></td><td dyc-type='time-min+' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-up'></td>"),
-		tis.args.showTime == 12 && e.push("<td rowspan='2' class='MDCalendar-time-sep'></td><td rowspan='2'><div class='MDCalendar-time-am' dyc-type='time-am' dyc-cls='hover-time,pressed-time'></div></td>"),
-		e.push("</tr><tr><td dyc-type='time-hour-' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-down'></td><td dyc-type='time-min-' dyc-cls='hover-time,pressed-time' class='MDCalendar-time-down'></td></tr></table>")
-    }
-
-    function Today(tis) {// print Today
-        var n = [],
-            a = tis.args
-        n.push("<table", " align='center' cellspacing='0' cellpadding='0'", " style='width:100%'><tr>"),
-		a.timePos == "left" && a.showTime && (n.push("<td>"), Time(tis, n), n.push("</td>")),
-		a.bottomBar && (n.push("<td><table", " align='center' cellspacing='0' cellpadding='0'", "><tr><td><div dyc-btn='today' dyc-cls='hover-bottomBar-today,pressed-bottomBar-today' dyc-type='bottomBar-today' class='MDCalendar-bottomBar-today'>",
-		_("today"), "</div></td></tr></table></td>")),
-		a.timePos == "right" && a.showTime && (n.push("<td>"), Time(tis, n), n.push("</td>")),
-		n.push("</tr></table>")
-		return n.join("")
-    }
-
-	function Title(tis) {//Title
-        return "<div unselectable='on'>" + Calendar.printDate(tis.date, tis.args.titleFormat) + "</div>"
-    }
-
-    function getWeekNumber(date) {
-        var dow, ms
-        return date = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0),
-			dow = date.getDay(),
-			date.setDate(date.getDate() - (dow + 6) % 7 + 3),// Nearest Thu
-			ms = date.valueOf(),// GMT
-			date.setMonth(0),
-			date.setDate(4), // Thu in Week 1
-			Math.round((ms - date.valueOf()) / 6048e5) + 1
-    }
-
-    function getDayOfYear(date) {
-        var e, time,now, then
-			now = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0),
-			then = new Date(date.getFullYear(), 0, 1, 12, 0, 0),
-			time = now - then
-        return Math.floor(time / 864e5)
-    }
-
-	function inputField() {// print inputField
-        this.refresh(),
-		this.inputField && (/input|textarea/i.test(this.inputField.tagName) ? this.inputField.value = this.selection.print(this.dateFormat) : this.inputField.innerHTML = this.selection.print(this.dateFormat)),
-		this.callHooks("onSelect", this, this.selection)
-    }
-
-	function argDiff(args,defargs, n, newArgs){//E()
-		var newArgs = {}
-        for (n in defargs) defargs.hasOwnProperty(n) && (newArgs[n] = defargs[n])
-        for (n in args) args.hasOwnProperty(n) && (newArgs[n] = args[n])
-		return newArgs;
+			(this.selection = new t.Selection(e.selection, e.selectionType, C, this)),
+			(s = l(this)),
+			e.cont && J(e.cont).appendChild(s),
+			e.trigger && this.manageFields(e.trigger, e.inputField, e.dateFormat);
 	}
+	function e(t) {
+		var e,
+			n = ["<table", Q, "><tr>"],
+			a = 0;
+		for (
+			t.args.weekNumbers &&
+			n.push(
+				"<td><div class='DynarchCalendar-weekNumber'>",
+				_("wk"),
+				"</div></td>"
+			);
+			7 > a;
 
-	function setDate(date) {//k()
-        if (date) {
-            if ("number" == typeof date) return Calendar.intToDate(date)
-            if (!(date instanceof Date)) {
-                var dateSpl = date.split(/-/)
-                return new Date(parseInt(dateSpl[0], 10), parseInt(dateSpl[1], 10) - 1, parseInt(dateSpl[2], 10), 12, 0, 0, 0)
-            }
-        }
-        return date
-    }
-
-	function getElementById(el) {
-		"string" == typeof el && (el = document.getElementById(el))
-        return el
-    }
-
-	function CreateElement(type, className, parent) {//CreateElement(type, parent)
-        var el = null //el
-        el = document.createElementNS ? document.createElementNS("http://www.w3.org/1999/xhtml", type) : document.createElement(type),
-		className && (el.className = className),
-		parent && parent.appendChild(el)
-		return el
-    }
-
-	function onFocus() {//c()
-        this._bluringTimeout && clearTimeout(this._bluringTimeout),
-		this.focused = true,
-		P(this.els.main, "MDCalendar-focused"),
-		this.callHooks("onFocus", this)
-    }
-
-	function onBlur() {//h()
-        this.focused = false,
-		Y(this.els.main, "MDCalendar-focused"),
-		this._menuVisible && y(this, false),
-		this.args.cont || this.hide(),
-		this.callHooks("onBlur", this)
-    }
-
-    function blurTime() {//u()
-        this._bluringTimeout = setTimeout(setEvent(onBlur, this), 50)
-    }
-
-	function addEvent(el, evname, func, a) {//addEvent = function(el, evname, func) {
-        var i
-        if (el instanceof Array)
-            for (i = el.length; --i >= 0;)
-				addEvent(el[i], evname, func, a)
-        else if ("object" == typeof evname)
-            for (i in evname) evname.hasOwnProperty(i) && addEvent(el, i, evname[i], func)
-        else el.addEventListener ? el.addEventListener(evname, func, is_ie ? true : !!a) : el.attachEvent ? el.attachEvent("on" + evname, func) : el["on" + evname] = func
-    }
-
-    function removeEvent(el, evname, func, a) {//removeEvent = function(el, evname, func) {
-        var i
-        if (el instanceof Array)
-            for (i = el.length; --i >= 0;) removeEvent(el[i], evname, func)
-        else if ("object" == typeof evname)
-            for (i in evname) evname.hasOwnProperty(i) && removeEvent(el, i, evname[i], func)
-        else el.removeEventListener ? el.removeEventListener(evname, func, is_ie ? true : !!a) : el.detachEvent ? el.detachEvent("on" + evname, func) : el["on" + evname] = null
-    }
-
-    function stopEvent(ev) {//stopEvent = function(ev) {
-        return ev = ev || window.event, is_ie ? (ev.cancelBubble = true, ev.returnValue = false) : (ev.preventDefault(), ev.stopPropagation()), false
-    }
-
-	function U(t, e) {
-        null == e && (e = 0)
-        var n, a, s
-        try {
-            n = Array.prototype.slice.call(t, e)
-        } catch (i) {
-            for (n = Array(t.length - e), a = e, s = 0; a < t.length; ++a, ++s) n[s] = t[a]
-        }
-        return n
-    }
-
-    function setEvent(func, tis) {
-        var n = U(arguments, 2)
-        return void 0 == tis ? function() {return func.apply(this, n.concat(U(arguments)))} : function() {return func.apply(tis, n.concat(U(arguments)))}
-    }
-
-    function W(t, e) {
-        if (!e(t))
-            for (var n = t.firstChild; n; n = n.nextSibling) n.nodeType == 1 && W(n, e)
-    }
-
-	function runAF(args, func) {//q()
-        for (var n = 0; n < args.length; ++n) func(args[n])
-    }
-
-	function dateDiff(t, e, n) {//H()
-        var ty = t.getFullYear(),
-            tm = t.getMonth(),
-            td = t.getDate(),
-            ey = e.getFullYear(),
-            em = e.getMonth(),
-            ed = e.getDate()
-        return ey > ty ? -3 : ty > ey ? 3 : em > tm ? -2 : tm > em ? 2 : n ? 0 : ed > td ? -1 : td > ed ? 1 : 0
-    }
-
-	function mouseClick(e, n) {
-        var dycType, timeOut, dycBtn, dTdycType, dycDate, selection, event, dTDycCls, u,DateDiv
-        n = n || window.event,
-		dycType = getDycType(n),
-		dycType && !dycType.getAttribute("disabled") && (
-			dycBtn = dycType.getAttribute("dyc-btn"),
-			dTdycType = dycType.getAttribute("dyc-type"),
-			dycDate = dycType.getAttribute("dyc-date"),
-			selection = this.selection,
-			event = {
-				mouseover: stopEvent,
-				mousemove: stopEvent,
-				mouseup: function() {
-					var dycCls = dycType.getAttribute("dyc-cls")
-					dycCls && Y(dycType, Split(dycCls, 1)),
-					clearTimeout(timeOut),
-					removeEvent(document, event, true),
-					event = null
-				}
-			},
-			e ?
-			(setTimeout(setEvent(this.focus, this), 1),
-				dTDycCls = dycType.getAttribute("dyc-cls"),
-				dTDycCls && P(dycType, Split(dTDycCls, 1)),
-				("menu" == dycBtn ?
-					this.toggleMenu() :
-					(dycType && /^[+-][MY]$/.test(dycBtn) ?
-						(chdate(this, dycBtn) ?
-							(u = setEvent(function() {
-								chdate(this, dycBtn, true) ?
-									timeOut = setTimeout(u, 40) : (event.mouseup(), chdate(this, dycBtn))
-								}, this),
-								timeOut = setTimeout(u, 350),
-								addEvent(document, event, true)
-							) : event.mouseup()
-						) :
-						("year" == dycBtn ?
-							(this.els.yearInput.focus(),
-								this.els.yearInput.select()
-							) :
-							("time-am" == dTdycType ?
-								addEvent(document, event, true) :
-								(/^time/.test(dTdycType) ?
-									(u = setEvent(function(t) {
-										chtime.call(this, t),
-										timeOut = setTimeout(u, 100)
-										}, this, dTdycType),
-										chtime.call(this, dTdycType),
-										timeOut = setTimeout(u, 350),
-										addEvent(document, event, true)
-									) :
-									(dycDate && selection.type &&
-										((selection.type == Calendar.SEL_MULTIPLE ?
-												(n.shiftKey && this._selRangeStart ?
-													selection.selectRange(this._selRangeStart, dycDate) :
-													(n.ctrlKey || selection.isSelected(dycDate) || !this.args.multiCtrl || selection.clear(true),
-														selection.set(dycDate, true),
-														this._selRangeStart = dycDate
-													)
-												) :
-												(selection.set(dycDate),
-													this.moveTo(Calendar.intToDate(dycDate), 2)
-												)
-											),
-											DateDiv = this._getDateDiv(dycDate),
-											mouseHover.call(this, true, {target: DateDiv})
-										),
-										addEvent(document, event, true)
-									)
-								)
-							)
-						)
-					)
-				),
-				is_ie && event && /dbl/i.test(n.type) && event.mouseup(),
-				this.args.fixed || !/^(MDCalendar-(topBar|bottomBar|weekend|weekNumber|menu(-sep)?))?$/.test(DateDiv.className) || this.args.cont ||
-				(event.mousemove = setEvent(p, this),
-				this._mouseDiff = z(n, getAbsolutePos(this.els.topCont)),
-				addEvent(document, event, true)
-				)
-			) :
-			("today" == dycBtn ?
-				(this._menuVisible || selection.type != Calendar.SEL_SINGLE || selection.set(new Date),
-				this.moveTo(new Date, true),
-				y(this, false)
-				) :
-				(/^m([0-9]+)/.test(dycBtn) ?
-					(dycDate = new Date(this.date),
-					dycDate.setDate(1),
-					dycDate.setMonth(RegExp.$1),
-					dycDate.setFullYear(this._getInputYear()),
-					this.moveTo(dycDate, true),
-					y(this, false)
-					) :
-					("time-am" == dTdycType && this.setHours(this.getHours() + 12),
-					is_ie || stopEvent(n)
-					)
-				)
-			)
 		)
-    }
-
-	function getAbsolutePos(el) {//G()
-        var BCR, osl = 0, ost = 0
-        if (el.getBoundingClientRect) return BCR = el.getBoundingClientRect(), {
-            x: BCR.left - document.documentElement.clientLeft + document.body.scrollLeft,
-            y: BCR.top - document.documentElement.clientTop + document.body.scrollTop
-        }
-        do osl += el.offsetLeft - el.scrollLeft,
-			ost += el.offsetTop - el.scrollTop
-        while (el = el.offsetParent)
-        return {
-            x: osl,
-            y: ost
-        }
-    }
-
-    function z(t, e) {
-        var n = is_ie ? t.clientX + document.body.scrollLeft : t.pageX,
-            a = is_ie ? t.clientY + document.body.scrollTop : t.pageY
-        return e && (n -= e.x, a -= e.y), {
-            x: n,
-            y: a
-        }
-    }
-
-	function getDycType(t) {// get dyc-type
-        for (var e = t.target || t.srcElement, n = e; e && e.getAttribute && !e.getAttribute("dyc-type");) e = e.parentNode
-        return e.getAttribute && e || n
-    }
-
-    function Split(t, e) {
-        return "MDCalendar-" + t.split(/,/)[e]
-    }
-
-    function mouseHover(t, e) {// D()
-        var DycType, dTdycType, dycCls
-        e = e || window.event,
-		DycType = getDycType(e),
-		DycType && (
-			dTdycType = DycType.getAttribute("dyc-type"),
-			dTdycType && !DycType.getAttribute("disabled") && (
-				t && this._bodyAnim && "date" == dTdycType || (
-					dycCls = DycType.getAttribute("dyc-cls"),
-					dycCls = dycCls ? Split(dycCls, 0) : "MDCalendar-hover-" + dTdycType,
-					("date" != dTdycType || this.selection.type) && R(t, DycType, dycCls),
-					"date" == dTdycType && (
-						R(t, DycType.parentNode.parentNode, "MDCalendar-hover-week"),
-						this._showTooltip(DycType.getAttribute("dyc-date"))
-					),
-					/^time-hour/.test(dTdycType) && R(t, this.els.timeHour, "MDCalendar-hover-time"),
-					/^time-min/.test(dTdycType) && R(t, this.els.timeMinute, "MDCalendar-hover-time"),
-					Y(this._getDateDiv(this._lastHoverDate), "MDCalendar-hover-date"),
-					this._lastHoverDate = null
-				)
+			(e = (a++ + t.fdow) % 7),
+				n.push(
+					"<td><div",
+					_("weekend").indexOf(e) < 0
+						? ">"
+						: " class='DynarchCalendar-weekend'>",
+					_("sdn")[e],
+					"</div></td>"
+				);
+		return n.push("</tr></table>"), n.join("");
+	}
+	function n(t, e, n) {
+		var a, s, i, r, o, l, c, h, u, d, f, y, m, p, g, v, D;
+		for (
+			e = e || t.date,
+				n = n || t.fdow,
+				e = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 12, 0, 0, 0),
+				a = e.getMonth(),
+				s = [],
+				i = 0,
+				r = t.args.weekNumbers,
+				e.setDate(1),
+				o = (e.getDay() - n) % 7,
+				0 > o && (o += 7),
+				e.setDate(0 - o),
+				e.setDate(e.getDate() + 1),
+				l = new Date(),
+				c = l.getDate(),
+				h = l.getMonth(),
+				u = l.getFullYear(),
+				s[i++] = "<table class='DynarchCalendar-bodyTable'" + Q + ">",
+				d = 0;
+			6 > d;
+			++d
+		) {
+			for (
+				s[i++] = "<tr class='DynarchCalendar-week",
+					0 == d && (s[i++] = " DynarchCalendar-first-row"),
+					5 == d && (s[i++] = " DynarchCalendar-last-row"),
+					s[i++] = "'>",
+					r &&
+						(s[i++] =
+							"<td class='DynarchCalendar-first-col'><div class='DynarchCalendar-weekNumber'>" +
+							T(e) +
+							"</div></td>"),
+					f = 0;
+				7 > f;
+				++f
 			)
-		),
-		t || this._showTooltip()
-    }
-
-    function wheelCHTime(event) {// b()
-        var dycType, dycBtn, dycType, wheelStep
-        if (event = event || window.event, dycType = getDycType(event)){
-			dycBtn = dycType.getAttribute("dyc-btn"),
-			dycType = dycType.getAttribute("dyc-type"),
-			wheelStep = event.wheelDelta ? event.wheelDelta / 120 : -event.detail / 3,
-			wheelStep = 0 > wheelStep ? -1 : wheelStep > 0 ? 1 : 0,
-			this.args.reverseWheel && (wheelStep = -wheelStep)
-            if (/^(time-(hour|min))/.test(dycType)) {
-					switch (RegExp.$1) {
-						case "time-hour":
-							this.setHours(this.getHours() + wheelStep)
-							break
-						case "time-min":
-							this.setMinutes(this.getMinutes() + this.args.minuteStep * wheelStep)
-					}
-					stopEvent(event)
-            } else
-				/Y/i.test(dycBtn) && (wheelStep *= 2),
-				chdate(this, -wheelStep),
-				stopEvent(event)
+				(y = e.getDate()),
+					(m = e.getMonth()),
+					(p = e.getFullYear()),
+					(g = 1e4 * p + 100 * (m + 1) + y),
+					(v = t.selection.isSelected(g)),
+					(D = t.isDisabled(e)),
+					(s[i++] = "<td class='"),
+					0 != f || r || (s[i++] = " DynarchCalendar-first-col"),
+					0 == f && 0 == d && (t._firstDateVisible = g),
+					6 == f &&
+						((s[i++] = " DynarchCalendar-last-col"),
+						5 == d && (t._lastDateVisible = g)),
+					v && (s[i++] = " DynarchCalendar-td-selected"),
+					(s[i++] =
+						"'><div dyc-type='date' unselectable='on' dyc-date='" + g + "' "),
+					D && (s[i++] = "disabled='1' "),
+					(s[i++] = "class='DynarchCalendar-day"),
+					_("weekend").indexOf(e.getDay()) < 0 ||
+						(s[i++] = " DynarchCalendar-weekend"),
+					m != a && (s[i++] = " DynarchCalendar-day-othermonth"),
+					y == c && m == h && p == u && (s[i++] = " DynarchCalendar-day-today"),
+					D && (s[i++] = " DynarchCalendar-day-disabled"),
+					v && (s[i++] = " DynarchCalendar-day-selected"),
+					(D = t.args.dateInfo(e)),
+					D && D.klass && (s[i++] = " " + D.klass),
+					(s[i++] = "'>" + y + "</div></td>"),
+					(e = new Date(p, m, y + 1, 12, 0, 0, 0));
+			s[i++] = "</tr>";
 		}
-    }
+		return (s[i++] = "</table>"), s.join("");
+	}
+	function a(t) {
+		var n = [
+			"<table class='DynarchCalendar-topCont'",
+			Q,
+			"><tr><td>",
+			"<div class='DynarchCalendar'>",
+			le
+				? "<a class='DynarchCalendar-focusLink' href='#'></a>"
+				: "<button class='DynarchCalendar-focusLink'></button>",
+			"<div class='DynarchCalendar-topBar'>",
+			"<div dyc-type='nav' dyc-btn='-Y' dyc-cls='hover-navBtn,pressed-navBtn' ",
+			"class='DynarchCalendar-navBtn DynarchCalendar-prevYear'><div></div></div>",
+			"<div dyc-type='nav' dyc-btn='+Y' dyc-cls='hover-navBtn,pressed-navBtn' ",
+			"class='DynarchCalendar-navBtn DynarchCalendar-nextYear'><div></div></div>",
+			"<div dyc-type='nav' dyc-btn='-M' dyc-cls='hover-navBtn,pressed-navBtn' ",
+			"class='DynarchCalendar-navBtn DynarchCalendar-prevMonth'><div></div></div>",
+			"<div dyc-type='nav' dyc-btn='+M' dyc-cls='hover-navBtn,pressed-navBtn' ",
+			"class='DynarchCalendar-navBtn DynarchCalendar-nextMonth'><div></div></div>",
+			"<table class='DynarchCalendar-titleCont'",
+			Q,
+			"><tr><td>",
+			"<div dyc-type='title' dyc-btn='menu' dyc-cls='hover-title,pressed-title' class='DynarchCalendar-title'>",
+			s(t),
+			"</div></td></tr></table>",
+			"<div class='DynarchCalendar-dayNames'>",
+			e(t),
+			"</div>",
+			"</div>",
+			"<div class='DynarchCalendar-body'></div>"
+		];
+		return (
+			(t.args.bottomBar || t.args.showTime) &&
+				n.push("<div class='DynarchCalendar-bottomBar'>", o(t), "</div>"),
+			n.push(
+				"<div class='DynarchCalendar-menu' style='display: none'>",
+				i(t),
+				"</div>",
+				"<div class='DynarchCalendar-tooltip'></div>",
+				"</div>",
+				"</td></tr></table>"
+			),
+			n.join("")
+		);
+	}
+	function s(t) {
+		return "<div unselectable='on'>" + S(t.date, t.args.titleFormat) + "</div>";
+	}
+	function i(t) {
+		for (
+			var e,
+				n = [
+					"<table height='100%'",
+					Q,
+					"><tr><td>",
+					"<table style='margin-top: 1.5em'",
+					Q,
+					">",
+					"<tr><td colspan='3'><input dyc-btn='year' class='DynarchCalendar-menu-year' size='6' value='",
+					t.date.getFullYear(),
+					"' /></td></tr>",
+					"<tr><td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='today'>",
+					_("goToday"),
+					"</div></td></tr>",
+					"</table>",
+					"<p class='DynarchCalendar-menu-sep'>&nbsp;</p>",
+					"<table class='DynarchCalendar-menu-mtable'",
+					Q,
+					">"
+				],
+				a = _("smn"),
+				s = 0,
+				i = n.length;
+			12 > s;
 
-    function chtime(dycType) { // d()
-        switch (dycType) {
-            case "time-hour+":
-                this.setHours(this.getHours() + 1)
-                break
-            case "time-hour-":
-                this.setHours(this.getHours() - 1)
-                break
-            case "time-min+":
-                this.setMinutes(this.getMinutes() + this.args.minuteStep)
-                break
-            case "time-min-":
-                this.setMinutes(this.getMinutes() - this.args.minuteStep)
-                break
-            default:
-                return
-        }
-    }
-
-    function chdate(tis, dycBtn, anim) { // f()
-        this._bodyAnim && this._bodyAnim.stop()
-        if (0 != dycBtn){
-			var data = new Date(tis.date)
-			data.setDate(1)
-			switch ( dycBtn) {
+		) {
+			for (n[i++] = "<tr>", e = 4; --e > 0; )
+				n[i++] =
+					"<td><div dyc-type='menubtn' dyc-cls='hover-navBtn,pressed-navBtn' dyc-btn='m" +
+					s +
+					"' class='DynarchCalendar-menu-month'>" +
+					a[s++] +
+					"</div></td>";
+			n[i++] = "</tr>";
+		}
+		return (n[i++] = "</table></td></tr></table>"), n.join("");
+	}
+	function r(t, e) {
+		e.push(
+			"<table class='DynarchCalendar-time'" + Q + "><tr>",
+			"<td rowspan='2'><div dyc-type='time-hour' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-hour'></div></td>",
+			"<td dyc-type='time-hour+' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-up'></td>",
+			"<td rowspan='2' class='DynarchCalendar-time-sep'></td>",
+			"<td rowspan='2'><div dyc-type='time-min' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-minute'></div></td>",
+			"<td dyc-type='time-min+' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-up'></td>"
+		),
+			t.args.showTime == 12 &&
+				e.push(
+					"<td rowspan='2' class='DynarchCalendar-time-sep'></td>",
+					"<td rowspan='2'><div class='DynarchCalendar-time-am' dyc-type='time-am' dyc-cls='hover-time,pressed-time'></div></td>"
+				),
+			e.push(
+				"</tr><tr>",
+				"<td dyc-type='time-hour-' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-down'></td>",
+				"<td dyc-type='time-min-' dyc-cls='hover-time,pressed-time' class='DynarchCalendar-time-down'></td>",
+				"</tr></table>"
+			);
+	}
+	function o(t) {
+		function e() {
+			a.showTime && (n.push("<td>"), r(t, n), n.push("</td>"));
+		}
+		var n = [],
+			a = t.args;
+		return (
+			n.push("<table", Q, " style='width:100%'><tr>"),
+			a.timePos == "left" && e(),
+			a.bottomBar &&
+				(n.push("<td>"),
+				n.push(
+					"<table",
+					Q,
+					"><tr><td>",
+					"<div dyc-btn='today' dyc-cls='hover-bottomBar-today,pressed-bottomBar-today' dyc-type='bottomBar-today' ",
+					"class='DynarchCalendar-bottomBar-today'>",
+					_("today"),
+					"</div>",
+					"</td></tr></table>"
+				),
+				n.push("</td>")),
+			a.timePos == "right" && e(),
+			n.push("</tr></table>"),
+			n.join("")
+		);
+	}
+	function l(t) {
+		var e = V("div"),
+			n = (t.els = {}),
+			s = {
+				mousedown: O(m, t, !0),
+				mouseup: O(m, t, !1),
+				mouseover: O(D, t, !0),
+				mouseout: O(D, t, !1),
+				keypress: O(w, t)
+			};
+		return (
+			t.args.noScroll || (s[he ? "DOMMouseScroll" : "mousewheel"] = O(b, t)),
+			le && ((s.dblclick = s.mousedown), (s.keydown = s.keypress)),
+			(e.innerHTML = a(t)),
+			W(e.firstChild, function (t) {
+				var e = Z[t.className];
+				e && (n[e] = t), le && t.setAttribute("unselectable", "on");
+			}),
+			B(n.main, s),
+			B(
+				[n.focusLink, n.yearInput],
+				(t._focusEvents = { focus: O(c, t), blur: O(u, t) })
+			),
+			t.moveTo(t.date, !1),
+			t.setTime(null, !0),
+			n.topCont
+		);
+	}
+	function c() {
+		this._bluringTimeout && clearTimeout(this._bluringTimeout),
+			(this.focused = !0),
+			P(this.els.main, "DynarchCalendar-focused"),
+			this.callHooks("onFocus", this);
+	}
+	function h() {
+		(this.focused = !1),
+			Y(this.els.main, "DynarchCalendar-focused"),
+			this._menuVisible && y(this, !1),
+			this.args.cont || this.hide(),
+			this.callHooks("onBlur", this);
+	}
+	function u() {
+		this._bluringTimeout = setTimeout(O(h, this), 50);
+	}
+	function d(t) {
+		switch (t) {
+			case "time-hour+":
+				this.setHours(this.getHours() + 1);
+				break;
+			case "time-hour-":
+				this.setHours(this.getHours() - 1);
+				break;
+			case "time-min+":
+				this.setMinutes(this.getMinutes() + this.args.minuteStep);
+				break;
+			case "time-min-":
+				this.setMinutes(this.getMinutes() - this.args.minuteStep);
+				break;
+			default:
+				return;
+		}
+	}
+	function f(t, e, n) {
+		this._bodyAnim && this._bodyAnim.stop();
+		var a;
+		if (0 != e)
+			switch (((a = new Date(t.date)), a.setDate(1), e)) {
 				case "-Y":
 				case -2:
-					data.setFullYear(data.getFullYear() - 1)
-					break
+					a.setFullYear(a.getFullYear() - 1);
+					break;
 				case "+Y":
 				case 2:
-					data.setFullYear(data.getFullYear() + 1)
-					break
+					a.setFullYear(a.getFullYear() + 1);
+					break;
 				case "-M":
 				case -1:
-					data.setMonth(data.getMonth() - 1)
-					break
+					a.setMonth(a.getMonth() - 1);
+					break;
 				case "+M":
 				case 1:
-					data.setMonth(data.getMonth() + 1)
+					a.setMonth(a.getMonth() + 1);
 			}
-		}else
-			data = new Date
-        return tis.moveTo(data, !anim)
-    }
-
-	function keypress(e) {
-        var target, dycBtn, keyCode, charCode, r, date, yearInput, selection, MN, monthName, d, m, p
-        if (!this._menuAnim) {
-			e = e || window.event,
-			target = e.target || e.srcElement,
-			dycBtn = target.getAttribute("dyc-btn"),
-			keyCode = e.keyCode,
-			charCode = e.charCode || keyCode,
-			r = ee[keyCode]
-            if ("year" == dycBtn && 13 == keyCode) {
-				date = new Date(this.date),
-				date.setDate(1),
-				date.setFullYear(this._getInputYear()),
-				this.moveTo(date, true),
-				y(this, false)
-				return stopEvent(e)
-			}
-            if (this._menuVisible) {
-                if (27 == keyCode){
-					y(this, false)
-					return stopEvent(e)
-				}
-            } else {
-				e.ctrlKey || (r = null),
-				null != r || e.ctrlKey || (r = ne[keyCode]),
-				36 == keyCode && (r = 0)
-                if (null != r){
-					chdate(this, r)
-					return stopEvent(e)
-				}
-				charCode = String.fromCharCode(charCode).toLowerCase(),
-				yearInput = this.els.yearInput,
-				selection = this.selection
-                if ( " " == charCode){
-					y(this, true),
-					this.focus(),
-					yearInput.focus(),
-					yearInput.select()
-					return stopEvent(e)
-				}
-                if (charCode >= "0" && "9" >= charCode){
-					y(this, true),
-					this.focus(),
-					yearInput.value = charCode,
-					yearInput.focus()
-					return stopEvent(e)
-				}
-				monthName = _("mn"),
-				d = e.shiftKey ? -1 : this.date.getMonth()
-                for (m = 0; ++m < 12;){
-					MN = monthName[(d + m) % 12].toLowerCase()
-                    if ( MN.indexOf(charCode) == 0){
-						date = new Date(this.date),
-						date.setDate(1),
-						date.setMonth((d + m) % 12),
-						this.moveTo(date, true)
-						return stopEvent(e)
-					}
-				}
-                if (keyCode >= 37 && 40 >= keyCode) {
-					date = this._lastHoverDate, date || selection.isEmpty() || (
-						date = 39 > keyCode ? selection.getFirstDate() : selection.getLastDate(),
-						(date < this._firstDateVisible || date > this._lastDateVisible) && (date = null)
-					)
-                    if ( date) {
-						p = date,
-						date = Calendar.intToDate(date)
-                        for (d = 100; d-- > 0;) {
-                            switch (keyCode) {
-                                case 37:
-                                    date.setDate(date.getDate() - 1)
-                                    break;
-                                case 38:
-                                    date.setDate(date.getDate() - 7)
-                                    break;
-                                case 39:
-                                    date.setDate(date.getDate() + 1);
-                                    break;
-                                case 40:
-                                    date.setDate(date.getDate() + 7)
-                            }
-                            if (!this.isDisabled(date)) break;
-                        }
-                        date = Calendar.dateToInt(date),
-						(date < this._firstDateVisible || date > this._lastDateVisible) && this.moveTo(date)
-                    } else
-						date = 39 > keyCode ? this._lastDateVisible : this._firstDateVisible
-					Y(this._getDateDiv(p), P(this._getDateDiv(date), "MDCalendar-hover-date")),
-					this._lastHoverDate = date
-                    return stopEvent(e)
-                }
-                if (13 == keyCode && this._lastHoverDate) {
-					selection.type == Calendar.SEL_MULTIPLE && (e.shiftKey || e.ctrlKey) ? (
-						e.shiftKey && this._selRangeStart && (
-							selection.clear(true),
-							selection.selectRange(this._selRangeStart, this._lastHoverDate)
-						),
-						e.ctrlKey && selection.set(this._selRangeStart = this._lastHoverDate, true)
-					) : selection.reset(this._selRangeStart = this._lastHoverDate)
-					return stopEvent(e)
-				}
-                27 != keyCode || this.args.cont || this.hide()
-            }
-        }
-    }
-
-	function y(tis, e) {// show menu
-        var menu, offsetHeight
-        tis._menuVisible = e,
-		R(e, tis.els.title, "MDCalendar-pressed-title"),
-		menu = tis.els.menu,
-		is_ie6 && (menu.style.height = tis.els.main.offsetHeight + "px"),
-		tis.args.animation ? (
-			tis._menuAnim && tis._menuAnim.stop(),
-			offsetHeight = tis.els.main.offsetHeight,
-			is_ie6 && (menu.style.width = tis.els.topBar.offsetWidth + "px"),
-			e && (menu.firstChild.style.marginTop = -offsetHeight + "px", tis.args.opacity > 0 && setOpacity(menu, 0), styleDisplay(menu, true)),
-			tis._menuAnim = bodyanimation({
-				onUpdate: function(s, i) {
-					menu.firstChild.style.marginTop = i(ae.accel_b(s), -offsetHeight, 0, !e) + "px",
-					tis.args.opacity > 0 && setOpacity(menu, i(ae.accel_b(s), 0, .85, !e))
-				},
-				onStop: function() {
-					tis.args.opacity > 0 && setOpacity(menu, .85),
-					menu.firstChild.style.marginTop = "",
-					tis._menuAnim = null,
-					e || (styleDisplay(menu, false),
-					tis.focused && tis.focus())
-				}
-			})
-		) : (
-			styleDisplay(menu, e),
-			tis.focused && tis.focus()
-		)
-    }
-
-    function styleDisplay(t, e) { // display
-        return null != e && ( t.style.display = e ? "" : "none"), t.style.display != "none"
-    }
-
-	function Y(t, e, n) {
-        if (t) {
-            var a,
-			s = t.className.replace(/^\s+|\s+$/, "").split(/\x20/),
-                i = []
-            for (a = s.length; a > 0;) s[--a] != e && i.push(s[a])
-            n && i.push(n),
-			t.className = i.join(" ")
-        }
-        return n
-    }
-
-    function P(t, e) {
-        return Y(t, e, e)
-    }
-
-    function R(t, e, n) {
-        if (e instanceof Array)
-            for (var a = e.length; --a >= 0;) R(t, e[a], n)
-        else Y(e, n, t ? n : null)
-        return t
-    }
-
-	function bodyanimation(args, e, n) {//animation
-        function map(t, e, n, a) {
-            return a ? n + t * (e - n) : e + t * (n - e)
-        }
-
-        function start() {
-            e && stop(),
-			n = 0,
-			e = setInterval(update, 1e3 / args.fps)
-        }
-
-        function stop() {
-            e && (clearInterval(e), e = null),
-			args.onStop(n / args.len, map)
-        }
-
-        function update() {
-            var e = args.len
-            args.onUpdate(n / e, map),
-			n == e && stop(),
-			++n
-        }
-        args = argDiff(args, {
-            fps: 50,
-            len: 15,
-            onUpdate: Function(),
-            onStop: Function()
-        }),
-		is_ie && (args.len = Math.round(t.len / 2)),
-		start()
-		return {
-            start: start,
-            stop: stop,
-            update: update,
-            args: args,
-            map: map
-        }
-    }
-
-    function setOpacity(el, value) {// set opacity
-		"" === value ?
-			is_ie ? el.style.filter = "" : el.style.opacity = "" :
-			null != value ?
-				is_ie ? el.style.filter = "alpha(opacity=" + 100 * value + ")" : el.style.opacity = value :
-				is_ie ? /alpha\(opacity=([0-9.])+\)/.test(el.style.opacity) && (value = parseFloat(RegExp.$1) / 100) : value = parseFloat(el.style.opacity)
-        return value
-    }
-
-	Calendar.prototype.moveTo = function(date, animation) {//date , animation
-        var a, datedif, args, min, max, body, el, firstChild, u, ddbool, fcoffsetTL, elstyle, boffsetHW, cloneNode, cnstyle,/*  v, */ tis = this
-			date = setDate(date),
-			datedif = dateDiff(date, tis.date, true),
-			args = tis.args,
-			min = args.min && dateDiff(date, args.min),
-			max = args.max && dateDiff(date, args.max),
-			args.animation || (animation = false),
-			R(null != min && 1 >= min,[tis.els.navPrevMonth, tis.els.navPrevYear], "MDCalendar-navDisabled"),
-			R(null != max && max >= -1, [tis.els.navNextMonth, tis.els.navNextYear], "MDCalendar-navDisabled"),
-			-1 > min && (date = args.min, a = 1, datedif = 0),
-			max > 1 && (date = args.max, a = 2, datedif = 0),
-			tis.date = date,
-			tis.refresh(!!animation),
-			tis.callHooks("onChange", tis, date, animation),
-		 	!animation || 0 == datedif && 2 == animation || (
-				tis._bodyAnim && tis._bodyAnim.stop(),
-				body = tis.els.body,
-				el = CreateElement("div", "MDCalendar-animBody-" + te[datedif], body),
-				firstChild = body.firstChild,
-				setOpacity(firstChild) || .7,
-				(u = a ?
-					ae.brakes :
-					(0 == datedif ?
-						ae.shake : ae.accel_ab2
-					)
-				),
-				ddbool = datedif * datedif > 4,
-				fcoffsetTL = ddbool ? firstChild.offsetTop : firstChild.offsetLeft,
-				elstyle = el.style,
-				boffsetHW = ddbool ? body.offsetHeight : body.offsetWidth,
-				0 > datedif ? boffsetHW += fcoffsetTL : datedif > 0 ? boffsetHW = fcoffsetTL - boffsetHW : (boffsetHW = Math.round(boffsetHW / 7), 2 == a && (boffsetHW = -boffsetHW)),
-				a || 0 == datedif || (cloneNode = el.cloneNode(true),
-				cnstyle = cloneNode.style,
-				//v = 2 * boffsetHW,
-				cloneNode.appendChild(firstChild.cloneNode(true)),
-				cnstyle[ddbool ? "marginTop" : "marginLeft"] = boffsetHW + "px",
-				body.appendChild(cloneNode)),
-				firstChild.style.visibility = "hidden",
-				el.innerHTML = Day(tis),
-				tis._bodyAnim = bodyanimation({
-				onUpdate: function(t, e) {
-					var n, i = u(t)
-					cloneNode && (n = e(i, boffsetHW, 2 * boffsetHW) + "px"), a ? elstyle[ddbool ? "marginTop" : "marginLeft"] = e(i, boffsetHW, 0) + "px" : ((ddbool || 0 == datedif) && (elstyle.marginTop = e(0 == datedif ? u(t * t) : i, 0, boffsetHW) + "px", 0 != datedif && (cnstyle.marginTop = n)), ddbool && 0 != datedif || (elstyle.marginLeft = e(i, 0, boffsetHW) + "px", 0 != datedif && (cnstyle.marginLeft = n))), tis.args.opacity > 2 && cloneNode && (setOpacity(cloneNode, 1 - i), setOpacity(el, i))
-				},
-				onStop: function() {
-					body.innerHTML = Day(tis, date),
-					tis._bodyAnim = null
-				}
-			})
-		),
-		tis._lastHoverDate = null
-		return min >= -1 && 1 >= max
-    }
-
-	Calendar.prototype.isDisabled = function(date) {
-        var args = this.args
-        return args.min && dateDiff(date, args.min) < 0 || args.max && dateDiff(date, args.max) > 0 || args.disabled(date)
-    }
-
-	Calendar.prototype.toggleMenu = function() {
-        y(this, !this._menuVisible)
-    }
-
-	Calendar.prototype.refresh = function(noBody) {
-        var els = this.els
-        noBody || (els.body.innerHTML = Day(this)),
-		els.title.innerHTML = Title(this),
-		els.yearInput.value = this.date.getFullYear()
-    }
-	/*
-	Calendar.prototype.manageFields = function(trigger, inputField, dateFormat) {//trigger, inputField, dateFormat
-        var a = this
-        inputField = getElementById(inputField),
-		trigger = getElementById(trigger),
-		/^button$/i.test(trigger.tagName) && trigger.setAttribute("type", "button"),
-		addEvent(trigger, "click", function(s) {
-            return a.popupForField(trigger, inputField, dateFormat),
-				stopEvent(s)
-        })
-    }
-
-	Calendar.prototype.popupForField = function(trigger, inputField, dateFormat) {//trigger, inputField, dateFormat
-        var s, i, r, o, l = this
-        inputField = getElementById(inputField),
-		trigger = getElementById(trigger),
-		l.inputField = inputField,
-		l.dateFormat = dateFormat,
-		l.selection.type == t.SEL_SINGLE && (s = /input|textarea/i.test(inputField.tagName) ? inputField.value : inputField.innerText || inputField.textContent,
-			s && (i = /(^|[^%])%[bBmo]/.exec(dateFormat),
-			r = /(^|[^%])%[de]/.exec(dateFormat),
-			i && r && (o = i.index < r.index),
-			s = Calendar.parseDate(s, o),
-			s && (l.selection.set(s, false, true),
-			l.args.showTime && (l.setHours(s.getHours()), l.setMinutes(s.getMinutes())),
-			l.moveTo(s)))),
-		l.popup(trigger)
-    } */
-
-	Calendar.Selection = function(selection, selectionType, inputField, tis) {
-        this.type = selectionType,
-		this.sel = selection instanceof Array ? selection : [selection],
-		this.onChange = setEvent(inputField, tis),
-		this.cal = tis
-    }
-
-	Calendar.Selection.prototype = {
-        get: function() {
-            return this.type == Calendar.SEL_SINGLE ? this.sel[0] : this.sel
-        },
-        isEmpty: function() {
-            return this.sel.length == 0
-        },
-        set: function(e, n, a) {//arg, toggle)
-            var type = this.type == Calendar.SEL_SINGLE
-            e instanceof Array ?
-				(
-					this.sel = e,
-					this.normalize(),
-					a || this.onChange(this)
-				) : (
-					e = Calendar.dateToInt(e),
-					type || !this.isSelected(e) ?
-					(
-						type ? this.sel = [e] : this.sel.splice(this.findInsertPos(e), 0, e),
-						this.normalize(),
-						a || this.onChange(this)
-					) : n && this.unselect(e, a)
-				)
-        },
-        reset: function() {//arg, toggle)
-            this.sel = [],
-			this.set.apply(this, arguments)
-        },
-        countDays: function() {
-			var subSel, dateo, datet, count = 0, sel = this.sel
-            for (var i = sel.length; --i >= 0;)
-			subSel = sel[i],
-			subSel instanceof Array && (
-				dateo = Calendar.intToDate(subSel[0]),
-				datet = Calendar.intToDate(subSel[1]),
-				count += Math.round(Math.abs(datet.getTime() - dateo.getTime()) / 864e5)
-			),
-			++count
-            return count
-        },
-        unselect: function(date, e) {//date)
-            var bool, a, sel, i, datet, Date, Datet
-            date = Calendar.dateToInt(date),
-			bool = false,
-			sel = this.sel
-			for (i = sel.length; --i >= 0;)
-				a = sel[i],
-				a instanceof Array ? date < a[0] || date > a[1] ||
-				(
-					datet = Calendar.intToDate(date),
-					Date = datet.getDate(),
-					date == a[0] ?
-						(
-							datet.setDate(Date + 1),
-							a[0] = Calendar.dateToInt(datet),
-							bool = true
-						) : date == a[1] ?
-						(
-							datet.setDate(Date - 1),
-							a[1] = Calendar.dateToInt(datet),
-							bool = true
-						) : (
-							Datet = new Date(datet),
-							Datet.setDate(Date + 1),
-							datet.setDate(Date - 1),
-							sel.splice(i + 1, 0, [Calendar.dateToInt(Datet), a[1]]),
-							a[1] = Calendar.dateToInt(datet),
-							bool = true
-						)
-					) : date == a && (sel.splice(i, 1), bool = true)
-            bool && (this.normalize(), e || this.onChange(this))
-        },
-        normalize: function() {
-			var t, e, sel, a, s, i, r
-			this.sel = this.sel.sort(function(t, e) {
-                    return t instanceof Array && (t = t[0]), e instanceof Array && (e = e[0]), t - e
-            })
-			sel = this.sel
-            for(a = sel.length; --a >= 0;) {
-                if(t = sel[a], t instanceof Array) {
-                    if(t[0] > t[1]) {
-                        sel.splice(a, 1)
-                        continue
-                    }
-                    t[0] == t[1] && (t = sel[a] = t[0])
-                }
-                e && (
-					s = e,
-					i = t instanceof Array ? t[1] : t,
-					i = Calendar.intToDate(i),
-					i.setDate(i.getDate() + 1),
-					i = Calendar.dateToInt(i),
-					s > i ||
-					(
-						r = sel[a + 1],
-						t instanceof Array && r instanceof Array ?
-						(
-							t[1] = r[1],
-							sel.splice(a + 1, 1)
-						) : t instanceof Array ?
-						(
-							t[1] = e,
-							sel.splice(a + 1, 1)
-						) : r instanceof Array ?
-						(
-							r[0] = t,
-							sel.splice(a, 1)
-						) : (
-							sel[a] = [t, r],
-							sel.splice(a + 1, 1)
-						)
-					)
-				),
-				e = t instanceof Array ? t[0] : t
-            }
-        },
-        findInsertPos: function(t) {
-			var e, sel = this.sel, i
-            for ( i = sel.length; --i >= 0 && (e = sel[i], e instanceof Array && (e = e[0]), t < e););
-            return i + 1
-        },
-        clear: function(nohooks) {//nohooks)
-            this.sel = [],
-			nohooks || this.onChange(this)
-        },
-        selectRange: function(start_date, end_date) {//start_date, end_date)
-            var tmp, checkRange
-			start_date = Calendar.dateToInt(start_date),
-			end_date = Calendar.dateToInt(end_date),
-			start_date > end_date && (tmp = start_date, start_date = end_date, end_date = tmp),
-			checkRange = this.cal.args.checkRange
-            if (!checkRange) return this._do_selectRange(start_date, end_date)
-            try {
-                runAF(new Calendar.Selection([[start_date, end_date]], Calendar.SEL_MULTIPLE, Function()).getDates(), setEvent(function(t) {
-                    if (this.isDisabled(t)) throw checkRange instanceof Function && checkRange(t, this), "OUT"
-					}, this.cal)
-				),
-				this._do_selectRange(start_date, end_date)
-            } catch (i) {}
-        },
-        _do_selectRange: function(start_date, end_date) {
-            this.sel.push([start_date, end_date]),
-			this.normalize(),
-			this.onChange(this)
-        },
-        isSelected: function(t) {
-			var sel,i
-            for ( i = this.sel.length; --i >= 0;){
-				sel = this.sel[i]
-                if ( sel instanceof Array && t >= sel[0] && t <= sel[1] || t == sel)
-					return true
-			}
-            return false
-        },
-        getFirstDate: function() {
-            var sel = this.sel[0]
-			sel && sel instanceof Array && (sel = sel[0])
-            return sel
-        },
-        getLastDate: function() {
-            if (this.sel.length > 0) {
-                var sel = this.sel[this.sel.length - 1]
-				sel && sel instanceof Array && (sel = sel[1])
-                return sel
-            }
-        },
-        print: function(format, separator) {//format, separator)
-            var sel,
-				str = [],
-                Hours = this.cal.getHours(),
-                Minutes = this.cal.getMinutes()
-				separator || (separator = " -> ")
-            for (var i = 0; i < this.sel.length;)
-				sel = this.sel[i++],
-				sel instanceof Array ?
-					str.push(Calendar.printDate(Calendar.intToDate(sel[0], Hours, Minutes), format) + separator + Calendar.printDate(Calendar.intToDate(sel[1], Hours, Minutes), format)) :
-					str.push(Calendar.printDate(Calendar.intToDate(sel, Hours, Minutes), format))
-            return str
-        },
-        getDates: function(str) {
-			var date, sel, string = []
-            for (var i = 0; i < this.sel.length;) {
-				sel = this.sel[i++]
-                if ( sel instanceof Array){
-					date = Calendar.intToDate(sel[0])
-                    for (sel = sel[1]; Calendar.dateToInt(date) < sel;)
-						string.push(str ? Calendar.printDate(date, str) : new Date(date)),
-						date.setDate(date.getDate() + 1)
-                } else
-					date = Calendar.intToDate(sel)
-                string.push(str ? Calendar.printDate(date, str) : date)
-            }
-            return string
-        }
-    }
-
-	Calendar.prototype.focus = function() {
-        try {
-            this.els[this._menuVisible ? "yearInput" : "focusLink"].focus()
-        } catch (t) {}
-        onFocus.call(this)
-    }
-
-	Calendar.prototype.blur = function() {
-        this.els.focusLink.blur(),
-		this.els.yearInput.blur(),
-		onBlur.call(this)
-    }
-
-	Calendar.prototype.callHooks = function(evname) {
-		var e = U(arguments, 1),
-		n = this.handlers[evname]
-        for (a = 0; a < n.length; ++a) n[a].apply(this, e)
-    }
-
-	Calendar.prototype.addEventListener = function(evname, func) {
-        this.handlers[evname].push(func)
-    }
-
-	Calendar.prototype.removeEventListener = function(evname, func) {
-		var n = this.handlers[evname]
-        for (a = n.length; --a >= 0;) n[a] === func && n.splice(a, 1)
-    }
-
-	Calendar.prototype.getTime = function() {
-        return this.time
-    }
-
-	Calendar.prototype.getHours = function() {
-        return Math.floor(this.time / 100)
-    }
-
-	Calendar.prototype.getMinutes = function() {
-        return this.time % 100
-    }
-
-	Calendar.prototype.setHours = function(H) {
-        0 > H && (H += 24),
-		this.setTime(100 * (H % 24) + this.time % 100)
-    }
-
-	Calendar.prototype.setMinutes = function(M) {
-        0 > M && (M += 60),
-		M = Math.floor(M / this.args.minuteStep) * this.args.minuteStep,
-		this.setTime(100 * this.getHours() + M % 60)
-    }
-
-	Calendar.prototype.setTime = function(time, nohooks) {//time, [ nohooks ]
-        var Hours, Minutes, inputField, selection, print
-        this.args.showTime && (time = null != time ? time : this.time,
-		this.time = time,
-		Hours = this.getHours(),
-		Minutes = this.getMinutes(),
-		this.args.showTime == 12 && (0 == Hours && (Hours = 12),
-		Hours > 12 && (Hours -= 12),
-		this.els.timeAM.innerHTML = _(12 > Hours ? "AM" : "PM")),
-		10 > Hours && (Hours = "0" + Hours),
-		10 > Minutes && (Minutes = "0" + Minutes),
-		this.els.timeHour.innerHTML = Hours,
-		this.els.timeMinute.innerHTML = Minutes,
-		nohooks || (this.callHooks("onTimeChange", this, time),
-		inputField = this.inputField,
-		selection = this.selection,
-		inputField && (print = selection.print(this.dateFormat),
-		/input|textarea/i.test(inputField.tagName) ? inputField.value = print : inputField.innerHTML = print)))
-    }
-
-	Calendar.prototype._getInputYear = function() {
-        var year = parseInt(this.els.yearInput.value, 10)
-        return isNaN(year) && (year = this.date.getFullYear()), year
-    }
-
-	Calendar.prototype._showTooltip = function(t) {
-        var dateInfo, str = "",
-            tooltip = this.els.tooltip
-        t && (t = Calendar.intToDate(t),
-		dateInfo = this.args.dateInfo(t),
-		dateInfo && dateInfo.tooltip && (str = "<div class='MDCalendar-tooltipCont'>" + Calendar.printDate(t, dateInfo.tooltip) + "</div>")),
-		tooltip.innerHTML = str
-    }
-
-	Calendar.prototype._getDateDiv = function(t) {
-        var e = null
-        if (t) try {
-            W(this.els.body, function(n) {
-                if (n.getAttribute("dyc-date") == t) throw e = n
-            })
-        } catch (n) {}
-        return e
-    }
-
-	Calendar.prototype.setLanguage = function(code) {
-		 var lang = Calendar.lang[code]
-        lang && (Calendar.lang._ = lang),
-        lang && (this.fdow = lang.data.fdow, this.redraw())
-    }
-
-	Calendar.intToDate = function(t, e, n, a, s) {//A()
-        var i, r
-		t instanceof Date || (t = parseInt(t, 10),
-		i = Math.floor(t / 1e4),
-		t %= 1e4,
-		r = Math.floor(t / 100),
-		t %= 100,
-		t = new Date(i, r - 1, t, null == e ? 12 : e, null == n ? 0 : n, null == a ? 0 : a, null == s ? 0 : s))
-        return t
-    }
-
-	Calendar.dateToInt = function(date) {//L()
-        return date instanceof Date ? 1e4 * date.getFullYear() + 100 * (date.getMonth() + 1) + date.getDate() : "string" == typeof date ? parseInt(date, 10) : date
-    }
-
-	Calendar.printDate = function(date, str) {//S()
-        var n, m = date.getMonth(),
-            d = date.getDate(),
-            y = date.getFullYear(),
-            wk = getWeekNumber(date),
-            dow = date.getDay(),
-            h = date.getHours(),
-            pm = h >= 12,
-            ir = pm ? h - 12 : h,
-            doy = getDayOfYear(date),
-            i = date.getMinutes(),
-            s = date.getSeconds(),
-            reg = /%./g
-			0 === ir && (ir = 12),
-			n = {
-            "%a": _("sdn")[dow],
-            "%A": _("dn")[dow],
-            "%b": _("smn")[m],
-            "%B": _("mn")[m],
-            "%C": 1 + Math.floor(y / 100),
-            "%d": 10 > d ? "0" + d : d,
-            "%e": d,
-            "%H": 10 > h ? "0" + h : h,
-            "%I": 10 > ir ? "0" + ir : ir,
-            "%j": 10 > doy ? "00" + doy : 100 > doy ? "0" + doy : doy,
-            "%k": h,
-            "%l": ir,
-            "%m": 9 > m ? "0" + (1 + m) : 1 + m,
-            "%o": 1 + m,
-            "%M": 10 > i ? "0" + i : i,
-            "%n": "\n",
-            "%p": pm ? "PM" : "AM",
-            "%P": pm ? "pm" : "am",
-            "%s": Math.floor(date.getTime() / 1e3),
-            "%S": 10 > s ? "0" + s : s,
-            "%t": "	",
-            "%U": 10 > wk ? "0" + wk : wk,
-            "%W": 10 > wk ? "0" + wk : wk,
-            "%V": 10 > wk ? "0" + wk : wk,
-            "%u": dow + 1,
-            "%w": dow,
-            "%y": ("" + y).substr(2, 2),
-            "%Y": y,
-            "%%": "%"
-        }
-		return str.replace(reg, function(t) {
-            return n.hasOwnProperty(t) ? n[t] : t
-        })
-    }
-
-	Calendar.Language = function(shortName, name, data) {
-			Calendar.lang._ = Calendar.lang[shortName] = {
-				name: name,
-				data: argDiff(data,{
-					fdow: 1,                // first day of week for this locale; 0 = Sunday, 1 = Monday, etc.
-					goToday: "Go Today",
-					today: "Today",         // appears in bottom bar
-					wk: "wk",
-					weekend: "0,6",         // 0 = Sunday, 1 = Monday, etc.
-					AM: "am",
-					PM: "pm",
-					mn : [ "January","February","March","April","May","June","July","August","September","October","November","December" ],
-					smn : [ "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" ],
-					dn : [ "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday" ],
-					sdn : [ "Su","Mo","Tu","We","Th","Fr","Sa","Su" ]
-				})
-			}
+		else a = new Date();
+		return t.moveTo(a, !n);
 	}
+	function y(t, e) {
+		var n, a;
+		(t._menuVisible = e),
+			R(e, t.els.title, "DynarchCalendar-pressed-title"),
+			(n = t.els.menu),
+			ce && (n.style.height = t.els.main.offsetHeight + "px"),
+			t.args.animation
+				? (t._menuAnim && t._menuAnim.stop(),
+				  (a = t.els.main.offsetHeight),
+				  ce && (n.style.width = t.els.topBar.offsetWidth + "px"),
+				  e &&
+						((n.firstChild.style.marginTop = -a + "px"),
+						t.args.opacity > 0 && $(n, 0),
+						j(n, !0)),
+				  (t._menuAnim = K({
+						onUpdate: function (s, i) {
+							(n.firstChild.style.marginTop =
+								i(ae.accel_b(s), -a, 0, !e) + "px"),
+								t.args.opacity > 0 && $(n, i(ae.accel_b(s), 0, 0.85, !e));
+						},
+						onStop: function () {
+							t.args.opacity > 0 && $(n, 0.85),
+								(n.firstChild.style.marginTop = ""),
+								(t._menuAnim = null),
+								e || (j(n, !1), t.focused && t.focus());
+						}
+				  })))
+				: (j(n, e), t.focused && t.focus());
+	}
+	function m(e, n) {
+		var a, s, i, r, o, l, c, h, u;
+		(n = n || window.event),
+			(a = g(n)),
+			a &&
+				!a.getAttribute("disabled") &&
+				((i = a.getAttribute("dyc-btn")),
+				(r = a.getAttribute("dyc-type")),
+				(o = a.getAttribute("dyc-date")),
+				(l = this.selection),
+				(c = {
+					mouseover: N,
+					mousemove: N,
+					mouseup: function () {
+						var t = a.getAttribute("dyc-cls");
+						t && Y(a, v(t, 1)), clearTimeout(s), F(document, c, !0), (c = null);
+					}
+				}),
+				e
+					? (setTimeout(O(this.focus, this), 1),
+					  (h = a.getAttribute("dyc-cls")),
+					  h && P(a, v(h, 1)),
+					  "menu" == i
+							? this.toggleMenu()
+							: a && /^[+-][MY]$/.test(i)
+							? f(this, i)
+								? ((u = O(function () {
+										f(this, i, !0)
+											? (s = setTimeout(u, 40))
+											: (c.mouseup(), f(this, i));
+								  }, this)),
+								  (s = setTimeout(u, 350)),
+								  B(document, c, !0))
+								: c.mouseup()
+							: "year" == i
+							? (this.els.yearInput.focus(), this.els.yearInput.select())
+							: "time-am" == r
+							? B(document, c, !0)
+							: /^time/.test(r)
+							? ((u = O(
+									function (t) {
+										d.call(this, t), (s = setTimeout(u, 100));
+									},
+									this,
+									r
+							  )),
+							  d.call(this, r),
+							  (s = setTimeout(u, 350)),
+							  B(document, c, !0))
+							: (o &&
+									l.type &&
+									(l.type == t.SEL_MULTIPLE
+										? n.shiftKey && this._selRangeStart
+											? l.selectRange(this._selRangeStart, o)
+											: (n.ctrlKey ||
+													l.isSelected(o) ||
+													!this.args.multiCtrl ||
+													l.clear(!0),
+											  l.set(o, !0),
+											  (this._selRangeStart = o))
+										: (l.set(o), this.moveTo(A(o), 2)),
+									(a = this._getDateDiv(o)),
+									D.call(this, !0, { target: a })),
+							  B(document, c, !0)),
+					  le && c && /dbl/i.test(n.type) && c.mouseup(),
+					  this.args.fixed ||
+							!/^(DynarchCalendar-(topBar|bottomBar|weekend|weekNumber|menu(-sep)?))?$/.test(
+								a.className
+							) ||
+							this.args.cont ||
+							((c.mousemove = O(p, this)),
+							(this._mouseDiff = z(n, G(this.els.topCont))),
+							B(document, c, !0)))
+					: "today" == i
+					? (this._menuVisible || l.type != t.SEL_SINGLE || l.set(new Date()),
+					  this.moveTo(new Date(), !0),
+					  y(this, !1))
+					: /^m([0-9]+)/.test(i)
+					? ((o = new Date(this.date)),
+					  o.setDate(1),
+					  o.setMonth(RegExp.$1),
+					  o.setFullYear(this._getInputYear()),
+					  this.moveTo(o, !0),
+					  y(this, !1))
+					: "time-am" == r && this.setHours(this.getHours() + 12),
+				le || N(n));
+	}
+	function p(t) {
+		t = t || window.event;
+		var e = this.els.topCont.style,
+			n = z(t, this._mouseDiff);
+		(e.left = n.x + "px"), (e.top = n.y + "px");
+	}
+	function g(t) {
+		for (
+			var e = t.target || t.srcElement, n = e;
+			e && e.getAttribute && !e.getAttribute("dyc-type");
 
-	Calendar.formatString = function(str, prop) {//M()
-        return str.replace(/\$\{([^:\}]+)(:[^\}]+)?\}/g, function(str, n, a) {
-            var s, i = prop[n]
-            return a && (s = a.substr(1).split(/\s*\|\s*/), i = (i < s.length ? s[i] : s[s.length - 1]).replace(/##?/g, function(str) {
-                return str.length == 2 ? "#" : i
-            })), i
-        })
-    }
+		)
+			e = e.parentNode;
+		return (e.getAttribute && e) || n;
+	}
+	function v(t, e) {
+		return "DynarchCalendar-" + t.split(/,/)[e];
+	}
+	function D(t, e) {
+		var n, a, s;
+		(e = e || window.event),
+			(n = g(e)),
+			n &&
+				((a = n.getAttribute("dyc-type")),
+				a &&
+					!n.getAttribute("disabled") &&
+					((t && this._bodyAnim && "date" == a) ||
+						((s = n.getAttribute("dyc-cls")),
+						(s = s ? v(s, 0) : "DynarchCalendar-hover-" + a),
+						("date" != a || this.selection.type) && R(t, n, s),
+						"date" == a &&
+							(R(t, n.parentNode.parentNode, "DynarchCalendar-hover-week"),
+							this._showTooltip(n.getAttribute("dyc-date"))),
+						/^time-hour/.test(a) &&
+							R(t, this.els.timeHour, "DynarchCalendar-hover-time"),
+						/^time-min/.test(a) &&
+							R(t, this.els.timeMinute, "DynarchCalendar-hover-time"),
+						Y(
+							this._getDateDiv(this._lastHoverDate),
+							"DynarchCalendar-hover-date"
+						),
+						(this._lastHoverDate = null)))),
+			t || this._showTooltip();
+	}
+	function b(t) {
+		var e, n, a, s;
+		if (((t = t || window.event), (e = g(t))))
+			if (
+				((n = e.getAttribute("dyc-btn")),
+				(a = e.getAttribute("dyc-type")),
+				(s = t.wheelDelta ? t.wheelDelta / 120 : -t.detail / 3),
+				(s = 0 > s ? -1 : s > 0 ? 1 : 0),
+				this.args.reverseWheel && (s = -s),
+				/^(time-(hour|min))/.test(a))
+			) {
+				switch (RegExp.$1) {
+					case "time-hour":
+						this.setHours(this.getHours() + s);
+						break;
+					case "time-min":
+						this.setMinutes(this.getMinutes() + this.args.minuteStep * s);
+				}
+				N(t);
+			} else /Y/i.test(n) && (s *= 2), f(this, -s), N(t);
+	}
+	function C() {
+		var t, e, n;
+		this.refresh(),
+			(t = this.inputField),
+			(e = this.selection),
+			t &&
+				((n = e.print(this.dateFormat)),
+				/input|textarea/i.test(t.tagName) ? (t.value = n) : (t.innerHTML = n)),
+			this.callHooks("onSelect", this, e);
+	}
+	function w(e) {
+		var n, a, s, i, r, o, l, c, h, u, d, m, p;
+		if (!this._menuAnim) {
+			if (
+				((e = e || window.event),
+				(n = e.target || e.srcElement),
+				(a = n.getAttribute("dyc-btn")),
+				(s = e.keyCode),
+				(i = e.charCode || s),
+				(r = ee[s]),
+				"year" == a && 13 == s)
+			)
+				return (
+					(o = new Date(this.date)),
+					o.setDate(1),
+					o.setFullYear(this._getInputYear()),
+					this.moveTo(o, !0),
+					y(this, !1),
+					N(e)
+				);
+			if (this._menuVisible) {
+				if (27 == s) return y(this, !1), N(e);
+			} else {
+				if (
+					(e.ctrlKey || (r = null),
+					null != r || e.ctrlKey || (r = ne[s]),
+					36 == s && (r = 0),
+					null != r)
+				)
+					return f(this, r), N(e);
+				if (
+					((i = String.fromCharCode(i).toLowerCase()),
+					(l = this.els.yearInput),
+					(c = this.selection),
+					" " == i)
+				)
+					return y(this, !0), this.focus(), l.focus(), l.select(), N(e);
+				if (i >= "0" && "9" >= i)
+					return y(this, !0), this.focus(), (l.value = i), l.focus(), N(e);
+				for (
+					u = _("mn"), d = e.shiftKey ? -1 : this.date.getMonth(), m = 0;
+					++m < 12;
 
-    function _(t, e) {// _()
-        var n = Calendar.lang._.data[t]
-		e && "string" == typeof n && (n = Calendar.formatString(n, e))
-        return n
-    }
+				)
+					if (((h = u[(d + m) % 12].toLowerCase()), h.indexOf(i) == 0))
+						return (
+							(o = new Date(this.date)),
+							o.setDate(1),
+							o.setMonth((d + m) % 12),
+							this.moveTo(o, !0),
+							N(e)
+						);
+				if (s >= 37 && 40 >= s) {
+					if (
+						((o = this._lastHoverDate),
+						o ||
+							c.isEmpty() ||
+							((o = 39 > s ? c.getFirstDate() : c.getLastDate()),
+							(o < this._firstDateVisible || o > this._lastDateVisible) &&
+								(o = null)),
+						o)
+					) {
+						for (p = o, o = A(o), d = 100; d-- > 0; ) {
+							switch (s) {
+								case 37:
+									o.setDate(o.getDate() - 1);
+									break;
+								case 38:
+									o.setDate(o.getDate() - 7);
+									break;
+								case 39:
+									o.setDate(o.getDate() + 1);
+									break;
+								case 40:
+									o.setDate(o.getDate() + 7);
+							}
+							if (!this.isDisabled(o)) break;
+						}
+						(o = L(o)),
+							(o < this._firstDateVisible || o > this._lastDateVisible) &&
+								this.moveTo(o);
+					} else o = 39 > s ? this._lastDateVisible : this._firstDateVisible;
+					return (
+						Y(
+							this._getDateDiv(p),
+							P(this._getDateDiv(o), "DynarchCalendar-hover-date")
+						),
+						(this._lastHoverDate = o),
+						N(e)
+					);
+				}
+				if (13 == s && this._lastHoverDate)
+					return (
+						c.type == t.SEL_MULTIPLE && (e.shiftKey || e.ctrlKey)
+							? (e.shiftKey &&
+									this._selRangeStart &&
+									(c.clear(!0),
+									c.selectRange(this._selRangeStart, this._lastHoverDate)),
+							  e.ctrlKey &&
+									c.set((this._selRangeStart = this._lastHoverDate), !0))
+							: c.reset((this._selRangeStart = this._lastHoverDate)),
+						N(e)
+					);
+				27 != s || this.args.cont || this.hide();
+			}
+		}
+	}
+	function M(t, e) {
+		return t.replace(/\$\{([^:\}]+)(:[^\}]+)?\}/g, function (t, n, a) {
+			var s,
+				i = e[n];
+			return (
+				a &&
+					((s = a.substr(1).split(/\s*\|\s*/)),
+					(i = (i < s.length ? s[i] : s[s.length - 1]).replace(
+						/##?/g,
+						function (t) {
+							return t.length == 2 ? "#" : i;
+						}
+					))),
+				i
+			);
+		});
+	}
+	function _(t, e) {
+		var n = de.__.data[t];
+		return e && "string" == typeof n && (n = M(n, e)), n;
+	}
+	function T(t) {
+		var e, n;
+		return (
+			(t = new Date(t.getFullYear(), t.getMonth(), t.getDate(), 12, 0, 0)),
+			(e = t.getDay()),
+			t.setDate(t.getDate() - ((e + 6) % 7) + 3),
+			(n = t.valueOf()),
+			t.setMonth(0),
+			t.setDate(4),
+			Math.round((n - t.valueOf()) / 6048e5) + 1
+		);
+	}
+	function x(t) {
+		var e, n;
+		return (
+			(t = new Date(t.getFullYear(), t.getMonth(), t.getDate(), 12, 0, 0)),
+			(e = new Date(t.getFullYear(), 0, 1, 12, 0, 0)),
+			(n = t - e),
+			Math.floor(n / 864e5)
+		);
+	}
+	function L(t) {
+		return t instanceof Date
+			? 1e4 * t.getFullYear() + 100 * (t.getMonth() + 1) + t.getDate()
+			: "string" == typeof t
+			? parseInt(t, 10)
+			: t;
+	}
+	function A(t, e, n, a, s) {
+		var i, r;
+		return (
+			t instanceof Date ||
+				((t = parseInt(t, 10)),
+				(i = Math.floor(t / 1e4)),
+				(t %= 1e4),
+				(r = Math.floor(t / 100)),
+				(t %= 100),
+				(t = new Date(
+					i,
+					r - 1,
+					t,
+					null == e ? 12 : e,
+					null == n ? 0 : n,
+					null == a ? 0 : a,
+					null == s ? 0 : s
+				))),
+			t
+		);
+	}
+	function H(t, e, n) {
+		var a = t.getFullYear(),
+			s = t.getMonth(),
+			i = t.getDate(),
+			r = e.getFullYear(),
+			o = e.getMonth(),
+			l = e.getDate();
+		return r > a
+			? -3
+			: a > r
+			? 3
+			: o > s
+			? -2
+			: s > o
+			? 2
+			: n
+			? 0
+			: l > i
+			? -1
+			: i > l
+			? 1
+			: 0;
+	}
+	function S(t, e) {
+		var n,
+			a = t.getMonth(),
+			s = t.getDate(),
+			i = t.getFullYear(),
+			r = T(t),
+			o = t.getDay(),
+			l = t.getHours(),
+			c = l >= 12,
+			h = c ? l - 12 : l,
+			u = x(t),
+			d = t.getMinutes(),
+			f = t.getSeconds(),
+			y = /%./g;
+		return (
+			0 === h && (h = 12),
+			(n = {
+				"%a": _("sdn")[o],
+				"%A": _("dn")[o],
+				"%b": _("smn")[a],
+				"%B": _("mn")[a],
+				"%C": 1 + Math.floor(i / 100),
+				"%d": 10 > s ? "0" + s : s,
+				"%e": s,
+				"%H": 10 > l ? "0" + l : l,
+				"%I": 10 > h ? "0" + h : h,
+				"%j": 10 > u ? "00" + u : 100 > u ? "0" + u : u,
+				"%k": l,
+				"%l": h,
+				"%m": 9 > a ? "0" + (1 + a) : 1 + a,
+				"%o": 1 + a,
+				"%M": 10 > d ? "0" + d : d,
+				"%n": "\n",
+				"%p": c ? "PM" : "AM",
+				"%P": c ? "pm" : "am",
+				"%s": Math.floor(t.getTime() / 1e3),
+				"%S": 10 > f ? "0" + f : f,
+				"%t": "	",
+				"%U": 10 > r ? "0" + r : r,
+				"%W": 10 > r ? "0" + r : r,
+				"%V": 10 > r ? "0" + r : r,
+				"%u": o + 1,
+				"%w": o,
+				"%y": ("" + i).substr(2, 2),
+				"%Y": i,
+				"%%": "%"
+			}),
+			e.replace(y, function (t) {
+				return n.hasOwnProperty(t) ? n[t] : t;
+			})
+		);
+	}
+	function k(t) {
+		if (t) {
+			if ("number" == typeof t) return A(t);
+			if (!(t instanceof Date)) {
+				var e = t.split(/-/);
+				return new Date(
+					parseInt(e[0], 10),
+					parseInt(e[1], 10) - 1,
+					parseInt(e[2], 10),
+					12,
+					0,
+					0,
+					0
+				);
+			}
+		}
+		return t;
+	}
+	function I(t) {
+		function e(e) {
+			for (var n = e.length; --n >= 0; )
+				if (e[n].toLowerCase().indexOf(t) == 0) return n + 1;
+		}
+		return /\S/.test(t)
+			? ((t = t.toLowerCase()), e(_("smn")) || e(_("mn")))
+			: void 0;
+	}
+	function E(t, e, n, a) {
+		a = {};
+		for (n in e) e.hasOwnProperty(n) && (a[n] = e[n]);
+		for (n in t) t.hasOwnProperty(n) && (a[n] = t[n]);
+		return a;
+	}
+	function B(t, e, n, a) {
+		var s;
+		if (t instanceof Array) for (s = t.length; --s >= 0; ) B(t[s], e, n, a);
+		else if ("object" == typeof e)
+			for (s in e) e.hasOwnProperty(s) && B(t, s, e[s], n);
+		else
+			t.addEventListener
+				? t.addEventListener(e, n, le ? !0 : !!a)
+				: t.attachEvent
+				? t.attachEvent("on" + e, n)
+				: (t["on" + e] = n);
+	}
+	function F(t, e, n, a) {
+		var s;
+		if (t instanceof Array) for (s = t.length; --s >= 0; ) F(t[s], e, n);
+		else if ("object" == typeof e)
+			for (s in e) e.hasOwnProperty(s) && F(t, s, e[s], n);
+		else
+			t.removeEventListener
+				? t.removeEventListener(e, n, le ? !0 : !!a)
+				: t.detachEvent
+				? t.detachEvent("on" + e, n)
+				: (t["on" + e] = null);
+	}
+	function N(t) {
+		return (
+			(t = t || window.event),
+			le
+				? ((t.cancelBubble = !0), (t.returnValue = !1))
+				: (t.preventDefault(), t.stopPropagation()),
+			!1
+		);
+	}
+	function Y(t, e, n) {
+		if (t) {
+			var a,
+				s = t.className.replace(/^\s+|\s+$/, "").split(/\x20/),
+				i = [];
+			for (a = s.length; a > 0; ) s[--a] != e && i.push(s[a]);
+			n && i.push(n), (t.className = i.join(" "));
+		}
+		return n;
+	}
+	function P(t, e) {
+		return Y(t, e, e);
+	}
+	function R(t, e, n) {
+		if (e instanceof Array) for (var a = e.length; --a >= 0; ) R(t, e[a], n);
+		else Y(e, n, t ? n : null);
+		return t;
+	}
+	function V(t, e, n) {
+		var a = null;
+		return (
+			(a = document.createElementNS
+				? document.createElementNS("http://www.w3.org/1999/xhtml", t)
+				: document.createElement(t)),
+			e && (a.className = e),
+			n && n.appendChild(a),
+			a
+		);
+	}
+	function U(t, e) {
+		null == e && (e = 0);
+		var n, a, s;
+		try {
+			n = Array.prototype.slice.call(t, e);
+		} catch (i) {
+			for (n = Array(t.length - e), a = e, s = 0; a < t.length; ++a, ++s)
+				n[s] = t[a];
+		}
+		return n;
+	}
+	function O(t, e) {
+		var n = U(arguments, 2);
+		return void 0 == e
+			? function () {
+					return t.apply(this, n.concat(U(arguments)));
+			  }
+			: function () {
+					return t.apply(e, n.concat(U(arguments)));
+			  };
+	}
+	function W(t, e) {
+		if (!e(t))
+			for (var n = t.firstChild; n; n = n.nextSibling)
+				n.nodeType == 1 && W(n, e);
+	}
+	function K(t, e, n) {
+		function a(t, e, n, a) {
+			return a ? n + t * (e - n) : e + t * (n - e);
+		}
+		function s() {
+			e && i(), (n = 0), (e = setInterval(r, 1e3 / t.fps));
+		}
+		function i() {
+			e && (clearInterval(e), (e = null)), t.onStop(n / t.len, a);
+		}
+		function r() {
+			var e = t.len;
+			t.onUpdate(n / e, a), n == e && i(), ++n;
+		}
+		return (
+			(t = E(t, { fps: 50, len: 15, onUpdate: se, onStop: se })),
+			le && (t.len = Math.round(t.len / 2)),
+			s(),
+			{ start: s, stop: i, update: r, args: t, map: a }
+		);
+	}
+	function $(t, e) {
+		return (
+			"" === e
+				? le
+					? (t.style.filter = "")
+					: (t.style.opacity = "")
+				: null != e
+				? le
+					? (t.style.filter = "alpha(opacity=" + 100 * e + ")")
+					: (t.style.opacity = e)
+				: le
+				? /alpha\(opacity=([0-9.])+\)/.test(t.style.opacity) &&
+				  (e = parseFloat(RegExp.$1) / 100)
+				: (e = parseFloat(t.style.opacity)),
+			e
+		);
+	}
+	function j(t, e) {
+		var n = t.style;
+		return null != e && (n.display = e ? "" : "none"), n.display != "none";
+	}
+	function z(t, e) {
+		var n = le ? t.clientX + document.body.scrollLeft : t.pageX,
+			a = le ? t.clientY + document.body.scrollTop : t.pageY;
+		return e && ((n -= e.x), (a -= e.y)), { x: n, y: a };
+	}
+	function G(t) {
+		var e, n, a;
+		if (t.getBoundingClientRect)
+			return (
+				(e = t.getBoundingClientRect()),
+				{
+					x:
+						e.left -
+						document.documentElement.clientLeft +
+						document.body.scrollLeft,
+					y:
+						e.top - document.documentElement.clientTop + document.body.scrollTop
+				}
+			);
+		(n = 0), (a = 0);
+		do (n += t.offsetLeft - t.scrollLeft), (a += t.offsetTop - t.scrollTop);
+		while ((t = t.offsetParent));
+		return { x: n, x: a };
+	}
+	function X() {
+		var t = document.documentElement,
+			e = document.body;
+		return {
+			x: t.scrollLeft || e.scrollLeft,
+			y: t.scrollTop || e.scrollTop,
+			w: t.clientWidth || window.innerWidth || e.clientWidth,
+			h: t.clientHeight || window.innerHeight || e.clientHeight
+		};
+	}
+	function q(t, e, n) {
+		for (n = 0; n < t.length; ++n) e(t[n]);
+	}
+	function J(t) {
+		return "string" == typeof t && (t = document.getElementById(t)), t;
+	}
+	var Q,
+		Z,
+		te,
+		ee,
+		ne,
+		ae,
+		se,
+		ie = navigator.userAgent,
+		re = /opera/i.test(ie),
+		oe = /Konqueror|Safari|KHTML/i.test(ie),
+		le = /msie/i.test(ie) && !re && !/mac_powerpc/i.test(ie),
+		ce = le && /msie 6/i.test(ie),
+		he = /gecko/i.test(ie) && !oe && !re && !le,
+		ue = t.prototype,
+		de = (t.I18N = {});
+	return (
+		(t.SEL_NONE = 0),
+		(t.SEL_SINGLE = 1),
+		(t.SEL_MULTIPLE = 2),
+		(t.SEL_WEEK = 3),
+		(t.dateToInt = L),
+		(t.intToDate = A),
+		(t.printDate = S),
+		(t.formatString = M),
+		(t.i18n = _),
+		(t.LANG = function (t, e, n) {
+			de.__ = de[t] = { name: e, data: n };
+		}),
+		(t.setup = function (e) {
+			return new t(e);
+		}),
+		(ue.moveTo = function (t, e) {
+			var a,
+				s,
+				i,
+				r,
+				o,
+				l,
+				c,
+				h,
+				u,
+				d,
+				f,
+				y,
+				m,
+				p,
+				g,
+				v,
+				D = this;
+			return (
+				(t = k(t)),
+				(s = H(t, D.date, !0)),
+				(i = D.args),
+				(r = i.min && H(t, i.min)),
+				(o = i.max && H(t, i.max)),
+				i.animation || (e = !1),
+				R(
+					null != r && 1 >= r,
+					[D.els.navPrevMonth, D.els.navPrevYear],
+					"DynarchCalendar-navDisabled"
+				),
+				R(
+					null != o && o >= -1,
+					[D.els.navNextMonth, D.els.navNextYear],
+					"DynarchCalendar-navDisabled"
+				),
+				-1 > r && ((t = i.min), (a = 1), (s = 0)),
+				o > 1 && ((t = i.max), (a = 2), (s = 0)),
+				(D.date = t),
+				D.refresh(!!e),
+				D.callHooks("onChange", D, t, e),
+				!e ||
+					(0 == s && 2 == e) ||
+					(D._bodyAnim && D._bodyAnim.stop(),
+					(l = D.els.body),
+					(c = V("div", "DynarchCalendar-animBody-" + te[s], l)),
+					(h = l.firstChild),
+					$(h) || 0.7,
+					(u = a ? ae.brakes : 0 == s ? ae.shake : ae.accel_ab2),
+					(d = s * s > 4),
+					(f = d ? h.offsetTop : h.offsetLeft),
+					(y = c.style),
+					(m = d ? l.offsetHeight : l.offsetWidth),
+					0 > s
+						? (m += f)
+						: s > 0
+						? (m = f - m)
+						: ((m = Math.round(m / 7)), 2 == a && (m = -m)),
+					a ||
+						0 == s ||
+						((p = c.cloneNode(!0)),
+						(g = p.style),
+						(v = 2 * m),
+						p.appendChild(h.cloneNode(!0)),
+						(g[d ? "marginTop" : "marginLeft"] = m + "px"),
+						l.appendChild(p)),
+					(h.style.visibility = "hidden"),
+					(c.innerHTML = n(D)),
+					(D._bodyAnim = K({
+						onUpdate: function (t, e) {
+							var n,
+								i = u(t);
+							p && (n = e(i, m, v) + "px"),
+								a
+									? (y[d ? "marginTop" : "marginLeft"] = e(i, m, 0) + "px")
+									: ((d || 0 == s) &&
+											((y.marginTop = e(0 == s ? u(t * t) : i, 0, m) + "px"),
+											0 != s && (g.marginTop = n)),
+									  (d && 0 != s) ||
+											((y.marginLeft = e(i, 0, m) + "px"),
+											0 != s && (g.marginLeft = n))),
+								D.args.opacity > 2 && p && ($(p, 1 - i), $(c, i));
+						},
+						onStop: function () {
+							(l.innerHTML = n(D, t)), (D._bodyAnim = null);
+						}
+					}))),
+				(D._lastHoverDate = null),
+				r >= -1 && 1 >= o
+			);
+		}),
+		(ue.isDisabled = function (t) {
+			var e = this.args;
+			return (
+				(e.min && H(t, e.min) < 0) ||
+				(e.max && H(t, e.max) > 0) ||
+				e.disabled(t)
+			);
+		}),
+		(ue.toggleMenu = function () {
+			y(this, !this._menuVisible);
+		}),
+		(ue.refresh = function (t) {
+			var e = this.els;
+			t || (e.body.innerHTML = n(this)),
+				(e.title.innerHTML = s(this)),
+				(e.yearInput.value = this.date.getFullYear());
+		}),
+		(ue.redraw = function () {
+			var t = this,
+				n = t.els;
+			t.refresh(),
+				(n.dayNames.innerHTML = e(t)),
+				(n.menu.innerHTML = i(t)),
+				n.bottomBar && (n.bottomBar.innerHTML = o(t)),
+				W(n.topCont, function (e) {
+					var a = Z[e.className];
+					a && (n[a] = e),
+						e.className == "DynarchCalendar-menu-year"
+							? (B(e, t._focusEvents), (n.yearInput = e))
+							: le && e.setAttribute("unselectable", "on");
+				}),
+				t.setTime(null, !0);
+		}),
+		(ue.setLanguage = function (e) {
+			var n = t.setLanguage(e);
+			n && ((this.fdow = n.data.fdow), this.redraw());
+		}),
+		(t.setLanguage = function (t) {
+			var e = de[t];
+			return e && (de.__ = e), e;
+		}),
+		(ue.focus = function () {
+			try {
+				this.els[this._menuVisible ? "yearInput" : "focusLink"].focus();
+			} catch (t) {}
+			c.call(this);
+		}),
+		(ue.blur = function () {
+			this.els.focusLink.blur(), this.els.yearInput.blur(), h.call(this);
+		}),
+		(ue.showAt = function (t, e, n) {
+			this._showAnim && this._showAnim.stop(), (n = n && this.args.animation);
+			var a = this.els.topCont,
+				s = this,
+				i = this.els.body.firstChild,
+				r = i.offsetHeight,
+				o = a.style;
+			(o.position = "absolute"),
+				(o.left = t + "px"),
+				(o.top = e + "px"),
+				(o.zIndex = 1e4),
+				(o.display = ""),
+				n &&
+					((i.style.marginTop = -r + "px"),
+					this.args.opacity > 1 && $(a, 0),
+					(this._showAnim = K({
+						onUpdate: function (t, e) {
+							(i.style.marginTop = -e(ae.accel_b(t), r, 0) + "px"),
+								s.args.opacity > 1 && $(a, t);
+						},
+						onStop: function () {
+							s.args.opacity > 1 && $(a, ""), (s._showAnim = null);
+						}
+					})));
+		}),
+		(ue.hide = function () {
+			this.callHooks("onClose", this);
+			var t = this.els.topCont,
+				e = this,
+				n = this.els.body.firstChild,
+				a = n.offsetHeight,
+				s = G(t).y;
+			this.args.animation
+				? (this._showAnim && this._showAnim.stop(),
+				  (this._showAnim = K({
+						onUpdate: function (i, r) {
+							e.args.opacity > 1 && $(t, 1 - i),
+								(n.style.marginTop = -r(ae.accel_b(i), 0, a) + "px"),
+								(t.style.top = r(ae.accel_ab(i), s, s - 10) + "px");
+						},
+						onStop: function () {
+							(t.style.display = "none"),
+								(n.style.marginTop = ""),
+								e.args.opacity > 1 && $(t, ""),
+								(e._showAnim = null);
+						}
+				  })))
+				: (t.style.display = "none"),
+				(this.inputField = null);
+		}),
+		(ue.popup = function (t, e) {
+			function n(e) {
+				var n = { x: l.x, y: l.y };
+				return e
+					? (/B/.test(e) && (n.y += t.offsetHeight),
+					  /b/.test(e) && (n.y += t.offsetHeight - a.y),
+					  /T/.test(e) && (n.y -= a.y),
+					  /l/.test(e) && (n.x -= a.x - t.offsetWidth),
+					  /L/.test(e) && (n.x -= a.x),
+					  /R/.test(e) && (n.x += t.offsetWidth),
+					  /c/i.test(e) && (n.x += (t.offsetWidth - a.x) / 2),
+					  /m/i.test(e) && (n.y += (t.offsetHeight - a.y) / 2),
+					  n)
+					: n;
+			}
+			var a, s, i, r, o, l;
+			(t = J(t)),
+				e || (e = this.args.align),
+				(e = e.split(/\x2f/)),
+				(s = G(t)),
+				(i = this.els.topCont),
+				(r = i.style),
+				(o = X()),
+				(r.visibility = "hidden"),
+				(r.display = ""),
+				this.showAt(0, 0),
+				document.body.appendChild(i),
+				(a = { x: i.offsetWidth, y: i.offsetHeight }),
+				(l = s),
+				(l = n(e[0])),
+				l.y < o.y && ((l.y = s.y), (l = n(e[1]))),
+				l.x + a.x > o.x + o.w && ((l.x = s.x), (l = n(e[2]))),
+				l.y + a.y > o.y + o.h && ((l.y = s.y), (l = n(e[3]))),
+				l.x < o.x && ((l.x = s.x), (l = n(e[4]))),
+				this.showAt(l.x, l.y, !0),
+				(r.visibility = ""),
+				this.focus();
+		}),
+		(ue.popupForField = function (e, n, a) {
+			var s,
+				i,
+				r,
+				o,
+				l = this;
+			(n = J(n)),
+				(e = J(e)),
+				(l.inputField = n),
+				(l.dateFormat = a),
+				l.selection.type == t.SEL_SINGLE &&
+					((s = /input|textarea/i.test(n.tagName)
+						? n.value
+						: n.innerText || n.textContent),
+					s &&
+						((i = /(^|[^%])%[bBmo]/.exec(a)),
+						(r = /(^|[^%])%[de]/.exec(a)),
+						i && r && (o = i.index < r.index),
+						(s = Calendar.parseDate(s, o)),
+						s &&
+							(l.selection.set(s, !1, !0),
+							l.args.showTime &&
+								(l.setHours(s.getHours()), l.setMinutes(s.getMinutes())),
+							l.moveTo(s)))),
+				l.popup(e);
+		}),
+		(ue.manageFields = function (t, e, n) {
+			var a = this;
+			(e = J(e)),
+				(t = J(t)),
+				/^button$/i.test(t.tagName) && t.setAttribute("type", "button"),
+				B(t, "click", function (s) {
+					return a.popupForField(t, e, n), N(s);
+				});
+		}),
+		(ue.callHooks = function (t) {
+			for (
+				var e = U(arguments, 1), n = this.handlers[t], a = 0;
+				a < n.length;
+				++a
+			)
+				n[a].apply(this, e);
+		}),
+		(ue.addEventListener = function (t, e) {
+			this.handlers[t].push(e);
+		}),
+		(ue.removeEventListener = function (t, e) {
+			for (var n = this.handlers[t], a = n.length; --a >= 0; )
+				n[a] === e && n.splice(a, 1);
+		}),
+		(ue.getTime = function () {
+			return this.time;
+		}),
+		(ue.setTime = function (t, e) {
+			var n, a, s, i, r, o;
+			this.args.showTime &&
+				((t = null != t ? t : this.time),
+				(this.time = t),
+				(n = this.getHours()),
+				(a = this.getMinutes()),
+				(s = 12 > n),
+				this.args.showTime == 12 &&
+					(0 == n && (n = 12),
+					n > 12 && (n -= 12),
+					(this.els.timeAM.innerHTML = _(s ? "AM" : "PM"))),
+				10 > n && (n = "0" + n),
+				10 > a && (a = "0" + a),
+				(this.els.timeHour.innerHTML = n),
+				(this.els.timeMinute.innerHTML = a),
+				e ||
+					(this.callHooks("onTimeChange", this, t),
+					(i = this.inputField),
+					(r = this.selection),
+					i &&
+						((o = r.print(this.dateFormat)),
+						/input|textarea/i.test(i.tagName)
+							? (i.value = o)
+							: (i.innerHTML = o))));
+		}),
+		(ue.getHours = function () {
+			return Math.floor(this.time / 100);
+		}),
+		(ue.getMinutes = function () {
+			return this.time % 100;
+		}),
+		(ue.setHours = function (t) {
+			0 > t && (t += 24), this.setTime(100 * (t % 24) + (this.time % 100));
+		}),
+		(ue.setMinutes = function (t) {
+			0 > t && (t += 60),
+				(t = Math.floor(t / this.args.minuteStep) * this.args.minuteStep),
+				this.setTime(100 * this.getHours() + (t % 60));
+		}),
+		(ue._getInputYear = function () {
+			var t = parseInt(this.els.yearInput.value, 10);
+			return isNaN(t) && (t = this.date.getFullYear()), t;
+		}),
+		(ue._showTooltip = function (t) {
+			var e,
+				n = "",
+				a = this.els.tooltip;
+			t &&
+				((t = A(t)),
+				(e = this.args.dateInfo(t)),
+				e &&
+					e.tooltip &&
+					(n =
+						"<div class='DynarchCalendar-tooltipCont'>" +
+						S(t, e.tooltip) +
+						"</div>")),
+				(a.innerHTML = n);
+		}),
+		(Q = " align='center' cellspacing='0' cellpadding='0'"),
+		(Z = {
+			"DynarchCalendar-topCont": "topCont",
+			"DynarchCalendar-focusLink": "focusLink",
+			DynarchCalendar: "main",
+			"DynarchCalendar-topBar": "topBar",
+			"DynarchCalendar-title": "title",
+			"DynarchCalendar-dayNames": "dayNames",
+			"DynarchCalendar-body": "body",
+			"DynarchCalendar-menu": "menu",
+			"DynarchCalendar-menu-year": "yearInput",
+			"DynarchCalendar-bottomBar": "bottomBar",
+			"DynarchCalendar-tooltip": "tooltip",
+			"DynarchCalendar-time-hour": "timeHour",
+			"DynarchCalendar-time-minute": "timeMinute",
+			"DynarchCalendar-time-am": "timeAM",
+			"DynarchCalendar-navBtn DynarchCalendar-prevYear": "navPrevYear",
+			"DynarchCalendar-navBtn DynarchCalendar-nextYear": "navNextYear",
+			"DynarchCalendar-navBtn DynarchCalendar-prevMonth": "navPrevMonth",
+			"DynarchCalendar-navBtn DynarchCalendar-nextMonth": "navNextMonth"
+		}),
+		(te = { "-3": "backYear", "-2": "back", 0: "now", 2: "fwd", 3: "fwdYear" }),
+		(ee = { 37: -1, 38: -2, 39: 1, 40: 2 }),
+		(ne = { 33: -1, 34: 1 }),
+		(ue._getDateDiv = function (t) {
+			var e = null;
+			if (t)
+				try {
+					W(this.els.body, function (n) {
+						if (n.getAttribute("dyc-date") == t) throw (e = n);
+					});
+				} catch (n) {}
+			return e;
+		}),
+		((t.Selection = function (t, e, n, a) {
+			(this.type = e),
+				(this.sel = t instanceof Array ? t : [t]),
+				(this.onChange = O(n, a)),
+				(this.cal = a);
+		}).prototype = {
+			get: function () {
+				return this.type == t.SEL_SINGLE ? this.sel[0] : this.sel;
+			},
+			isEmpty: function () {
+				return this.sel.length == 0;
+			},
+			set: function (e, n, a) {
+				var s = this.type == t.SEL_SINGLE;
+				e instanceof Array
+					? ((this.sel = e), this.normalize(), a || this.onChange(this))
+					: ((e = L(e)),
+					  s || !this.isSelected(e)
+							? (s
+									? (this.sel = [e])
+									: this.sel.splice(this.findInsertPos(e), 0, e),
+							  this.normalize(),
+							  a || this.onChange(this))
+							: n && this.unselect(e, a));
+			},
+			reset: function () {
+				(this.sel = []), this.set.apply(this, arguments);
+			},
+			countDays: function () {
+				for (var t, e, n, a = 0, s = this.sel, i = s.length; --i >= 0; )
+					(t = s[i]),
+						t instanceof Array &&
+							((e = A(t[0])),
+							(n = A(t[1])),
+							(a += Math.round(Math.abs(n.getTime() - e.getTime()) / 864e5))),
+						++a;
+				return a;
+			},
+			unselect: function (t, e) {
+				var n, a, s, i, r, o, l;
+				for (t = L(t), n = !1, s = this.sel, i = s.length; --i >= 0; )
+					(a = s[i]),
+						a instanceof Array
+							? t < a[0] ||
+							  t > a[1] ||
+							  ((r = A(t)),
+							  (o = r.getDate()),
+							  t == a[0]
+									? (r.setDate(o + 1), (a[0] = L(r)), (n = !0))
+									: t == a[1]
+									? (r.setDate(o - 1), (a[1] = L(r)), (n = !0))
+									: ((l = new Date(r)),
+									  l.setDate(o + 1),
+									  r.setDate(o - 1),
+									  s.splice(i + 1, 0, [L(l), a[1]]),
+									  (a[1] = L(r)),
+									  (n = !0)))
+							: t == a && (s.splice(i, 1), (n = !0));
+				n && (this.normalize(), e || this.onChange(this));
+			},
+			normalize: function () {
+				var t, e, n, a, s, i, r;
+				for (
+					this.sel = this.sel.sort(function (t, e) {
+						return (
+							t instanceof Array && (t = t[0]),
+							e instanceof Array && (e = e[0]),
+							t - e
+						);
+					}),
+						n = this.sel,
+						a = n.length;
+					--a >= 0;
 
-	Calendar.setup = function(args) {
-        return new Calendar(args)
-    }
+				) {
+					if (((t = n[a]), t instanceof Array)) {
+						if (t[0] > t[1]) {
+							n.splice(a, 1);
+							continue;
+						}
+						t[0] == t[1] && (t = n[a] = t[0]);
+					}
+					e &&
+						((s = e),
+						(i = t instanceof Array ? t[1] : t),
+						(i = A(i)),
+						i.setDate(i.getDate() + 1),
+						(i = L(i)),
+						s > i ||
+							((r = n[a + 1]),
+							t instanceof Array && r instanceof Array
+								? ((t[1] = r[1]), n.splice(a + 1, 1))
+								: t instanceof Array
+								? ((t[1] = e), n.splice(a + 1, 1))
+								: r instanceof Array
+								? ((r[0] = t), n.splice(a, 1))
+								: ((n[a] = [t, r]), n.splice(a + 1, 1)))),
+						(e = t instanceof Array ? t[0] : t);
+				}
+			},
+			findInsertPos: function (t) {
+				for (
+					var e, n = this.sel, a = n.length;
+					--a >= 0 && ((e = n[a]), e instanceof Array && (e = e[0]), t < e);
 
-return Calendar
-}();
-
-
+				);
+				return a + 1;
+			},
+			clear: function (t) {
+				(this.sel = []), t || this.onChange(this);
+			},
+			selectRange: function (e, n) {
+				var a, s;
+				if (
+					((e = L(e)),
+					(n = L(n)),
+					e > n && ((a = e), (e = n), (n = a)),
+					(s = this.cal.args.checkRange),
+					!s)
+				)
+					return this._do_selectRange(e, n);
+				try {
+					q(
+						new t.Selection([[e, n]], t.SEL_MULTIPLE, se).getDates(),
+						O(function (t) {
+							if (this.isDisabled(t))
+								throw (s instanceof Function && s(t, this), "OUT");
+						}, this.cal)
+					),
+						this._do_selectRange(e, n);
+				} catch (i) {}
+			},
+			_do_selectRange: function (t, e) {
+				this.sel.push([t, e]), this.normalize(), this.onChange(this);
+			},
+			isSelected: function (t) {
+				for (var e, n = this.sel.length; --n >= 0; )
+					if (
+						((e = this.sel[n]),
+						(e instanceof Array && t >= e[0] && t <= e[1]) || t == e)
+					)
+						return !0;
+				return !1;
+			},
+			getFirstDate: function () {
+				var t = this.sel[0];
+				return t && t instanceof Array && (t = t[0]), t;
+			},
+			getLastDate: function () {
+				if (this.sel.length > 0) {
+					var t = this.sel[this.sel.length - 1];
+					return t && t instanceof Array && (t = t[1]), t;
+				}
+			},
+			print: function (t, e) {
+				var n,
+					a = [],
+					s = 0,
+					i = this.cal.getHours(),
+					r = this.cal.getMinutes();
+				for (e || (e = " -> "); s < this.sel.length; )
+					(n = this.sel[s++]),
+						n instanceof Array
+							? a.push(S(A(n[0], i, r), t) + e + S(A(n[1], i, r), t))
+							: a.push(S(A(n, i, r), t));
+				return a;
+			},
+			getDates: function (t) {
+				for (var e, n, a = [], s = 0; s < this.sel.length; ) {
+					if (((n = this.sel[s++]), n instanceof Array))
+						for (e = A(n[0]), n = n[1]; L(e) < n; )
+							a.push(t ? S(e, t) : new Date(e)), e.setDate(e.getDate() + 1);
+					else e = A(n);
+					a.push(t ? S(e, t) : e);
+				}
+				return a;
+			}
+		}),
+		(t.isUnicodeLetter = function (t) {
+			return t.toUpperCase() != t.toLowerCase();
+		}),
+		(t.parseDate = function (e, n, a) {
+			var s, i, r, o, l, c, h, u, d, f, y;
+			if (!/\S/.test(e)) return "";
+			for (
+				e = e.replace(/^\s+/, "").replace(/\s+$/, ""),
+					a = a || new Date(),
+					s = null,
+					i = null,
+					r = null,
+					o = null,
+					l = null,
+					c = null,
+					h = e.match(/([0-9]{1,2}):([0-9]{1,2})(:[0-9]{1,2})?\s*(am|pm)?/i),
+					h &&
+						((o = parseInt(h[1], 10)),
+						(l = parseInt(h[2], 10)),
+						(c = h[3] ? parseInt(h[3].substr(1), 10) : 0),
+						(e = e.substring(0, h.index) + e.substr(h.index + h[0].length)),
+						h[4] &&
+							(h[4].toLowerCase() == "pm" && 12 > o
+								? (o += 12)
+								: h[4].toLowerCase() != "am" || 12 > o || (o -= 12))),
+					u = (function () {
+						function n() {
+							return e.charAt(l++);
+						}
+						function a() {
+							return e.charAt(l);
+						}
+						function s(t) {
+							for (; a() && h(a()); ) t += n();
+							return t;
+						}
+						function i() {
+							for (var t = ""; a() && /[0-9]/.test(a()); ) t += n();
+							return h(a()) ? s(t) : parseInt(t, 10);
+						}
+						function r(t) {
+							c.push(t);
+						}
+						for (var o, l = 0, c = [], h = t.isUnicodeLetter; l < e.length; )
+							(o = a()), h(o) ? r(s("")) : /[0-9]/.test(o) ? r(i()) : n();
+						return c;
+					})(),
+					d = [],
+					f = 0;
+				f < u.length;
+				++f
+			)
+				(y = u[f]),
+					/^[0-9]{4}$/.test(y)
+						? ((s = parseInt(y, 10)),
+						  null == i && null == r && null == n && (n = !0))
+						: /^[0-9]{1,2}$/.test(y)
+						? ((y = parseInt(y, 10)),
+						  60 > y
+								? 0 > y || y > 12
+									? 1 > y || y > 31 || (r = y)
+									: d.push(y)
+								: (s = y))
+						: null == i && (i = I(y));
+			return (
+				d.length < 2
+					? d.length == 1 &&
+					  (null == r ? (r = d.shift()) : null == i && (i = d.shift()))
+					: n
+					? (null == i && (i = d.shift()), null == r && (r = d.shift()))
+					: (null == r && (r = d.shift()), null == i && (i = d.shift())),
+				null == s && (s = d.length > 0 ? d.shift() : a.getFullYear()),
+				30 > s ? (s += 2e3) : 99 > s && (s += 1900),
+				null == i && (i = a.getMonth() + 1),
+				null != s && null != i && null != r
+					? new Date(s, i - 1, r, o, l, c)
+					: null
+			);
+		}),
+		(ae = {
+			elastic_b: function (t) {
+				return 1 - Math.cos(5.5 * -t * Math.PI) / Math.pow(2, 7 * t);
+			},
+			magnetic: function (t) {
+				return 1 - Math.cos(10.5 * t * t * t * Math.PI) / Math.exp(4 * t);
+			},
+			accel_b: function (t) {
+				return (t = 1 - t), 1 - t * t * t * t;
+			},
+			accel_a: function (t) {
+				return t * t * t;
+			},
+			accel_ab: function (t) {
+				return (t = 1 - t), 1 - Math.sin((t * t * Math.PI) / 2);
+			},
+			accel_ab2: function (t) {
+				return (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1);
+			},
+			brakes: function (t) {
+				return (t = 1 - t), 1 - Math.sin(t * t * Math.PI);
+			},
+			shake: function (t) {
+				return 0.5 > t
+					? -Math.cos(11 * t * Math.PI) * t * t
+					: ((t = 1 - t), Math.cos(11 * t * Math.PI) * t * t);
+			}
+		}),
+		(se = Function()),
+		t
+	);
+})();
