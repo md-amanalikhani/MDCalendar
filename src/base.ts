@@ -1761,17 +1761,17 @@ export default class SHCalendar {
 		template.push(
 			"<table class='SHCalendar-time' align='center' cellspacing='0' cellpadding='0'>",
 			"<tr>",
-			"<td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'>12</div></td>",
+			"<td rowspan='2'><div shc-type='time-hour' shc-cls='hover-time,pressed-time' class='SHCalendar-time-hour'></div></td>",
 			"<td shc-type='time-hour+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>",
 			"<td rowspan='2' class='SHCalendar-time-sep'></td>",
-			"<td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'>00</div></td>",
+			"<td rowspan='2'><div shc-type='time-min' shc-cls='hover-time,pressed-time' class='SHCalendar-time-minute'></div></td>",
 			"<td shc-type='time-min+' shc-cls='hover-time,pressed-time' class='SHCalendar-time-up'></td>"
 		);
 
 		if (this.args.showTime == 12) {
 			template.push(
 				"<td rowspan='2' class='SHCalendar-time-sep'></td>",
-				"<td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'>AM</div></td>"
+				"<td rowspan='2'><div class='SHCalendar-time-am' shc-type='time-am' shc-cls='hover-time,pressed-time'></div></td>"
 			);
 		}
 

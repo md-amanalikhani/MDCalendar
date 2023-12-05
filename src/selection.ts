@@ -211,26 +211,19 @@ export default class Selection {
 	}
 
 	selectRange(date_start: any | any[], date_end: any | any[]) {
-		var checkRange: any;
 		date_start = SHCalendar.dateToInt(date_start);
 		date_end = SHCalendar.dateToInt(date_end);
 		if (date_start > date_end) [date_end, date_start] = [date_start, date_end];
-		checkRange = this.cal.args.checkRange;
+		const checkRange = this.cal.args.checkRange;
 		if (!checkRange) return this.#do_selectRange(date_start, date_end);
 		try {
-			this.cal.setFunction(
-				new Selection(
-					[[date_start, date_end]],
-					Selection.SELECTION_TYPE.MULTIPLE,
-					this.cal
-				).getDates(false),
-				(date: SHDate | number) => {
-					if (this.cal.isDisabled(date))
-						throw (
-							(checkRange instanceof Function && checkRange(date, this), "OUT")
-						);
-				}
-			);
+			const date = new Selection(
+				[[date_start, date_end]],
+				Selection.SELECTION_TYPE.MULTIPLE,
+				this.cal
+			).getDates();
+			if (this.cal.isDisabled(date))
+				throw (checkRange instanceof Function && checkRange(date, this), "OUT");
 			this.#do_selectRange(date_start, date_end);
 		} catch (i) {}
 	}
@@ -299,9 +292,10 @@ export default class Selection {
 			sel = this.sel[i];
 			if (sel instanceof Array) {
 				date = SHCalendar.intToDate(sel[0]);
-				for (sel = sel[1]; SHCalendar.dateToInt(date) < sel; )
-					str.push(str ? this.cal.printDate(date, str) : new SHDate(date)),
-						date.setDate(date.getDate() + 1);
+				for (sel = sel[1]; SHCalendar.dateToInt(date) < sel; ) {
+					str.push(str ? this.cal.printDate(date, str) : new SHDate(date));
+					date.setDate(date.getDate() + 1);
+				}
 			} else date = SHCalendar.intToDate(sel);
 			str.push(str ? this.cal.printDate(date, str) : date);
 		}
