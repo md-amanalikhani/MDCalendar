@@ -511,9 +511,9 @@ export default class SHCalendar {
 						this.args.cont
 					)
 				) {
-					this._mouseDiff = this.position(
+					this._mouseDiff = this.getOffset(
 						event,
-						this.getAbsolutePos(this.els.topCont)
+						this.getElementOffset(this.els.topCont)
 					);
 					this.addEvent(document, events, true);
 				}
@@ -1335,8 +1335,8 @@ export default class SHCalendar {
 					els_top_cont.style.top =
 						func_map(
 							tis.#func_animation.accel_ab(pos),
-							tis.getAbsolutePos(els_top_cont).y,
-							tis.getAbsolutePos(els_top_cont).y - 10
+							tis.getElementOffset(els_top_cont).y,
+							tis.getElementOffset(els_top_cont).y - 10
 						) + "px";
 				},
 				onStop: () => {
@@ -1525,8 +1525,8 @@ export default class SHCalendar {
 				is_unicode_letter(o)
 					? push(s(""))
 					: /[0-9]/.test(o)
-					? push(i())
-					: charAtNext();
+					  ? push(i())
+					  : charAtNext();
 			}
 			return c;
 		})();
@@ -1537,22 +1537,23 @@ export default class SHCalendar {
 			/^[0-9]{4}$/.test(y)
 				? ((year = +y), null == month && null == day && null == n && (n = true))
 				: /^[0-9]{1,2}$/.test(y)
-				? ((y = +y),
-				  60 > y
-						? 0 > y || y > 12
-							? 1 > y || y > 31 || (day = y)
-							: d.push(y)
-						: (year = y))
-				: null == month && (month = this.kcmonth(y));
+				  ? ((y = +y),
+				    60 > y
+							? 0 > y || y > 12
+								? 1 > y || y > 31 || (day = y)
+								: d.push(y)
+							: (year = y))
+				  : null == month && (month = this.kcmonth(y));
 		}
 
 		d.length < 2
 			? d.length == 1 &&
 			  (null == day ? (day = d.shift()) : null == month && (month = d.shift()))
 			: n
-			? (null == month && (month = d.shift()), null == day && (day = d.shift()))
-			: (null == day && (day = d.shift()),
-			  null == month && (month = d.shift()));
+			  ? (null == month && (month = d.shift()),
+			    null == day && (day = d.shift()))
+			  : (null == day && (day = d.shift()),
+			    null == month && (month = d.shift()));
 		if (null == year) year = d.length > 0 ? d.shift() : date_now.getFullYear();
 		if (30 > year) year += 2e3;
 		else if (99 > year) year += 1900;
@@ -1840,18 +1841,25 @@ export default class SHCalendar {
 		this.callHooks("onSelect", sel);
 	}
 
-	popupForField(trigger: string, field: string, date_format: string) {
-		var date: any, i: any, r: any, el_field: any;
-		this.input_field = el_field = this.getElementById(field);
-		const el_trigger = this.getElementById(trigger);
+	popupForField(
+		el_trigger: HTMLElement,
+		el_field: HTMLElement | any,
+		date_format: string
+	) {
+		var date: any, i: any, r: any;
+		if (!(el_trigger instanceof HTMLElement))
+			el_trigger = this.getElementById(el_trigger);
+		if (!(el_field instanceof HTMLElement))
+			el_field = this.getElementById(el_field);
+		this.input_field = el_field;
 		this.date_format = date_format;
 		if (this.selection.type == SHCalendar.SEL_SINGLE) {
 			date = /input|textarea/i.test(el_field.tagName)
 				? el_field.value
 				: el_field.innerText || el_field.textContent;
 			if (date) {
-				(i = /(^|[^%])%[bBmo]/.exec(date_format)),
-					(r = /(^|[^%])%[de]/.exec(date_format));
+				i = /(^|[^%])%[bBmo]/.exec(date_format);
+				r = /(^|[^%])%[de]/.exec(date_format);
 				if (i && r) {
 					date = SHCalendar.parseDate(date, i.index < r.index);
 				}
@@ -1868,9 +1876,8 @@ export default class SHCalendar {
 	}
 
 	manageFields(trigger: string, field: string, date_format: string) {
-		var el_trigger: any, el_field: any;
-		el_field = this.getElementById(field);
-		el_trigger = this.getElementById(trigger);
+		const el_field = this.getElementById(field);
+		const el_trigger = this.getElementById(trigger);
 		if (/^button$/i.test(el_trigger.tagName))
 			el_trigger.setAttribute("type", "button");
 		this.addEvent(el_trigger, "click", (event: any) => {
@@ -1900,30 +1907,24 @@ export default class SHCalendar {
 				return pos;
 			} else return pos;
 		};
-		var top_cont_offset: any,
-			trigger_offset: any,
-			top_cont: any,
-			top_cont_style: any,
-			position_mouse: any,
-			offset: any,
-			el_trigger: any;
+		var top_cont_offset: any, position_mouse: any, offset: any;
 		this.showAt(0, 0);
-		top_cont = this.els.topCont;
-		top_cont_style = top_cont.style;
-		top_cont_style.visibility = "hidden";
-		top_cont_style.display = "";
-		document.body.appendChild(top_cont);
+		const { els_top_cont } = this.els,
+			els_top_cont_style = els_top_cont.style;
+		els_top_cont_style.visibility = "hidden";
+		els_top_cont_style.display = "";
+		document.body.appendChild(els_top_cont);
 		top_cont_offset = {
-			x: top_cont.offsetWidth,
-			y: top_cont.offsetHeight
+			x: els_top_cont.offsetWidth,
+			y: els_top_cont.offsetHeight
 		};
-		el_trigger = this.getElementById(trigger);
-		trigger_offset = this.getAbsolutePos(el_trigger);
+		const el_trigger = this.getElementById(trigger),
+			trigger_offset = this.getElementOffset(el_trigger);
 		offset = trigger_offset;
 		if (!align) align = this.args.align;
 		align = align.split(/\x2f/);
 		offset = alignment(align[0]);
-		position_mouse = this.positionMouse();
+		position_mouse = this.getMouseOffset();
 		if (offset.y < position_mouse.y) {
 			offset.y = trigger_offset.y;
 			offset = alignment(align[1]);
@@ -1941,36 +1942,39 @@ export default class SHCalendar {
 			offset = alignment(align[4]);
 		}
 		this.showAt(offset.x, offset.y, true);
-		top_cont_style.visibility = "";
+		els_top_cont_style.visibility = "";
 		this.focusingFocus();
 	}
 
-	showAt(lpos: any, tpos: any, banim?: any) {
+	showAt(lpos: any, tpos: any, is_animation?: any) {
 		if (this.show_animation) this.show_animation.stop();
-		banim = banim && this.args.animation;
-		var top_cont = this.els.topCont,
-			first_child = this.els.body.firstChild,
-			offsetHeight = first_child.offsetHeight,
-			top_cont_style = top_cont.style;
-		top_cont_style.position = "absolute";
-		top_cont_style.left = lpos + "px";
-		top_cont_style.top = tpos + "px";
-		top_cont_style.zIndex = 1e4;
-		top_cont_style.display = "";
-		if (banim) {
-			first_child.style.marginTop = -offsetHeight + "px";
+		const { topCont: els_top_cont } = this.els,
+			els_body_first_child = this.els.body.firstChild,
+			els_body_first_child_offset_height = els_body_first_child.offsetHeight,
+			els_top_cont_style = els_top_cont.style;
+		els_top_cont_style.getOffset = "absolute";
+		els_top_cont_style.left = lpos + "px";
+		els_top_cont_style.top = tpos + "px";
+		els_top_cont_style.zIndex = 1e4;
+		els_top_cont_style.display = "";
+		if (is_animation && this.args.animation) {
+			els_body_first_child.style.marginTop =
+				-els_body_first_child_offset_height + "px";
 			if (this.args.opacity > 1) {
-				this.setOpacity(top_cont, 0);
+				this.setOpacity(els_top_cont, 0);
 				const tis = this;
 				this.show_animation = this.Animation({
 					onUpdate: function (pos: any, func_map: Function) {
-						first_child.style.marginTop =
-							-func_map(tis.#func_animation.accel_b(pos), offsetHeight, 0) +
-							"px";
-						if (tis.args.opacity > 1) tis.setOpacity(top_cont, pos);
+						els_body_first_child.style.marginTop =
+							-func_map(
+								tis.#func_animation.accel_b(pos),
+								els_body_first_child_offset_height,
+								0
+							) + "px";
+						if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, pos);
 					},
 					onStop: function () {
-						if (tis.args.opacity > 1) tis.setOpacity(top_cont, "");
+						if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, "");
 						tis.show_animation = null;
 					}
 				});
@@ -1978,36 +1982,35 @@ export default class SHCalendar {
 		}
 	}
 
-	getAbsolutePos(el: any) {
-		//G()
+	getElementOffset(el: HTMLElement | any) {
 		var BCR,
-			osl = 0,
-			ost = 0;
-		if (el.getBoundingClientRect)
-			return (
-				(BCR = el.getBoundingClientRect()),
-				{
-					x:
-						BCR.left -
-						document.documentElement.clientLeft +
-						document.body.scrollLeft,
-					y:
-						BCR.top -
-						document.documentElement.clientTop +
-						document.body.scrollTop
-				}
-			);
-		do
-			(osl += el.offsetLeft - el.scrollLeft),
-				(ost += el.offsetTop - el.scrollTop);
-		while ((el = el.offsetParent));
+			left = 0,
+			top = 0;
+		if (el.getBoundingClientRect) {
+			BCR = el.getBoundingClientRect();
+			const {
+				clientLeft: document_element_client_left,
+				clientTop: document_element_client_top
+			} = document.documentElement;
+			const { scrollLeft: body_scroll_left, scrollTop: body_scroll_top } =
+				document.body;
+			return {
+				x: BCR.left - document_element_client_left + body_scroll_left,
+				y: BCR.top - document_element_client_top + body_scroll_top
+			};
+		}
+		do {
+			left += el.offsetLeft - el.scrollLeft;
+			top += el.offsetTop - el.scrollTop;
+			el = el.offsetParent;
+		} while (el);
 		return {
-			x: osl,
-			y: ost
+			x: left,
+			y: top
 		};
 	}
 
-	position(even: any, pos: any) {
+	getOffset(even: any, pos: any) {
 		var x = SHCalendar.IS_IE
 				? even.clientX + document.body.scrollLeft
 				: even.pageX,
@@ -2026,16 +2029,15 @@ export default class SHCalendar {
 
 	dragIt(event: any) {
 		// p
-		var style = this.els.topCont.style,
-			pos = this.position(event, this._mouseDiff);
+		const { style } = this.els.topCont,
+			pos = this.getOffset(event, this._mouseDiff);
 		style.left = pos.x + "px";
 		style.top = pos.y + "px";
 	}
 
-	positionMouse() {
+	getMouseOffset() {
 		//X
-		var document_element = document.documentElement,
-			document_body = document.body;
+		const { documentElement: document_element, body: document_body } = document;
 		return {
 			x: document_element.scrollLeft || document_body.scrollLeft,
 			y: document_element.scrollTop || document_body.scrollTop,
