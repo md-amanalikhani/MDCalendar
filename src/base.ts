@@ -353,9 +353,9 @@ export default class SHCalendar {
 
 	addEvent(el: any, evname: any, callback?: any, useCapture?: any) {
 		var i: number | string;
-		// if (el instanceof Array)
-		// 	for (i = el.length - 1; i >= 0; i--)
-		// 		this.addEvent(el[i], evname, callback, useCapture);else
+		if (el instanceof Array)
+			for (i = el.length - 1; i >= 0; i--)
+				this.addEvent(el[i], evname, callback, useCapture);
 		if ("object" == typeof evname)
 			for (i in evname)
 				if (evname.hasOwnProperty(i)) this.addEvent(el, i, evname[i], callback);
@@ -440,7 +440,7 @@ export default class SHCalendar {
 						const shc_cls = el_type.getAttribute("shc-cls");
 						if (shc_cls) tis.removeClass(el_type, tis.getClass(shc_cls, 1));
 						clearTimeout(_time_out);
-						tis.removeEvent(document, events); //, true
+						tis.removeEvent(document, events, true);
 						events = null;
 					}
 				};
@@ -460,13 +460,13 @@ export default class SHCalendar {
 							}
 						};
 						_time_out = setTimeout(_time_out, 350);
-						this.addEvent(document, events); //, true
+						this.addEvent(document, events, true);
 					} else events.mouseup();
 				} else if ("year" == shc_btn) {
 					this.els.yearInput.focus();
 					this.els.yearInput.select();
 				} else if ("time-am" == shc_type) {
-					this.addEvent(document, events); //, true
+					this.addEvent(document, events, true);
 				} else if (/^time/.test(shc_type)) {
 					_time_out = (type: string = shc_type) => {
 						tis.stepTime(type);
@@ -474,45 +474,48 @@ export default class SHCalendar {
 					};
 					this.stepTime(shc_type);
 					_time_out = setTimeout(_time_out, 350);
-					this.addEvent(document, events); //, true
-				} else if (shc_date && this.selection.type) {
-					const selection = this.selection;
-					if (selection.type == SHCalendar.SEL_MULTIPLE) {
-						if (event.shiftKey && this.sel_range_start) {
-							selection.selectRange(this.sel_range_start, shc_date);
-						} else if (
-							event.ctrlKey ||
-							selection.isSelected(shc_date) ||
-							!this.args.multiCtrl
-						) {
-							selection.clear(true);
-							selection.set(shc_date, true);
-							this.sel_range_start = shc_date;
+					this.addEvent(document, events, true);
+				} else {
+					if (shc_date && this.selection.type) {
+						const selection = this.selection;
+						if (selection.type == SHCalendar.SEL_MULTIPLE) {
+							if (event.shiftKey && this.sel_range_start) {
+								selection.selectRange(this.sel_range_start, shc_date);
+							} else if (
+								event.ctrlKey ||
+								selection.isSelected(shc_date) ||
+								!this.args.multiCtrl
+							) {
+								selection.clear(true);
+								selection.set(shc_date, true);
+								this.sel_range_start = shc_date;
+							}
+						} else {
+							selection.set(shc_date);
+							this.moveTo(SHCalendar.intToDate(shc_date), 2);
 						}
-					} else {
-						selection.set(shc_date);
-						this.moveTo(SHCalendar.intToDate(shc_date), 2);
+						el_date = this.getElementDate(shc_date);
+						this.mouseHover({ target: el_date }, true);
 					}
-					el_date = this.getElementDate(shc_date);
-					this.mouseHover({ target: el_date }, true);
-					this.addEvent(document, events); //, true
+					this.addEvent(document, events, true);
 				}
-				if (SHCalendar.IS_IE && events && /dbl/i.test(event.type)) {
+				if (SHCalendar.IS_IE && events && events && /dbl/i.test(event.type)) {
 					events.mouseup();
 				}
 				if (
-					this.args.fixed ||
-					(el_date &&
+					!(
+						this.args.fixed ||
 						!/^(SHCalendar-(topBar|bottomBar|weekend|weekNumber|menu(-sep)?))?$/.test(
 							el_date.className
-						)) ||
-					this.args.cont
+						) ||
+						this.args.cont
+					)
 				) {
 					this._mouseDiff = this.position(
 						event,
 						this.getAbsolutePos(this.els.topCont)
 					);
-					this.addEvent(document, events); //, true
+					this.addEvent(document, events, true);
 				}
 			} else if ("today" == shc_btn) {
 				const date = new SHDate();
@@ -533,8 +536,8 @@ export default class SHCalendar {
 				this.showMenu(false);
 			} else if ("time-am" == shc_type) {
 				this.setHours(this.date.getHours() + 12);
-				if (!SHCalendar.IS_IE) this.stopEvent(event);
 			}
+			if (!SHCalendar.IS_IE) this.stopEvent(event);
 		}
 	}
 
@@ -962,7 +965,7 @@ export default class SHCalendar {
 			start: () => {
 				if (interval_id) result.stop();
 				step = 0;
-				interval_id = setInterval(result.update, 1000 / args_fps);
+				interval_id = setInterval(result.update, 1e3 / args_fps);
 			},
 			stop: () => {
 				if (interval_id) {

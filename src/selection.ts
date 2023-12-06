@@ -50,7 +50,7 @@ export default class Selection {
 		is_change?: boolean
 	) {
 		//arg, toggle)
-		var type = this.type == Selection.SELECTION_TYPE.SINGLE;
+		const type = this.type == Selection.SELECTION_TYPE.SINGLE;
 		if (date instanceof Array) {
 			this.sel = date;
 			this.normalize();
@@ -141,17 +141,14 @@ export default class Selection {
 
 	normalize() {
 		var i: number,
-			date_int: any,
+			date: any,
 			sel_item: any,
 			sel_item_second: any,
 			sel_item_first: any;
-		const sel = (this.sel = this.sel.sort(function (
-			sel_first: any,
-			sel_second: any
-		) {
-			if (sel_first instanceof Array) sel_first = sel_first[0];
-			if (sel_second instanceof Array) sel_second = sel_second[0];
-			return sel_first - sel_second;
+		const sel = (this.sel = this.sel.sort((first: any, second: any) => {
+			if (first instanceof Array) first = first[0];
+			if (second instanceof Array) second = second[0];
+			return first - second;
 		}));
 		for (i = sel.length - 1; i >= 0; i--) {
 			sel_item_first = sel[i];
@@ -164,12 +161,12 @@ export default class Selection {
 					sel_item_first = sel[i] = sel_item_first[0];
 			}
 			if (sel_item) {
-				date_int =
+				date =
 					sel_item_first instanceof Array ? sel_item_first[1] : sel_item_first;
-				const date = SHCalendar.intToDate(date_int);
+				date = SHCalendar.intToDate(date);
 				date.setDate(date.getDate() + 1);
-				date_int = SHCalendar.dateToInt(date);
-				if (sel_item < date_int) {
+				date = SHCalendar.dateToInt(date);
+				if (!(sel_item > date)) {
 					sel_item_second = sel[i + 1];
 					if (
 						sel_item_first instanceof Array &&
@@ -198,10 +195,11 @@ export default class Selection {
 		const sel: any = this.sel;
 		var sel_item: any,
 			i: number = sel.length - 1;
-		do {
-			sel_item = sel[i--];
-			if (sel_item instanceof Array) sel_item = sel_item[0];
-		} while (i >= 0 && date < sel_item);
+		if (i >= 0)
+			do {
+				sel_item = sel[i--];
+				if (sel_item instanceof Array) sel_item = sel_item[0];
+			} while (i >= 0 && date < sel_item);
 		return i + 1;
 	}
 
@@ -213,16 +211,17 @@ export default class Selection {
 	selectRange(date_start: any | any[], date_end: any | any[]) {
 		date_start = SHCalendar.dateToInt(date_start);
 		date_end = SHCalendar.dateToInt(date_end);
+		const cal = this.cal;
 		if (date_start > date_end) [date_end, date_start] = [date_start, date_end];
-		const checkRange = this.cal.args.checkRange;
+		const { checkRange } = cal.args;
 		if (!checkRange) return this.#do_selectRange(date_start, date_end);
 		try {
 			const date = new Selection(
 				[[date_start, date_end]],
 				Selection.SELECTION_TYPE.MULTIPLE,
-				this.cal
+				cal
 			).getDates();
-			if (this.cal.isDisabled(date))
+			if (cal.isDisabled(date))
 				throw (checkRange instanceof Function && checkRange(date, this), "OUT");
 			this.#do_selectRange(date_start, date_end);
 		} catch (i) {}
