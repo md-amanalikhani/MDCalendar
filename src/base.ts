@@ -225,7 +225,7 @@ export default class SHCalendar {
 	};
 
 	constructor(args: any = SHCalendar.DEFAULT_ARGS) {
-		this.args = this.mergeData(args, SHCalendar.DEFAULT_ARGS);
+		this.args = this.dataIntegration(args, SHCalendar.DEFAULT_ARGS);
 		this.date = this.setDate(this.args.date);
 		this.args.min = this.setDate(this.args.min);
 		this.args.max = this.setDate(this.args.max);
@@ -251,7 +251,7 @@ export default class SHCalendar {
 			); //popup
 	}
 
-	mergeData(data: any, defaults: any): any {
+	dataIntegration(data: any, defaults: any): any {
 		return { ...defaults, ...data };
 	}
 
@@ -272,7 +272,7 @@ export default class SHCalendar {
 	}
 
 	setHandler() {
-		const event = [
+		const event: Array<string> = [
 			"onChange",
 			"onSelect",
 			"onTimeChange",
@@ -282,29 +282,39 @@ export default class SHCalendar {
 		];
 		for (const key in event) {
 			const evn: any = event[key];
-			this.handlers[key] = evn instanceof Array ? evn : [evn];
+			this.handlers[key] = Array.isArray(evn) ? evn : [evn];
 		}
 	}
 
 	init(): HTMLElement {
-		const { cont: args_cont, noScroll: args_noScroll } = this.args;
+		const { cont: args_cont, noScroll: args_noScroll } = this.args,
+			tis = this;
 		var el = this.getElementById(args_cont);
-		const els = this.els;
+		el.innerHTML = this.template();
+		this.setNode(el.firstChild, (el: any) => {
+			var class_name = this.#top_class[el.className];
+			if (class_name) tis.els[class_name] = el;
+			if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
+		});
+		const {
+			topCont: els_top_cont,
+			main: els_main,
+			focusLink: els_focus_link,
+			yearInput: els_year_input
+		} = this.els;
 		const events: any = {
-			mousedown: (event: any) => this.mouseClick(event, true),
-			mouseup: (event: any) => this.mouseClick(event, false),
-			mouseover: (event: any) => this.mouseHover(event, true),
-			mouseout: (event: any) => this.mouseHover(event, false),
+			mousedown: (event: MouseEvent) => this.mouseClick(event, true),
+			mouseup: (event: MouseEvent) => this.mouseClick(event, false),
+			mouseover: (event: MouseEvent) => this.mouseHover(event, true),
+			mouseout: (event: MouseEvent) => this.mouseHover(event, false),
 			keypress: (event: KeyboardEvent) => this.keypress(event)
 		};
-
 		const events_IE: any = SHCalendar.IS_IE
 			? {
 					dblclick: events.mousedown,
 					keydown: events.keypress
 			  }
 			: {};
-
 		const events_wheel: any = !args_noScroll
 			? SHCalendar.IS_GECKO
 				? {
@@ -314,36 +324,21 @@ export default class SHCalendar {
 						mousewheel: (event: any) => this.wheelCHTime(event)
 				  }
 			: {};
-
-		el.innerHTML = this.template();
-		this.setNode(el.firstChild, (el: any) => {
-			var class_name = this.#top_class[el.className];
-			if (class_name) els[class_name] = el;
-			if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
-		});
-		const {
-			main: els_main,
-			focusLink: els_focus_link,
-			yearInput: els_year_input
-		} = els;
 		this.addEvent(els_main, { ...events, ...events_IE, ...events_wheel });
-		const tis = this;
 		this.events_focusing = {
-			focus: (event?: any) => tis.onFocus(),
-			blur: (event?: any) => tis.onBluringTimeout()
+			focus: (event?: MouseEvent) => tis.onFocus(),
+			blur: (event?: MouseEvent) => tis.onBluringTimeout()
 		};
 		this.addEvent(els_focus_link, this.events_focusing);
 		if (els_year_input) this.addEvent(els_year_input, this.events_focusing);
 
-		this.moveTo(this.date, false);
 		this.setTime(this.time, true);
-		return els.topCont;
+		this.moveTo(this.date, false);
+		return els_top_cont;
 	}
 
 	createElement(type: any, className?: any, parent?: any) {
-		//createElement(type, parent)
-		var el: HTMLElement; //el
-		el = document.createElementNS
+		const el: HTMLElement = document.createElementNS
 			? document.createElementNS("http://www.w3.org/1999/xhtml", type)
 			: document.createElement(type);
 		if (className) el.className = className;
@@ -351,54 +346,35 @@ export default class SHCalendar {
 		return el;
 	}
 
-	addEvent(el: any, evname: any, callback?: any, useCapture?: any) {
+	addEvent(el: any, evname: any, callback?: any, useCapture: boolean = false) {
 		var i: number | string;
-		if (el instanceof Array)
-			for (i = el.length - 1; i >= 0; i--)
-				this.addEvent(el[i], evname, callback, useCapture);
-		if ("object" == typeof evname)
-			for (i in evname)
-				if (evname.hasOwnProperty(i)) this.addEvent(el, i, evname[i], callback);
-		//if (el)
-		if (el.addEventListener)
-			el.addEventListener(
-				evname,
-				callback,
-				SHCalendar.IS_IE ? true : !!useCapture
-			);
-		else if (el.attachEvent) el.attachEvent("on" + evname, callback);
-		else el["on" + evname] = callback;
-	}
-
-	stopEvent(event: any) {
-		if (event.stopPropagation) {
-			event.preventDefault();
-			event.stopPropagation();
-		} else {
-			//SHCalendar.IS_IE
-			event.cancelBubble = true; // For IE
-			event.returnValue = false; // For IE
+		if (Array.isArray(el))
+			for (const _el of el) this.addEvent(_el, evname, callback, useCapture);
+		else if (typeof evname == "object")
+			for (const eventName of Object.keys(evname))
+				this.addEvent(el, eventName, evname[eventName], useCapture);
+		else {
+			if (el.addEventListener)
+				el.addEventListener(evname, callback, useCapture);
+			else if (el.attachEvent) el.attachEvent("on" + evname, callback);
+			else el["on" + evname] = callback;
 		}
-		return false;
 	}
 
-	removeEvent(el: any, evname: any, callback?: any, useCapture?: any) {
-		// if (el instanceof Array)
-		// 	for (i = el.length - 1; i >= 0; i--)
-		// 		this.removeEvent(el[i], evname, callback, useCapture);else
-		if (typeof evname === "object") {
-			for (var key in evname) {
-				if (evname.hasOwnProperty(key)) {
-					this.removeEvent(el, key, evname[key], callback);
-				}
-			}
+	removeEvent(
+		el: any,
+		evname: any,
+		callback?: any,
+		useCapture: boolean = false
+	) {
+		if (Array.isArray(el))
+			for (const _el of el) this.removeEvent(_el, evname, callback, useCapture);
+		else if (typeof evname == "object") {
+			for (const eventName of Object.keys(evname))
+				this.removeEvent(el, eventName, evname[eventName], callback);
 		} else {
 			if (el.removeEventListener) {
-				el.removeEventListener(
-					evname,
-					callback,
-					SHCalendar.IS_IE ? true : !!useCapture
-				);
+				el.removeEventListener(evname, callback, useCapture);
 				//
 			} else if (el.detachEvent) {
 				el.detachEvent("on" + evname, callback);
@@ -408,17 +384,35 @@ export default class SHCalendar {
 		}
 	}
 
-	addEventListener(evname: string, func: Function) {
+	stopEvent(event: Event) {
+		if (event.cancelable) {
+			event.preventDefault();
+			event.stopPropagation();
+		} else {
+			// For IE
+			event.cancelBubble = true;
+			event.returnValue = false;
+		}
+		return false;
+	}
+
+	addEventListener(evname: string, func: (event: any) => void) {
+		if (!this.handlers[evname]) {
+			this.handlers[evname] = [];
+		}
 		this.handlers[evname].push(func);
 	}
 
 	removeEventListener(evname: string, func: Function) {
 		const evn = this.handlers[evname];
 		for (var i = evn.length - 1; i >= 0; i--)
-			if (evn[i] === func) evn.splice(i, 1);
+			if (evn[i] === func) {
+				evn.splice(i, 1);
+				return;
+			}
 	}
 
-	setNode(els: any, callback: Function) {
+	setNode(els: any, callback: (el: HTMLElement) => any) {
 		if (!callback(els))
 			for (let el = els.firstChild; el; el = el.nextSibling)
 				if (el.nodeType == 1) this.setNode(el, callback);
@@ -451,15 +445,15 @@ export default class SHCalendar {
 					this.toggleMenu();
 				} else if (el_type && /^[+-][MY]$/.test(shc_btn)) {
 					if (this.stepDate(shc_btn)) {
-						_time_out = () => {
-							if (tis.stepDate(shc_btn, true)) {
-								_time_out = setTimeout(_time_out, 40);
+						_time_out = (type: string = shc_type) => {
+							if (tis.stepDate(type, true)) {
+								_time_out = setTimeout(_time_out(type), 40);
 							} else {
 								events.mouseup();
-								tis.stepDate(shc_btn);
+								tis.stepDate(type);
 							}
 						};
-						_time_out = setTimeout(_time_out, 350);
+						_time_out = setTimeout(_time_out(shc_btn), 350);
 						this.addEvent(document, events, true);
 					} else events.mouseup();
 				} else if ("year" == shc_btn) {
@@ -470,10 +464,10 @@ export default class SHCalendar {
 				} else if (/^time/.test(shc_type)) {
 					_time_out = (type: string = shc_type) => {
 						tis.stepTime(type);
-						_time_out = setTimeout(_time_out, 1e2);
+						_time_out = setTimeout(_time_out(type), 1e2);
 					};
 					this.stepTime(shc_type);
-					_time_out = setTimeout(_time_out, 350);
+					_time_out = setTimeout(_time_out(shc_type), 350);
 					this.addEvent(document, events, true);
 				} else {
 					if (shc_date && this.selection.type) {
@@ -753,51 +747,57 @@ export default class SHCalendar {
 
 	redraw() {
 		this.refresh();
-		const { dayNames, menu, bottomBar, topCont } = this.els;
-		dayNames.innerHTML = this.Weeks();
-		menu.innerHTML = this.Menu();
-		if (bottomBar) bottomBar.innerHTML = this.BottomBar();
-		this.setNode(topCont, (el: any) => {
-			var cls = this.#top_class[el.className];
-			if (cls) this.els[cls] = el;
+		const {
+			topCont: els_topCont,
+			menu: els_menu,
+			bottomBar: els_bottomBar,
+			dayNames: els_dayNames
+		} = this.els;
+		els_dayNames.innerHTML = this.Weeks();
+		els_menu.innerHTML = this.Menu();
+		if (els_bottomBar) els_bottomBar.innerHTML = this.BottomBar();
+		const tis = this;
+		this.setNode(els_topCont, (el: any) => {
+			const cls = tis.#top_class[el.className];
+			if (cls) tis.els[cls] = el;
 			if (el.className == "SHCalendar-menu-year") {
-				this.addEvent(el, this.events_focusing);
-				this.els.yearInput = el;
+				tis.addEvent(el, this.events_focusing);
+				tis.els.yearInput = el;
 			} else if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
 		this.setTime(this.time, true);
 	}
 
 	focusingFocus() {
-		const { yearInput, focusLink } = this.els;
+		const { yearInput: els_yearInput, focusLink: els_focusLink } = this.els;
 		try {
-			if (this.menu_visible) yearInput.focus();
-			else focusLink.focus();
+			if (this.menu_visible) els_yearInput.focus();
+			else els_focusLink.focus();
 		} catch (err) {}
 		this.onFocus();
 	}
 
 	onFocus() {
 		//c
-		const { main } = this.els;
+		const { main: els_main } = this.els;
 		if (this.bluring_time_out) clearTimeout(this.bluring_time_out);
 		this.focused = true;
-		this.addClass(main, "SHCalendar-focused");
+		this.addClass(els_main, "SHCalendar-focused");
 		this.callHooks("onFocus");
 	}
 
 	focusingBlur() {
-		const { yearInput, focusLink } = this.els;
-		focusLink.blur();
-		yearInput.blur();
+		const { yearInput: els_yearInput, focusLink: els_focusLink } = this.els;
+		els_focusLink.blur();
+		els_yearInput.blur();
 		this.onBlur();
 	}
 
 	onBlur() {
 		//h
 		this.focused = false;
-		const { main } = this.els;
-		this.removeClass(main, "SHCalendar-focused");
+		const { main: els_main } = this.els;
+		this.removeClass(els_main, "SHCalendar-focused");
 		if (this.menu_visible) this.showMenu(false);
 		if (!this.args.cont) this.hide();
 		this.callHooks("onBlur");
@@ -820,49 +820,52 @@ export default class SHCalendar {
 	}
 
 	setHours(H24: number) {
-		const { timeAM, timeHour } = this.els;
+		const { timeAM: els_timeAM, timeHour: els_timeHour } = this.els;
 		if (H24 < 0) H24 += 24;
 		H24 %= 24;
-		this.setTime(1e2 * (H24 % 24) + (this.time % 1e2));
+		this.setTime(H24 * 1e2 + (this.time % 1e2));
 		this.date.setHours(H24);
 		if (this.args.showTime == 12) {
-			timeAM.innerHTML = Word.getMeridienFullName(H24);
+			els_timeAM.innerHTML = Word.getMeridienFullName(H24);
 			H24 = H24 % 12 || 12;
 		}
-		timeHour.innerHTML = H24.toString().padStart(2, "0");
+		els_timeHour.innerHTML = H24.toString().padStart(2, "0");
 	}
 
 	setMinutes(minute: number) {
-		const { minuteStep } = this.args,
-			{ timeMinute } = this.els;
+		const { minuteStep: args_minuteStep } = this.args,
+			{ timeMinute: els_timeMinute } = this.els;
 		if (minute < 0) minute += 60;
 		minute %= 60;
-		minute = Math.trunc(minute / minuteStep) * minuteStep;
-		this.setTime(1e2 * this.date.getHours() + minute);
+		minute = Math.trunc(minute / args_minuteStep) * args_minuteStep;
+		this.setTime(this.date.getHours() * 1e2 + minute);
 		this.date.setMinutes(minute);
-		timeMinute.innerHTML = minute.toString().padStart(2, "0");
+		els_timeMinute.innerHTML = minute.toString().padStart(2, "0");
 	}
 
 	setTime(time: number, nohooks: boolean = false) {
-		const { input_field, showTime, dateFormat } = this.args;
-		if (showTime) {
+		const {
+			input_field: args_input_field,
+			showTime: args_showTime,
+			dateFormat: args_dateFormat
+		} = this.args;
+		if (args_showTime) {
 			this.time = time;
 			if (!nohooks) {
 				this.callHooks("onTimeChange", time);
-				if (input_field) {
-					input_field[
-						input_field.tagName.toLowerCase() === "input"
+				if (args_input_field) {
+					args_input_field[
+						args_input_field.tagName.toLowerCase() === "input"
 							? "value"
 							: "innerHTML"
-					] = this.selection.print(dateFormat);
+					] = this.selection.print(args_dateFormat);
 				}
 			}
 		}
 	}
 
 	stepTime(shc_type: string) {
-		// d()
-		const { minuteStep } = this.args;
+		const { minuteStep: args_minuteStep } = this.args;
 		const date = this.date;
 		switch (shc_type) {
 			case "time-hour+":
@@ -872,10 +875,10 @@ export default class SHCalendar {
 				this.setHours(date.getHours() - 1);
 				break;
 			case "time-min+":
-				this.setMinutes(date.getMinutes() + minuteStep);
+				this.setMinutes(date.getMinutes() + args_minuteStep);
 				break;
 			case "time-min-":
-				this.setMinutes(date.getMinutes() - minuteStep);
+				this.setMinutes(date.getMinutes() - args_minuteStep);
 				break;
 			default:
 				return;
@@ -887,7 +890,6 @@ export default class SHCalendar {
 		hours: number = 12,
 		minute: number = 0
 	): SHDate {
-		//A()
 		if (date instanceof SHDate) return date;
 		date = typeof date == "number" ? date : +date;
 		const year: number = Math.trunc(date / 1e4);
@@ -924,21 +926,19 @@ export default class SHCalendar {
 	}
 
 	getElementDate(shc_date: string | number | boolean): HTMLElement | false {
-		let el_s: HTMLElement | false = false;
+		let ـel: HTMLElement | false = false;
 		if (shc_date) {
 			this.setNode(this.els.body, (el: HTMLElement) => {
 				if (el.getAttribute("shc-date") == shc_date) {
-					el_s = el;
+					ـel = el;
 				}
 			});
 		}
-		return el_s;
+		return ـel;
 	}
 
 	Animation(args: any, interval_id?: any, step: number = 0) {
-		//animation
-
-		args = this.mergeData(args, {
+		args = this.dataIntegration(args, {
 			fps: 50, //frames per second (rate)
 			len: 15, // all step
 			onUpdate: Function(),
@@ -1887,70 +1887,94 @@ export default class SHCalendar {
 	}
 
 	popup(trigger: any, align?: any) {
-		const alignment = (align: any) => {
-			var pos: any = { x: offset.x, y: offset.y };
-			if (align) {
-				// vertical alignment
-				if (/B/.test(align)) pos.y += el_trigger.offsetHeight;
-				if (/b/.test(align))
-					pos.y += el_trigger.offsetHeight - top_cont_offset.y;
-				if (/T/.test(align)) pos.y -= top_cont_offset.y;
-				if (/m/i.test(align))
-					pos.y += (el_trigger.offsetHeight - top_cont_offset.y) / 2;
-				// horizontal alignment
-				if (/l/.test(align))
-					pos.x -= top_cont_offset.x - el_trigger.offsetWidth;
-				if (/L/.test(align)) pos.x -= top_cont_offset.x;
-				if (/R/.test(align)) pos.x += el_trigger.offsetWidth;
-				if (/c/i.test(align))
-					pos.x += (el_trigger.offsetWidth - top_cont_offset.x) / 2;
-				return pos;
-			} else return pos;
-		};
-		var top_cont_offset: any, position_mouse: any, offset: any;
 		this.showAt(0, 0);
-		const { els_top_cont } = this.els,
-			els_top_cont_style = els_top_cont.style;
+		const { topCont: els_top_cont } = this.els,
+			{ style: els_top_cont_style } = els_top_cont;
 		els_top_cont_style.visibility = "hidden";
 		els_top_cont_style.display = "";
 		document.body.appendChild(els_top_cont);
-		top_cont_offset = {
+		const top_cont_offset: { x: any; y: any } = {
 			x: els_top_cont.offsetWidth,
 			y: els_top_cont.offsetHeight
 		};
-		const el_trigger = this.getElementById(trigger),
+		const el_trigger: HTMLElement = this.getElementById(trigger),
 			trigger_offset = this.getElementOffset(el_trigger);
-		offset = trigger_offset;
+		let offset: { x: any; y: any } = trigger_offset;
 		if (!align) align = this.args.align;
 		align = align.split(/\x2f/);
-		offset = alignment(align[0]);
-		position_mouse = this.getMouseOffset();
+		offset = this.alignmentPopup(align[0], el_trigger, top_cont_offset, offset);
+		let position_mouse = this.getMouseOffset();
 		if (offset.y < position_mouse.y) {
 			offset.y = trigger_offset.y;
-			offset = alignment(align[1]);
+			offset = this.alignmentPopup(
+				align[1],
+				el_trigger,
+				top_cont_offset,
+				offset
+			);
 		}
 		if (offset.x + top_cont_offset.x > position_mouse.x + position_mouse.w) {
 			offset.x = trigger_offset.x;
-			offset = alignment(align[2]);
+			offset = this.alignmentPopup(
+				align[2],
+				el_trigger,
+				top_cont_offset,
+				offset
+			);
 		}
 		if (offset.y + top_cont_offset.y > position_mouse.y + position_mouse.h) {
 			offset.y = trigger_offset.y;
-			offset = alignment(align[3]);
+			offset = this.alignmentPopup(
+				align[3],
+				el_trigger,
+				top_cont_offset,
+				offset
+			);
 		}
 		if (offset.x < position_mouse.x) {
 			offset.x = trigger_offset.x;
-			offset = alignment(align[4]);
+			offset = this.alignmentPopup(
+				align[4],
+				el_trigger,
+				top_cont_offset,
+				offset
+			);
 		}
+		console.log(position_mouse, offset);
 		this.showAt(offset.x, offset.y, true);
 		els_top_cont_style.visibility = "";
 		this.focusingFocus();
 	}
 
+	alignmentPopup = (
+		align: any,
+		el_trigger: HTMLElement,
+		top_cont_offset: { x: any; y: any },
+		offset: { x: any; y: any }
+	) => {
+		var pos: any = { x: offset.x, y: offset.y };
+		if (align) {
+			// vertical alignment
+			if (/B/.test(align)) pos.y += el_trigger.offsetHeight;
+			if (/b/.test(align)) pos.y += el_trigger.offsetHeight - top_cont_offset.y;
+			if (/T/.test(align)) pos.y -= top_cont_offset.y;
+			if (/m/i.test(align))
+				pos.y += (el_trigger.offsetHeight - top_cont_offset.y) / 2;
+			// horizontal alignment
+			if (/l/.test(align)) pos.x -= top_cont_offset.x - el_trigger.offsetWidth;
+			if (/L/.test(align)) pos.x -= top_cont_offset.x;
+			if (/R/.test(align)) pos.x += el_trigger.offsetWidth;
+			if (/c/i.test(align))
+				pos.x += (el_trigger.offsetWidth - top_cont_offset.x) / 2;
+		}
+		return pos;
+	};
+
 	showAt(lpos: any, tpos: any, is_animation?: any) {
 		if (this.show_animation) this.show_animation.stop();
 		const { topCont: els_top_cont } = this.els,
-			els_body_first_child = this.els.body.firstChild,
-			els_body_first_child_offset_height = els_body_first_child.offsetHeight,
+			{ firstChild: body_first_child } = this.els.body,
+			{ offsetHeight: body_first_child_offset_height } = body_first_child,
 			els_top_cont_style = els_top_cont.style;
 		els_top_cont_style.getOffset = "absolute";
 		els_top_cont_style.left = lpos + "px";
@@ -1958,17 +1982,16 @@ export default class SHCalendar {
 		els_top_cont_style.zIndex = 1e4;
 		els_top_cont_style.display = "";
 		if (is_animation && this.args.animation) {
-			els_body_first_child.style.marginTop =
-				-els_body_first_child_offset_height + "px";
+			body_first_child.style.marginTop = -body_first_child_offset_height + "px";
 			if (this.args.opacity > 1) {
 				this.setOpacity(els_top_cont, 0);
 				const tis = this;
 				this.show_animation = this.Animation({
 					onUpdate: function (pos: any, func_map: Function) {
-						els_body_first_child.style.marginTop =
+						body_first_child.style.marginTop =
 							-func_map(
 								tis.#func_animation.accel_b(pos),
-								els_body_first_child_offset_height,
+								body_first_child_offset_height,
 								0
 							) + "px";
 						if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, pos);
@@ -1983,22 +2006,16 @@ export default class SHCalendar {
 	}
 
 	getElementOffset(el: HTMLElement | any) {
-		var BCR,
-			left = 0,
-			top = 0;
 		if (el.getBoundingClientRect) {
-			BCR = el.getBoundingClientRect();
-			const {
-				clientLeft: document_element_client_left,
-				clientTop: document_element_client_top
-			} = document.documentElement;
-			const { scrollLeft: body_scroll_left, scrollTop: body_scroll_top } =
-				document.body;
+			const BCR = el.getBoundingClientRect();
+			const { documentElement, body } = document;
 			return {
-				x: BCR.left - document_element_client_left + body_scroll_left,
-				y: BCR.top - document_element_client_top + body_scroll_top
+				x: BCR.left - documentElement.clientLeft + body.scrollLeft,
+				y: BCR.top - documentElement.clientTop + body.scrollTop
 			};
 		}
+		let left = 0,
+			top = 0;
 		do {
 			left += el.offsetLeft - el.scrollLeft;
 			top += el.offsetTop - el.scrollTop;
@@ -2010,13 +2027,16 @@ export default class SHCalendar {
 		};
 	}
 
-	getOffset(even: any, pos: any) {
-		var x = SHCalendar.IS_IE
-				? even.clientX + document.body.scrollLeft
-				: even.pageX,
-			y = SHCalendar.IS_IE
-				? even.clientY + document.body.scrollTop
-				: even.pageY;
+	getOffset(even: any, pos: { x: number; y: number }) {
+		let x: number, y: number;
+		if (SHCalendar.IS_IE) {
+			const { body } = document;
+			x = even.clientX + body.scrollLeft;
+			y = even.clientY + body.scrollTop;
+		} else {
+			x = even.pageX;
+			y = even.pageY;
+		}
 		if (pos) {
 			x -= pos.x;
 			y -= pos.y;
@@ -2028,27 +2048,22 @@ export default class SHCalendar {
 	}
 
 	dragIt(event: any) {
-		// p
-		const { style } = this.els.topCont,
+		let { style } = this.els.topCont,
 			pos = this.getOffset(event, this._mouseDiff);
 		style.left = pos.x + "px";
 		style.top = pos.y + "px";
 	}
 
 	getMouseOffset() {
-		//X
-		const { documentElement: document_element, body: document_body } = document;
+		const { documentElement, body } = document;
 		return {
-			x: document_element.scrollLeft || document_body.scrollLeft,
-			y: document_element.scrollTop || document_body.scrollTop,
-			w:
-				document_element.clientWidth ||
-				window.innerWidth ||
-				document_body.clientWidth,
-			h:
-				document_element.clientHeight ||
-				window.innerHeight ||
-				document_body.clientHeight
+			x: documentElement.scrollLeft || body.scrollLeft || window.scrollX,
+
+			y: documentElement.scrollTop || body.scrollTop || window.scrollY,
+
+			w: documentElement.clientWidth || window.innerWidth || body.clientWidth,
+			h: documentElement.clientHeight || window.innerHeight || body.clientHeight
+			//|| body.offsetHeight
 		};
 	}
 }
