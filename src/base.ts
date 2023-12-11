@@ -1002,7 +1002,7 @@ export default class SHCalendar {
 
 	moveTo(date: SHDate, animation?: boolean | number) {
 		//date , animation
-		var stop_move: any,
+		var stop_move: number = 0,
 			min: any = false,
 			max: any = false,
 			func_animation: any,
@@ -1525,8 +1525,8 @@ export default class SHCalendar {
 				is_unicode_letter(o)
 					? push(s(""))
 					: /[0-9]/.test(o)
-					  ? push(i())
-					  : charAtNext();
+					? push(i())
+					: charAtNext();
 			}
 			return c;
 		})();
@@ -1537,23 +1537,22 @@ export default class SHCalendar {
 			/^[0-9]{4}$/.test(y)
 				? ((year = +y), null == month && null == day && null == n && (n = true))
 				: /^[0-9]{1,2}$/.test(y)
-				  ? ((y = +y),
-				    60 > y
-							? 0 > y || y > 12
-								? 1 > y || y > 31 || (day = y)
-								: d.push(y)
-							: (year = y))
-				  : null == month && (month = this.kcmonth(y));
+				? ((y = +y),
+				  60 > y
+						? 0 > y || y > 12
+							? 1 > y || y > 31 || (day = y)
+							: d.push(y)
+						: (year = y))
+				: null == month && (month = this.kcmonth(y));
 		}
 
 		d.length < 2
 			? d.length == 1 &&
 			  (null == day ? (day = d.shift()) : null == month && (month = d.shift()))
 			: n
-			  ? (null == month && (month = d.shift()),
-			    null == day && (day = d.shift()))
-			  : (null == day && (day = d.shift()),
-			    null == month && (month = d.shift()));
+			? (null == month && (month = d.shift()), null == day && (day = d.shift()))
+			: (null == day && (day = d.shift()),
+			  null == month && (month = d.shift()));
 		if (null == year) year = d.length > 0 ? d.shift() : date_now.getFullYear();
 		if (30 > year) year += 2e3;
 		else if (99 > year) year += 1900;
@@ -1902,11 +1901,11 @@ export default class SHCalendar {
 		let offset: { x: any; y: any } = trigger_offset;
 		if (!align) align = this.args.align;
 		align = align.split(/\x2f/);
-		offset = this.alignmentPopup(align[0], el_trigger, top_cont_offset, offset);
+		offset = this.popupAlignment(align[0], el_trigger, top_cont_offset, offset);
 		let position_mouse = this.getMouseOffset();
 		if (offset.y < position_mouse.y) {
 			offset.y = trigger_offset.y;
-			offset = this.alignmentPopup(
+			offset = this.popupAlignment(
 				align[1],
 				el_trigger,
 				top_cont_offset,
@@ -1915,7 +1914,7 @@ export default class SHCalendar {
 		}
 		if (offset.x + top_cont_offset.x > position_mouse.x + position_mouse.w) {
 			offset.x = trigger_offset.x;
-			offset = this.alignmentPopup(
+			offset = this.popupAlignment(
 				align[2],
 				el_trigger,
 				top_cont_offset,
@@ -1924,7 +1923,7 @@ export default class SHCalendar {
 		}
 		if (offset.y + top_cont_offset.y > position_mouse.y + position_mouse.h) {
 			offset.y = trigger_offset.y;
-			offset = this.alignmentPopup(
+			offset = this.popupAlignment(
 				align[3],
 				el_trigger,
 				top_cont_offset,
@@ -1933,7 +1932,7 @@ export default class SHCalendar {
 		}
 		if (offset.x < position_mouse.x) {
 			offset.x = trigger_offset.x;
-			offset = this.alignmentPopup(
+			offset = this.popupAlignment(
 				align[4],
 				el_trigger,
 				top_cont_offset,
@@ -1946,12 +1945,12 @@ export default class SHCalendar {
 		this.focusingFocus();
 	}
 
-	alignmentPopup = (
+	popupAlignment(
 		align: any,
 		el_trigger: HTMLElement,
 		top_cont_offset: { x: any; y: any },
 		offset: { x: any; y: any }
-	) => {
+	) {
 		var pos: any = { x: offset.x, y: offset.y };
 		if (align) {
 			// vertical alignment
@@ -1968,7 +1967,7 @@ export default class SHCalendar {
 				pos.x += (el_trigger.offsetWidth - top_cont_offset.x) / 2;
 		}
 		return pos;
-	};
+	}
 
 	showAt(lpos: any, tpos: any, is_animation?: any) {
 		if (this.show_animation) this.show_animation.stop();
@@ -1976,7 +1975,7 @@ export default class SHCalendar {
 			{ firstChild: body_first_child } = this.els.body,
 			{ offsetHeight: body_first_child_offset_height } = body_first_child,
 			els_top_cont_style = els_top_cont.style;
-		els_top_cont_style.getOffset = "absolute";
+		els_top_cont_style.position = "absolute";
 		els_top_cont_style.left = lpos + "px";
 		els_top_cont_style.top = tpos + "px";
 		els_top_cont_style.zIndex = 1e4;
@@ -2048,7 +2047,7 @@ export default class SHCalendar {
 	}
 
 	dragIt(event: any) {
-		let { style } = this.els.topCont,
+		const { style } = this.els.topCont,
 			pos = this.getOffset(event, this._mouseDiff);
 		style.left = pos.x + "px";
 		style.top = pos.y + "px";
