@@ -297,7 +297,7 @@ export default class SHCalendar {
 			if (SHCalendar.IS_IE) el.setAttribute("unselectable", "on");
 		});
 		const {
-			topCont: els_top_cont,
+			topCont: els_topCont,
 			main: els_main,
 			focusLink: els_focus_link,
 			yearInput: els_year_input
@@ -334,7 +334,7 @@ export default class SHCalendar {
 
 		this.setTime(this.time, true);
 		this.moveTo(this.date, false);
-		return els_top_cont;
+		return els_topCont;
 	}
 
 	createElement(type: any, className?: any, parent?: any) {
@@ -473,10 +473,12 @@ export default class SHCalendar {
 					if (shc_date && this.selection.type) {
 						const selection = this.selection;
 						if (selection.type == SHCalendar.SEL_MULTIPLE) {
-							if (event.shiftKey && this.sel_range_start) {
+							const { shiftKey: event_shiftKey, ctrlKey: event_ctrlKey } =
+								event;
+							if (event_shiftKey && this.sel_range_start) {
 								selection.selectRange(this.sel_range_start, shc_date);
 							} else if (
-								event.ctrlKey ||
+								event_ctrlKey ||
 								selection.isSelected(shc_date) ||
 								!this.args.multiCtrl
 							) {
@@ -604,24 +606,22 @@ export default class SHCalendar {
 	}
 
 	keypress(event: any) {
-		var target,
-			shc_btn,
-			key_code,
-			char_code,
-			r,
+		let event_charCode,
+			control_key,
 			date: SHDate,
 			date_int: number | false = false,
-			yearInput: any,
-			selection: any,
-			d,
-			m;
+			is_shiftKey;
 		if (!this.menu_animation) {
-			target = event.target;
-			shc_btn = target.getAttribute("shc-btn");
-			key_code = event.keyCode;
-			char_code = event.charCode || key_code;
-			r = this.#control_key[key_code];
-			if ("year" == shc_btn && 13 == key_code) {
+			const {
+					target: event_target,
+					keyCode: event_keyCode,
+					ctrlKey: event_ctrlKey,
+					shiftKey: event_shiftKey
+				} = event,
+				shc_btn = event_target.getAttribute("shc-btn");
+			event_charCode = event.charCode || event_keyCode;
+			control_key = this.#control_key[event_keyCode];
+			if ("year" == shc_btn && 13 == event_keyCode) {
 				const date = this.date;
 				date.setDate(1);
 				date.setFullYear(this._getInputYear());
@@ -630,53 +630,56 @@ export default class SHCalendar {
 				return this.stopEvent(event);
 			}
 			if (this.menu_visible) {
-				if (27 == key_code) {
+				if (27 == event_keyCode) {
 					this.showMenu(false);
 					return this.stopEvent(event);
 				}
 			} else {
-				if (!event.ctrlKey) r = null;
-				if (null != r || !event.ctrlKey) r = this.#ne[key_code];
-				if (36 == key_code) r = 0;
-				if (null != r) {
-					this.stepDate(r);
+				if (!event_ctrlKey) control_key = null;
+				if (null != control_key || !event_ctrlKey)
+					control_key = this.#ne[event_keyCode];
+				if (36 == event_keyCode) control_key = 0;
+				if (null != control_key) {
+					this.stepDate(control_key);
 					return this.stopEvent(event);
 				}
-				char_code = String.fromCharCode(char_code).toLowerCase();
-				yearInput = this.els.yearInput;
-				selection = this.selection;
-				if (" " == char_code) {
+				event_charCode = String.fromCharCode(event_charCode).toLowerCase();
+				const { yearInput: els_yearInput } = this.els;
+				const selection = this.selection;
+				if (" " == event_charCode) {
 					this.showMenu(true);
 					this.focusingFocus();
-					yearInput.focus();
-					yearInput.select();
+					els_yearInput.focus();
+					els_yearInput.select();
 					return this.stopEvent(event);
 				}
-				if (char_code >= "0" && "9" >= char_code) {
+				if (event_charCode >= "0" && "9" >= event_charCode) {
 					this.showMenu(true);
 					this.focusingFocus();
-					yearInput.value = char_code;
-					yearInput.focus();
+					els_yearInput.value = event_charCode;
+					els_yearInput.focus();
 					return this.stopEvent(event);
 				}
-				d = event.shiftKey ? -1 : this.date.getMonth();
-				for (m = 0; ++m < 12; ) {
-					const mfn = this.getLanguage("mfn", (d + m) % 12)
-						.toString()
-						.toLowerCase();
-					if (mfn.indexOf(char_code) == 0) {
+				is_shiftKey = event_shiftKey ? -1 : this.date.getMonth();
+				for (let month_index = 0; month_index < 12; month_index++) {
+					if (
+						this.getLanguage("mfn", (is_shiftKey + month_index) % 12)
+							.toString()
+							.toLowerCase()
+							.indexOf(event_charCode) == 0
+					) {
 						const date = this.date;
 						date.setDate(1);
-						date.setMonth((d + m) % 12);
+						date.setMonth((is_shiftKey + month_index) % 12);
 						this.moveTo(date, true);
 						return this.stopEvent(event);
 					}
 				}
-				if (key_code >= 37 && 40 >= key_code) {
+				if (event_keyCode >= 37 && 40 >= event_keyCode) {
 					date_int = this.last_hover_date;
 					if (!(date_int || selection.isEmpty())) {
 						date_int =
-							39 > key_code
+							39 > event_keyCode
 								? selection.getFirstDate()
 								: selection.getLastDate();
 						if (
@@ -687,8 +690,8 @@ export default class SHCalendar {
 					}
 					if (date_int) {
 						date = SHCalendar.intToDate(date_int);
-						for (d = 1e2; d > 0; d--) {
-							switch (key_code) {
+						for (is_shiftKey = 1e2; is_shiftKey > 0; is_shiftKey--) {
+							switch (event_keyCode) {
 								case 37:
 									date.setDate(date.getDate() - 1);
 									break;
@@ -711,7 +714,9 @@ export default class SHCalendar {
 							this.moveTo(date);
 					} else
 						date_int =
-							39 > key_code ? this.last_date_visible : this.first_date_visible;
+							39 > event_keyCode
+								? this.last_date_visible
+								: this.first_date_visible;
 					this.removeClass(
 						this.getElementDate(date_int),
 						this.addClass(
@@ -722,17 +727,17 @@ export default class SHCalendar {
 					this.last_hover_date = date_int;
 					return this.stopEvent(event);
 				}
-				if (13 == key_code && this.last_hover_date) {
+				if (13 == event_keyCode && this.last_hover_date) {
 					selection.type == SHCalendar.SEL_MULTIPLE &&
-					(event.shiftKey || event.ctrlKey)
-						? (event.shiftKey &&
+					(event_shiftKey || event_ctrlKey)
+						? (event_shiftKey &&
 								this.sel_range_start &&
 								(selection.clear(true),
 								selection.selectRange(
 									this.sel_range_start,
 									this.last_hover_date
 								)),
-						  event.ctrlKey &&
+						  event_ctrlKey &&
 								selection.set(
 									(this.sel_range_start = this.last_hover_date),
 									true
@@ -740,7 +745,7 @@ export default class SHCalendar {
 						: selection.reset((this.sel_range_start = this.last_hover_date));
 					return this.stopEvent(event);
 				}
-				27 != key_code || this.args.cont || this.hide();
+				27 != event_keyCode || this.args.cont || this.hide();
 			}
 		}
 	}
@@ -1053,7 +1058,7 @@ export default class SHCalendar {
 		if (!(!animation || (0 == date_comparison && 2 == animation))) {
 			if (this.body_animation) this.body_animation.stop();
 			const {
-				firstChild: body_first_child,
+				firstChild: body_firstChild,
 				offsetHeight: body_offset_height,
 				offsetWidth: body_offset_width
 			} = els_body;
@@ -1062,7 +1067,7 @@ export default class SHCalendar {
 				"SHCalendar-animBody-" + this.#control_button[date_comparison],
 				els_body
 			);
-			this.setOpacity(body_first_child, 0.7);
+			this.setOpacity(body_firstChild, 0.7);
 			if (stop_move) func_animation = this.#func_animation.brakes;
 			else if (0 == date_comparison)
 				func_animation = this.#func_animation.shake;
@@ -1070,8 +1075,8 @@ export default class SHCalendar {
 			const is_date_comparison_bigger_four =
 				date_comparison * date_comparison > 4;
 			const body_first_child_offset_top_left = is_date_comparison_bigger_four
-				? body_first_child.offsetTop
-				: body_first_child.offsetLeft;
+				? body_firstChild.offsetTop
+				: body_firstChild.offsetLeft;
 			const el_style = el.style;
 			var body_offset_height_width = is_date_comparison_bigger_four
 				? body_offset_height
@@ -1090,13 +1095,13 @@ export default class SHCalendar {
 				el_clone_node = el.cloneNode(true);
 				el_clone_node_style = el_clone_node.style;
 				//v = 2 * body_offset_height_width;
-				el_clone_node.appendChild(body_first_child.cloneNode(true));
+				el_clone_node.appendChild(body_firstChild.cloneNode(true));
 				el_clone_node_style[
 					is_date_comparison_bigger_four ? "marginTop" : "marginLeft"
 				] = body_offset_height_width + "px";
 				els_body.appendChild(el_clone_node);
 			}
-			body_first_child.style.visibility = "hidden";
+			body_firstChild.style.visibility = "hidden";
 			el.innerHTML = this.Day(date);
 			const tis = this;
 			this.body_animation = this.Animation({
@@ -1318,36 +1323,36 @@ export default class SHCalendar {
 
 	hide() {
 		this.callHooks("onClose", this);
-		const { topCont: els_top_cont } = this.els,
-			{ firstChild: body_first_child } = this.els.body;
+		const { topCont: els_topCont } = this.els,
+			{ firstChild: body_firstChild } = this.els.body;
 		if (this.args.animation) {
 			if (this.show_animation) this.show_animation.stop();
 			const tis = this;
 			this.show_animation = this.Animation({
 				onUpdate: (pos: number, func_map: Function) => {
-					if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, 1 - pos);
-					body_first_child.style.marginTop =
+					if (tis.args.opacity > 1) tis.setOpacity(els_topCont, 1 - pos);
+					body_firstChild.style.marginTop =
 						-func_map(
 							tis.#func_animation.accel_b(pos),
 							0,
-							body_first_child.offsetHeight
+							body_firstChild.offsetHeight
 						) + "px";
-					els_top_cont.style.top =
+					els_topCont.style.top =
 						func_map(
 							tis.#func_animation.accel_ab(pos),
-							tis.getElementOffset(els_top_cont).y,
-							tis.getElementOffset(els_top_cont).y - 10
+							tis.getElementOffset(els_topCont).y,
+							tis.getElementOffset(els_topCont).y - 10
 						) + "px";
 				},
 				onStop: () => {
-					els_top_cont.style.display = "none";
-					body_first_child.style.marginTop = "";
-					if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, "");
+					els_topCont.style.display = "none";
+					body_firstChild.style.marginTop = "";
+					if (tis.args.opacity > 1) tis.setOpacity(els_topCont, "");
 					tis.show_animation = null;
 				}
 			});
 		} else {
-			els_top_cont.style.display = "none";
+			els_topCont.style.display = "none";
 		}
 		this.input_field = null;
 	}
@@ -1791,17 +1796,22 @@ export default class SHCalendar {
 	}
 
 	BottomBar() {
-		const template: string[] = [];
+		const template: string[] = [],
+			{
+				showTime: args_showTime,
+				timePos: args_timePos,
+				bottomBar: args_bottomBar
+			} = this.args;
 
 		template.push(
 			"<table align='center' cellspacing='0' cellpadding='0' style='width:1e2%'><tr>"
 		);
 
-		if (this.args.showTime && this.args.timePos === "left") {
+		if (args_showTime && args_timePos === "left") {
 			template.push("<td>", this.Time(), "</td>");
 		}
 
-		if (this.args.bottomBar) {
+		if (args_bottomBar) {
 			template.push(
 				"<td>",
 				"<table align='center' cellspacing='0' cellpadding='0'><tr>",
@@ -1815,7 +1825,7 @@ export default class SHCalendar {
 			);
 		}
 
-		if (this.args.showTime && this.args.timePos === "right") {
+		if (args_showTime && args_timePos === "right") {
 			template.push("<td>", this.Time(), "</td>");
 		}
 
@@ -1825,6 +1835,9 @@ export default class SHCalendar {
 	}
 
 	getVersion() {
+		return SHCalendar.getVersion();
+	}
+	static getVersion() {
 		return SHCalendar.VERSION;
 	}
 
@@ -1887,116 +1900,123 @@ export default class SHCalendar {
 
 	popup(trigger: any, align?: any) {
 		this.showAt(0, 0);
-		const { topCont: els_top_cont } = this.els,
-			{ style: els_top_cont_style } = els_top_cont;
-		els_top_cont_style.visibility = "hidden";
-		els_top_cont_style.display = "";
-		document.body.appendChild(els_top_cont);
-		const top_cont_offset: { x: any; y: any } = {
-			x: els_top_cont.offsetWidth,
-			y: els_top_cont.offsetHeight
+		const { topCont: els_topCont } = this.els,
+			{ style: els_topCont_style } = els_topCont;
+		els_topCont_style.visibility = "hidden";
+		els_topCont_style.display = "";
+		document.body.appendChild(els_topCont);
+		const els_topCont_offset: { x: any; y: any } = {
+			x: els_topCont.offsetWidth,
+			y: els_topCont.offsetHeight
 		};
 		const el_trigger: HTMLElement = this.getElementById(trigger),
 			trigger_offset = this.getElementOffset(el_trigger);
 		let offset: { x: any; y: any } = trigger_offset;
 		if (!align) align = this.args.align;
 		align = align.split(/\x2f/);
-		offset = this.popupAlignment(align[0], el_trigger, top_cont_offset, offset);
-		let position_mouse = this.getMouseOffset();
-		if (offset.y < position_mouse.y) {
+		offset = this.popupAlignment(
+			align[0],
+			el_trigger,
+			els_topCont_offset,
+			offset
+		);
+		let mouse_offset = this.getMouseOffset();
+		if (offset.y < mouse_offset.y) {
 			offset.y = trigger_offset.y;
 			offset = this.popupAlignment(
 				align[1],
 				el_trigger,
-				top_cont_offset,
+				els_topCont_offset,
 				offset
 			);
 		}
-		if (offset.x + top_cont_offset.x > position_mouse.x + position_mouse.w) {
+		if (offset.x + els_topCont_offset.x > mouse_offset.x + mouse_offset.w) {
 			offset.x = trigger_offset.x;
 			offset = this.popupAlignment(
 				align[2],
 				el_trigger,
-				top_cont_offset,
+				els_topCont_offset,
 				offset
 			);
 		}
-		if (offset.y + top_cont_offset.y > position_mouse.y + position_mouse.h) {
+		if (offset.y + els_topCont_offset.y > mouse_offset.y + mouse_offset.h) {
 			offset.y = trigger_offset.y;
 			offset = this.popupAlignment(
 				align[3],
 				el_trigger,
-				top_cont_offset,
+				els_topCont_offset,
 				offset
 			);
 		}
-		if (offset.x < position_mouse.x) {
+		if (offset.x < mouse_offset.x) {
 			offset.x = trigger_offset.x;
 			offset = this.popupAlignment(
 				align[4],
 				el_trigger,
-				top_cont_offset,
+				els_topCont_offset,
 				offset
 			);
 		}
-		console.log(position_mouse, offset);
+		console.log(mouse_offset, offset);
 		this.showAt(offset.x, offset.y, true);
-		els_top_cont_style.visibility = "";
+		els_topCont_style.visibility = "";
 		this.focusingFocus();
 	}
 
 	popupAlignment(
 		align: any,
 		el_trigger: HTMLElement,
-		top_cont_offset: { x: any; y: any },
+		els_topCont_offset: { x: any; y: any },
 		offset: { x: any; y: any }
 	) {
 		var pos: any = { x: offset.x, y: offset.y };
 		if (align) {
 			// vertical alignment
 			if (/B/.test(align)) pos.y += el_trigger.offsetHeight;
-			if (/b/.test(align)) pos.y += el_trigger.offsetHeight - top_cont_offset.y;
-			if (/T/.test(align)) pos.y -= top_cont_offset.y;
+			if (/b/.test(align))
+				pos.y += el_trigger.offsetHeight - els_topCont_offset.y;
+			if (/T/.test(align)) pos.y -= els_topCont_offset.y;
 			if (/m/i.test(align))
-				pos.y += (el_trigger.offsetHeight - top_cont_offset.y) / 2;
+				pos.y += (el_trigger.offsetHeight - els_topCont_offset.y) / 2;
 			// horizontal alignment
-			if (/l/.test(align)) pos.x -= top_cont_offset.x - el_trigger.offsetWidth;
-			if (/L/.test(align)) pos.x -= top_cont_offset.x;
+			if (/l/.test(align))
+				pos.x -= els_topCont_offset.x - el_trigger.offsetWidth;
+			if (/L/.test(align)) pos.x -= els_topCont_offset.x;
 			if (/R/.test(align)) pos.x += el_trigger.offsetWidth;
 			if (/c/i.test(align))
-				pos.x += (el_trigger.offsetWidth - top_cont_offset.x) / 2;
+				pos.x += (el_trigger.offsetWidth - els_topCont_offset.x) / 2;
 		}
 		return pos;
 	}
 
 	showAt(lpos: any, tpos: any, is_animation?: any) {
 		if (this.show_animation) this.show_animation.stop();
-		const { topCont: els_top_cont } = this.els,
-			{ firstChild: body_first_child } = this.els.body,
-			{ offsetHeight: body_first_child_offset_height } = body_first_child,
-			els_top_cont_style = els_top_cont.style;
-		els_top_cont_style.position = "absolute";
-		els_top_cont_style.left = lpos + "px";
-		els_top_cont_style.top = tpos + "px";
-		els_top_cont_style.zIndex = 1e4;
-		els_top_cont_style.display = "";
+		const { topCont: els_topCont } = this.els,
+			{ firstChild: body_firstChild } = this.els.body,
+			{ offsetHeight: body_first_child_offset_height } = body_firstChild,
+			els_topCont_style = els_topCont.style;
+		els_topCont_style.position = "absolute";
+		els_topCont_style.left = lpos + "px";
+		els_topCont_style.top = tpos + "px";
+		els_topCont_style.zIndex = 1e4;
+		els_topCont_style.display = "";
 		if (is_animation && this.args.animation) {
-			body_first_child.style.marginTop = -body_first_child_offset_height + "px";
+			body_firstChild.style.marginTop = -body_first_child_offset_height + "px";
 			if (this.args.opacity > 1) {
-				this.setOpacity(els_top_cont, 0);
+				this.setOpacity(els_topCont, 0);
 				const tis = this;
 				this.show_animation = this.Animation({
 					onUpdate: function (pos: any, func_map: Function) {
-						body_first_child.style.marginTop =
+						body_firstChild.style.marginTop =
 							-func_map(
 								tis.#func_animation.accel_b(pos),
 								body_first_child_offset_height,
 								0
 							) + "px";
-						if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, pos);
+						if (tis.args.opacity > 1) tis.setOpacity(els_topCont, pos);
 					},
 					onStop: function () {
-						if (tis.args.opacity > 1) tis.setOpacity(els_top_cont, "");
+						if (tis.args.opacity > 1) tis.setOpacity(els_topCont, "");
 						tis.show_animation = null;
 					}
 				});
