@@ -606,11 +606,11 @@ export default class SHCalendar {
 	}
 
 	keypress(event: any) {
-		let event_charCode,
-			control_key,
+		let event_charCode: any,
+			control_key: number | null,
 			date: SHDate,
 			date_int: number | false = false,
-			is_shiftKey;
+			is_shiftKey: number;
 		if (!this.menu_animation) {
 			const {
 					target: event_target,
@@ -652,8 +652,7 @@ export default class SHCalendar {
 					els_yearInput.focus();
 					els_yearInput.select();
 					return this.stopEvent(event);
-				}
-				if (event_charCode >= "0" && "9" >= event_charCode) {
+				} else if (event_charCode >= "0" && "9" >= event_charCode) {
 					this.showMenu(true);
 					this.focusingFocus();
 					els_yearInput.value = event_charCode;
@@ -728,21 +727,20 @@ export default class SHCalendar {
 					return this.stopEvent(event);
 				}
 				if (13 == event_keyCode && this.last_hover_date) {
-					selection.type == SHCalendar.SEL_MULTIPLE &&
-					(event_shiftKey || event_ctrlKey)
-						? (event_shiftKey &&
-								this.sel_range_start &&
-								(selection.clear(true),
-								selection.selectRange(
-									this.sel_range_start,
-									this.last_hover_date
-								)),
-						  event_ctrlKey &&
-								selection.set(
-									(this.sel_range_start = this.last_hover_date),
-									true
-								))
-						: selection.reset((this.sel_range_start = this.last_hover_date));
+					if (
+						selection.type == SHCalendar.SEL_MULTIPLE &&
+						(event_shiftKey || event_ctrlKey)
+					) {
+						if (event_shiftKey && this.sel_range_start) {
+							selection.clear(true);
+							selection.selectRange(this.sel_range_start, this.last_hover_date);
+						}
+						if (event_ctrlKey)
+							selection.set(
+								(this.sel_range_start = this.last_hover_date),
+								true
+							);
+					} else selection.reset((this.sel_range_start = this.last_hover_date));
 					return this.stopEvent(event);
 				}
 				27 != event_keyCode || this.args.cont || this.hide();
